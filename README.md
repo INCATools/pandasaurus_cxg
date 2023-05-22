@@ -1,6 +1,6 @@
 # pandasaurus_cxg
 
-Ontology enrichment tool for [CxG standard]([url](https://github.com/chanzuckerberg/single-cell-curation/blob/main/schema/3.0.0/schema.md)) [AnnData files]([url](https://anndata.readthedocs.io/en/latest/)).
+Ontology enrichment tool for [CxG standard](https://github.com/chanzuckerberg/single-cell-curation/blob/main/schema/3.0.0/schema.md) [AnnData files](https://anndata.readthedocs.io/en/latest/).
 
 Slide summarising intended functionality
 ![image](https://github.com/INCATools/pandasaurus_cxg/assets/112839/3082dcd2-dd2f-469d-9076-4eabcc83130d)
