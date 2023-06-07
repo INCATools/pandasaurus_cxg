@@ -46,6 +46,7 @@ class AnndataEnricher:
         return self.enriched_df
 
     def filter_anndata_by_enriched_cell_type(self):
+        # TODO 's' amd 'o' part should be revised
         cell_type_list = set(self.enriched_df['s'].tolist() + self.enriched_df['o'].tolist())
         return self._anndata.obs[self._anndata.obs['cell_type_ontology_term_id'].isin(cell_type_list)]
 
