@@ -52,5 +52,3 @@ class AnndataEnricher:
 
     def set_enricher_property_list(self, property_list: List[str]):
         self.__enricher = Query(self.__seed_list, property_list)
-
-
