@@ -1,0 +1,36 @@
+[tool.poetry]
+name = "pandasaurus-cxg"
+version = "0.1.0"
+description = "Ontology enrichment tool for CxG standard AnnData files."
+authors = ["Ugur Bayindir <ugur@ebi.ac.uk>"]
+license = "http://www.apache.org/licenses/LICENSE-2.0"
+readme = "README.md"
+packages = [{include = "pandasaurus_cxg"}]
+
+[tool.poetry.dependencies]
+python = "^3.9"
+pandas = "^2.0.2"
+pandasaurus = "0.1.0"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^7.3.1"
+black = "^23.3.0"
+isort = "^5.12.0"
+flake8 = "^6.0.0"
+flake8-black = "^0.3.6"
+flake8-isort = "^6.0.0"
+
+[[tool.poetry.source]]
+name = "test"
+url = "https://test.pypi.org/simple/"
+secondary = true
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.black]
+line-length = 100
+
+[tool.isort]
+profile = "black"
