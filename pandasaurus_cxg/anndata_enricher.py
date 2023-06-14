@@ -2,8 +2,10 @@ from typing import List, Optional
 
 import pandas as pd
 from pandasaurus.query import Query
+from pandasaurus.slim_manager import SlimManager
 
 from pandasaurus_cxg.anndata_loader import AnndataLoader
+from pandasaurus_cxg.utils.exceptions import InvalidSlimName
 
 
 class AnndataEnricher:
@@ -15,15 +17,19 @@ class AnndataEnricher:
         file_path: str,
         cell_type_field: Optional[str] = "cell_type_ontology_term_id",
         context_field: Optional[str] = "tissue_ontology_term_id",
+        ontology_list_for_slims: Optional[List[str]] = ["Cell Ontology"],
     ):
         """Initialize the AnndataEnricher instance.
 
         Args:
-            file_path (str): The path to the file containing the anndata object.
+            file_path: The path to the file containing the anndata object.
             cell_type_field: The field name for the cell type information in the anndata object.
                 Defaults to "cell_type_ontology_term_id".
             context_field: The field name for the context information in the anndata object.
                 Defaults to "tissue_ontology_term_id".
+            ontology_list_for_slims: The ontology list for generating the slim list.
+                The slim list is used in minimal_slim_enrichment and full_slim_enrichment.
+                Defaults to "Cell Ontology"
         """
         self._anndata = AnndataLoader.load_from_file(file_path)
         self.__seed_list = self._anndata.obs[cell_type_field].unique().tolist()
@@ -33,6 +39,11 @@ class AnndataEnricher:
             if context_field not in self._anndata.obs.keys()
             else self._anndata.obs[context_field].unique().tolist()
         )
+        self.slim_list = [
+            slim
+            for ontology in ontology_list_for_slims
+            for slim in SlimManager.get_slim_list(ontology)
+        ]
         self.enriched_df = pd.DataFrame()
 
     def simple_enrichment(self) -> pd.DataFrame:
@@ -53,6 +64,7 @@ class AnndataEnricher:
         Returns:
            The enriched results as a pandas DataFrame.
         """
+        self.is_invalid_slim_list(slim_list)
         self.enriched_df = self.__enricher.minimal_slim_enrichment(slim_list)
         return self.enriched_df
 
@@ -65,6 +77,7 @@ class AnndataEnricher:
         Returns:
             The enriched results as a pandas DataFrame.
         """
+        self.is_invalid_slim_list(slim_list)
         self.enriched_df = self.__enricher.full_slim_enrichment(slim_list)
         return self.enriched_df
 
@@ -102,3 +115,19 @@ class AnndataEnricher:
             property_list (List[str]): The list of properties to include in the enrichment analysis.
         """
         self.__enricher = Query(self.__seed_list, property_list)
+
+    def is_invalid_slim_list(self, slim_list):
+        """Check if any slim term in the given list is invalid.
+
+        Args:
+            slim_list (List[str]): The list of slim terms to check.
+
+        Raises:
+            InvalidSlimName: If any slim term in the slim_list is invalid.
+
+        """
+        invalid_slim_list = [
+            item for item in slim_list if item not in [slim.get("name") for slim in self.slim_list]
+        ]
+        if invalid_slim_list:
+            raise InvalidSlimName(invalid_slim_list, self.slim_list)
