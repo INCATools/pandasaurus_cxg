@@ -64,7 +64,7 @@ class AnndataEnricher:
         Returns:
            The enriched results as a pandas DataFrame.
         """
-        self.is_invalid_slim_list(slim_list)
+        self.validate_slim_list(slim_list)
         self.enriched_df = self.__enricher.minimal_slim_enrichment(slim_list)
         return self.enriched_df
 
@@ -77,7 +77,7 @@ class AnndataEnricher:
         Returns:
             The enriched results as a pandas DataFrame.
         """
-        self.is_invalid_slim_list(slim_list)
+        self.validate_slim_list(slim_list)
         self.enriched_df = self.__enricher.full_slim_enrichment(slim_list)
         return self.enriched_df
 
@@ -116,7 +116,7 @@ class AnndataEnricher:
         """
         self.__enricher = Query(self.__seed_list, property_list)
 
-    def is_invalid_slim_list(self, slim_list):
+    def validate_slim_list(self, slim_list):
         """Check if any slim term in the given list is invalid.
 
         Args:
