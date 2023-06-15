@@ -16,8 +16,8 @@ class AnndataLoader:
             The loaded anndata object if successful, else None.
 
         Note:
-            - The method uses warnings to temporarily ignore ImplicitModificationWarning raised by anndata.
-            - If an error occurs while loading the file, an error message is printed, and None is returned.
+            - The method uses warnings to temporarily ignore ImplicitModificationWarning.
+            - If an error occurs, an error message is printed, and None is returned.
         """
         with warnings.catch_warnings():
             warnings.simplefilter("ignore", category=anndata.ImplicitModificationWarning)
