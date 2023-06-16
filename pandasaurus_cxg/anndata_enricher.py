@@ -31,6 +31,7 @@ class AnndataEnricher:
                 The slim list is used in minimal_slim_enrichment and full_slim_enrichment.
                 Defaults to "Cell Ontology"
         """
+        # TODO Do we need to keep whole anndata? Would it be enough to keep the obs only?
         self._anndata = AnndataLoader.load_from_file(file_path)
         self.__seed_list = self._anndata.obs[cell_type_field].unique().tolist()
         self.__enricher = Query(self.__seed_list)
