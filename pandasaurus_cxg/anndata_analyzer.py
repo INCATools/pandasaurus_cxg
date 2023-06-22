@@ -1,5 +1,6 @@
 from enum import Enum
 import os
+from typing import List
 
 import pandas as pd
 
@@ -87,12 +88,26 @@ class AnndataAnalyzer:
             [item for sublist in [[k, v] for k, v in record.items()] for item in sublist]
             for record in temp_result
         ]
-
+        unique_result = self._remove_duplicates(result)
         return pd.DataFrame(
-            [inner_list[:2] + inner_list[5:6] + inner_list[2:4] for inner_list in result],
+            [inner_list[:2] + inner_list[5:6] + inner_list[2:4] for inner_list in unique_result],
             columns=["field_name1", "value1", "predicate", "field_name2", "value2"],
         )
 
+
+    @staticmethod
+    def _remove_duplicates(data: List[List[str]]):
+        unique_data = []
+        unique_set = set()
+
+        for sublist in data:
+            if Predicate.SUPERCLUSTER_OF.value in sublist:
+                continue
+            sorted_sublist = tuple(sorted(set(sublist)))
+            if sorted_sublist not in unique_set:
+                unique_data.append(sublist)
+                unique_set.add(sorted_sublist)
+        return unique_data
 
     @staticmethod
     def _assign_predicate(
