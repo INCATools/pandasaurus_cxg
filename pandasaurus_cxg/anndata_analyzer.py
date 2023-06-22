@@ -1,10 +1,14 @@
 from enum import Enum
+import os
 
 import pandas as pd
 
 from pandasaurus_cxg.anndata_loader import AnndataLoader
 from pandasaurus_cxg.schema.schema_loader import read_json_file
 
+
+# Check if the DEBUG environment variable is set
+debug_mode = os.getenv('DEBUG')
 
 class AnndataAnalyzer:
     """
@@ -65,28 +69,15 @@ class AnndataAnalyzer:
                     field_name_1_dict = (
                         co_oc.groupby(field_name_1)[field_name_2].apply(list).to_dict()
                     )
-                    # co_oc["predicate"] = co_oc.apply(
-                    #     lambda row: Predicate.CLUSTER_MATCHES.value
-                    #     if row[field_name_2] in field_name_1_dict.get(row[field_name_1], [])
-                    #     and len(field_name_1_dict.get(row[field_name_1], [])) == 1
-                    #     else Predicate.SUBCLUSTER_OF.value
-                    #     if row[field_name_2] in field_name_1_dict.get(row[field_name_1], [])
-                    #     else Predicate.CLUSTER_OVERLAPS.value,
-                    #     axis=1,
-                    # )
                     co_oc["predicate"] = co_oc.apply(
-                        lambda row: Predicate.CLUSTER_MATCHES.value
-                        if field_name_2_dict.get(row[field_name_2], []) == [row[field_name_1]]
-                        and field_name_1_dict.get(row[field_name_1], []) == [row[field_name_2]]
-                        else Predicate.SUBCLUSTER_OF.value
-                        if row[field_name_1] in field_name_2_dict.get(row[field_name_2], [])
-                        and row[field_name_2] in field_name_1_dict.get(row[field_name_1], [])
-                        and len(field_name_1_dict.get(row[field_name_1], [])) == 1
-                        else Predicate.SUPERCLUSTER_OF.value
-                        if row[field_name_1] in field_name_2_dict.get(row[field_name_2], [])
-                        and row[field_name_2] in field_name_1_dict.get(row[field_name_1], [])
-                        and len(field_name_2_dict.get(row[field_name_2], [])) == 1
-                        else Predicate.CLUSTER_OVERLAPS.value,
+                        self._assign_predicate,
+                        args=(
+                            field_name_1,
+                            field_name_2,
+                            field_name_1_dict,
+                            field_name_2_dict,
+                            debug_mode,
+                        ),
                         axis=1,
                     )
 
@@ -101,6 +92,42 @@ class AnndataAnalyzer:
             [inner_list[:2] + inner_list[5:6] + inner_list[2:4] for inner_list in result],
             columns=["field_name1", "value1", "predicate", "field_name2", "value2"],
         )
+
+
+    @staticmethod
+    def _assign_predicate(
+        row, field_name_1, field_name_2, field_name_1_dict, field_name_2_dict, debug
+    ):
+        if debug:
+            print("Debugging row:", row)
+            print("Value of field_name_1:", row[field_name_1])
+            print("Value of field_name_1_dict:", field_name_1_dict.get(row[field_name_1], []))
+            print("Value of field_name_2:", row[field_name_2])
+            print("Value of field_name_2_dict:", field_name_2_dict.get(row[field_name_2], []))
+
+        field_name_1_values = field_name_1_dict.get(row[field_name_1], [])
+        field_name_2_values = field_name_2_dict.get(row[field_name_2], [])
+
+        if field_name_2_dict.get(row[field_name_2], []) == [
+            row[field_name_1]
+        ] and field_name_1_dict.get(row[field_name_1], []) == [row[field_name_2]]:
+            return Predicate.CLUSTER_MATCHES.value
+
+        if (
+            row[field_name_1] in field_name_2_values
+            and row[field_name_2] in field_name_1_values
+            and len(field_name_1_values) == 1
+        ):
+            return Predicate.SUBCLUSTER_OF.value
+
+        if (
+            row[field_name_1] in field_name_2_values
+            and row[field_name_2] in field_name_1_values
+            and len(field_name_2_values) == 1
+        ):
+            return Predicate.SUPERCLUSTER_OF.value
+
+        return Predicate.CLUSTER_OVERLAPS.value
 
 
 class Predicate(Enum):
