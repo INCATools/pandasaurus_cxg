@@ -10,7 +10,7 @@ packages = [{include = "pandasaurus_cxg"}]
 [tool.poetry.dependencies]
 python = "^3.9"
 pandas = "^2.0.2"
-pandasaurus = "0.1.0"
+pandasaurus = "0.2.2"
 anndata = "^0.9.1"
 
 [tool.poetry.group.dev.dependencies]
