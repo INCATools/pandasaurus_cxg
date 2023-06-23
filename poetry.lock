@@ -123,13 +123,13 @@ lxml = ["lxml"]
 
 [[package]]
 name = "bioregistry"
-version = "0.9.53"
+version = "0.9.54"
 description = "Integrated registry of biological databases and nomenclatures"
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "bioregistry-0.9.53-py3-none-any.whl", hash = "sha256:dda8b8ac2a9ff5a04ec15a120676047399d63a2f283c66760897cc4b63e12daa"},
-    {file = "bioregistry-0.9.53.tar.gz", hash = "sha256:11f02f2cb7de093191de0a806a72e4a48c543a49dc3491de2583c35cdb0d8f88"},
+    {file = "bioregistry-0.9.54-py3-none-any.whl", hash = "sha256:a53d6152f5e414d5b5bbc5f24a1de3ad9e0ea0d937628e1879f390bb084000d0"},
+    {file = "bioregistry-0.9.54.tar.gz", hash = "sha256:634f125854bd3b3a18810cfe72d904791e2371e797b1afbe26e39776f2fdd477"},
 ]
 
 [package.dependencies]
@@ -1822,13 +1822,13 @@ xml = ["lxml (>=4.6.3)"]
 
 [[package]]
 name = "pandasaurus"
-version = "0.2.2"
+version = "0.2.3"
 description = "Supporting simple queries over ontology annotations in dataframes, using UberGraph queries."
 optional = false
 python-versions = ">=3.9,<4.0"
 files = [
-    {file = "pandasaurus-0.2.2-py3-none-any.whl", hash = "sha256:0bfecefa6a4730d27051e678a4247c2a68ef427fd3c28d8c2045eccb2257f812"},
-    {file = "pandasaurus-0.2.2.tar.gz", hash = "sha256:909afc738fc6e717dbbe5ada1acc49f6557b0305667e2ab2f75266d2e0c0aebb"},
+    {file = "pandasaurus-0.2.3-py3-none-any.whl", hash = "sha256:be024e84b07311f97f4cc5029f4d57e35566b60c21737527fe6feb35250b0c9b"},
+    {file = "pandasaurus-0.2.3.tar.gz", hash = "sha256:61c850026f0f5e25186a148418975fe0e4a7acc92a940c8be4e3acbb17760a06"},
 ]
 
 [package.dependencies]
@@ -1880,13 +1880,13 @@ files = [
 
 [[package]]
 name = "platformdirs"
-version = "3.7.0"
+version = "3.8.0"
 description = "A small Python package for determining appropriate platform-specific dirs, e.g. a \"user data dir\"."
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "platformdirs-3.7.0-py3-none-any.whl", hash = "sha256:cfd065ba43133ff103ab3bd10aecb095c2a0035fcd1f07217c9376900d94ba07"},
-    {file = "platformdirs-3.7.0.tar.gz", hash = "sha256:87fbf6473e87c078d536980ba970a472422e94f17b752cfad17024c18876d481"},
+    {file = "platformdirs-3.8.0-py3-none-any.whl", hash = "sha256:ca9ed98ce73076ba72e092b23d3c93ea6c4e186b3f1c3dad6edd98ff6ffcca2e"},
+    {file = "platformdirs-3.8.0.tar.gz", hash = "sha256:b0cabcb11063d21a0b261d557acb0a9d2126350e63b70cdf7db6347baea456dc"},
 ]
 
 [package.extras]
@@ -3293,4 +3293,4 @@ testing = ["big-O", "flake8 (<5)", "jaraco.functools", "jaraco.itertools", "more
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.9"
-content-hash = "953efd0b9f796ff8b92b8f9b53255c7e4dc25b18f1a58e83722f53eb7a74f7f4"
+content-hash = "fa1710aad106c1f650054816d540e55773bc44f5dee6b4590150b40c6d051005"
