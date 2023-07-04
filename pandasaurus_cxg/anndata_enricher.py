@@ -1,5 +1,6 @@
 from typing import List, Optional
 
+from anndata import AnnData
 import pandas as pd
 from pandasaurus.query import Query
 from pandasaurus.slim_manager import SlimManager
@@ -14,7 +15,7 @@ class AnndataEnricher:
     # TODO think a better approach for cell_type_field and context_field selection/passing
     def __init__(
         self,
-        file_path: str,
+        anndata: AnnData,
         cell_type_field: Optional[str] = "cell_type_ontology_term_id",
         context_field: Optional[str] = "tissue_ontology_term_id",
         ontology_list_for_slims: Optional[List[str]] = ["Cell Ontology"],
@@ -22,17 +23,19 @@ class AnndataEnricher:
         """Initialize the AnndataEnricher instance.
 
         Args:
-            file_path: The path to the file containing the anndata object.
-            cell_type_field: The field name for the cell type information in the anndata object.
+
+            anndata: The AnnData object
+            cell_type_field: The cell type information in the anndata object.
                 Defaults to "cell_type_ontology_term_id".
-            context_field: The field name for the context information in the anndata object.
+            context_field: The context information in the anndata object.
                 Defaults to "tissue_ontology_term_id".
             ontology_list_for_slims: The ontology list for generating the slim list.
                 The slim list is used in minimal_slim_enrichment and full_slim_enrichment.
                 Defaults to "Cell Ontology"
         """
         # TODO Do we need to keep whole anndata? Would it be enough to keep the obs only?
-        self._anndata = AnndataLoader.load_from_file(file_path)
+        # file_path: The path to the file containing the anndata object.
+        self._anndata = anndata
         self.__seed_list = self._anndata.obs[cell_type_field].unique().tolist()
         self.__enricher = Query(self.__seed_list)
         self.__context_list = (
@@ -46,6 +49,20 @@ class AnndataEnricher:
             for slim in SlimManager.get_slim_list(ontology)
         ]
         self.enriched_df = pd.DataFrame()
+
+    @staticmethod
+    def from_file_path(
+        file_path: str,
+        cell_type_field: Optional[str] = "cell_type_ontology_term_id",
+        context_field: Optional[str] = "tissue_ontology_term_id",
+        ontology_list_for_slims: Optional[List[str]] = ["Cell Ontology"],
+    ):
+        return AnndataEnricher(
+            AnndataLoader.load_from_file(file_path),
+            cell_type_field,
+            context_field,
+            ontology_list_for_slims,
+        )
 
     def simple_enrichment(self) -> pd.DataFrame:
         """Perform simple enrichment analysis.
@@ -132,3 +149,6 @@ class AnndataEnricher:
         ]
         if invalid_slim_list:
             raise InvalidSlimName(invalid_slim_list, self.slim_list)
+
+    def get_seed_list(self):
+        return self.__seed_list
