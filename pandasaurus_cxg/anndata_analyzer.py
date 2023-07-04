@@ -78,23 +78,6 @@ class AnndataAnalyzer:
             columns=["field_name1", "value1", "predicate", "field_name2", "value2"],
         )
 
-    def _assign_predicate_column(self, co_oc, field_name_1, field_name_2):
-        # Group by field_name_2 and field_name_1 to create dictionaries
-        field_name_2_dict = co_oc.groupby(field_name_2)[field_name_1].apply(list).to_dict()
-        field_name_1_dict = co_oc.groupby(field_name_1)[field_name_2].apply(list).to_dict()
-        # Assign the "predicate" column using self._assign_predicate method
-        co_oc["predicate"] = co_oc.apply(
-            self._assign_predicate,
-            args=(
-                field_name_1,
-                field_name_2,
-                field_name_1_dict,
-                field_name_2_dict,
-                debug_mode,
-            ),
-            axis=1,
-        )
-
     def _filter_data_and_remove_duplicates(self, field_name_1, field_name_2, disease):
         # Filter the data based on the disease condition
         co_oc = (
@@ -121,6 +104,24 @@ class AnndataAnalyzer:
                 unique_data.append(sublist)
                 unique_set.add(sorted_sublist)
         return unique_data
+
+    @staticmethod
+    def _assign_predicate_column(co_oc, field_name_1, field_name_2):
+        # Group by field_name_2 and field_name_1 to create dictionaries
+        field_name_2_dict = co_oc.groupby(field_name_2)[field_name_1].apply(list).to_dict()
+        field_name_1_dict = co_oc.groupby(field_name_1)[field_name_2].apply(list).to_dict()
+        # Assign the "predicate" column using self._assign_predicate method
+        co_oc["predicate"] = co_oc.apply(
+            AnndataAnalyzer._assign_predicate,
+            args=(
+                field_name_1,
+                field_name_2,
+                field_name_1_dict,
+                field_name_2_dict,
+                debug_mode,
+            ),
+            axis=1,
+        )
 
     @staticmethod
     def _assign_predicate(
