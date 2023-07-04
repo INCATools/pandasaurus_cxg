@@ -65,14 +65,14 @@ class AnndataAnalyzer:
                     co_oc = self._filter_data_and_remove_duplicates(
                         field_name_1, field_name_2, disease
                     )
-                    self._assign_predicate_column(co_oc, field_name_1, field_name_2)
+                    AnndataAnalyzer._assign_predicate_column(co_oc, field_name_1, field_name_2)
                     temp_result.extend(co_oc.to_dict(orient="records"))
 
         result = [
             [item for sublist in [[k, v] for k, v in record.items()] for item in sublist]
             for record in temp_result
         ]
-        unique_result = self._remove_duplicates(result)
+        unique_result = AnndataAnalyzer._remove_duplicates(result)
         return pd.DataFrame(
             [inner_list[:2] + inner_list[5:6] + inner_list[2:4] for inner_list in unique_result],
             columns=["field_name1", "value1", "predicate", "field_name2", "value2"],
@@ -92,7 +92,7 @@ class AnndataAnalyzer:
         return co_oc
 
     @staticmethod
-    def _remove_duplicates(data: List[List[str]]):
+    def _remove_duplicates(data: List[List[str]]) -> List[List[str]]:
         unique_data = []
         unique_set = set()
 
