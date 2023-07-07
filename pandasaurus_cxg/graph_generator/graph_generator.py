@@ -37,7 +37,6 @@ class GraphGenerator:
         for (outer_key1, outer_key2), inner_dict in grouped_df:
             uuid_key = str(uuid.uuid4())
             for inner_list in inner_dict.values.tolist():
-
                 inner_dict_uuid = {
                     inner_list[0]: inner_list[1],
                     inner_list[3]: inner_list[4],
@@ -47,7 +46,6 @@ class GraphGenerator:
                     grouped_dict_uuid[uuid_key].append(inner_dict_uuid)
                 else:
                     grouped_dict_uuid[uuid_key] = [inner_dict_uuid]
-
 
         # generate a resource for each free-text cell_type annotation and cell_type_ontology_term annotation
 
