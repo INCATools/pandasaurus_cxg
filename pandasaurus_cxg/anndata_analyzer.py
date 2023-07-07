@@ -84,6 +84,18 @@ class AnndataAnalyzer:
             columns=["field_name1", "value1", "predicate", "field_name2", "value2"],
         )
 
+    def _filter_data_and_remove_duplicates(self, field_name_1, field_name_2, disease):
+        # Filter the data based on the disease condition
+        co_oc = (
+            self._anndata.obs[
+                (self._anndata.obs["disease_ontology_term_id"].str.lower() == disease.lower())
+            ][[field_name_1, field_name_2]]
+            if disease
+            else self._anndata.obs[[field_name_1, field_name_2]]
+        )
+        # Drop duplicates
+        co_oc = co_oc.drop_duplicates().reset_index(drop=True)
+        return co_oc
 
     def enriched_co_annotation_report(self, disease: Optional[str] = None):
         """
