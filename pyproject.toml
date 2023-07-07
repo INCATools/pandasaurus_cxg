@@ -12,6 +12,7 @@ python = "^3.9"
 pandas = "^2.0.2"
 pandasaurus = "0.2.3"
 anndata = "^0.9.1"
+rdflib = "^6.3.2"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.3.1"

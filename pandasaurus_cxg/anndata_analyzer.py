@@ -9,7 +9,8 @@ from pandasaurus_cxg.schema.schema_loader import read_json_file
 
 
 # Check if the DEBUG environment variable is set
-debug_mode = os.getenv('DEBUG')
+debug_mode = os.getenv("DEBUG")
+
 
 class AnndataAnalyzer:
     """
@@ -93,7 +94,6 @@ class AnndataAnalyzer:
             [inner_list[:2] + inner_list[5:6] + inner_list[2:4] for inner_list in unique_result],
             columns=["field_name1", "value1", "predicate", "field_name2", "value2"],
         )
-
 
     @staticmethod
     def _remove_duplicates(data: List[List[str]]):
