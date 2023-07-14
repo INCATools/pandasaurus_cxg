@@ -97,22 +97,46 @@ class AnndataAnalyzer:
 
     @staticmethod
     def _remove_duplicates(data: List[List[str]]):
+        # TODO do a clean up if it is necessary
         unique_data = []
         unique_set = set()
 
         for sublist in data:
             if Predicate.SUPERCLUSTER_OF.value in sublist:
                 continue
-            sorted_sublist = tuple(sorted(set(sublist)))
-            if sorted_sublist not in unique_set:
-                unique_data.append(sublist)
-                unique_set.add(sorted_sublist)
+            unique_data.append(sublist)
+            # sorted_sublist = tuple(sorted(set(sublist)))
+            # if sorted_sublist not in unique_set:
+            #     unique_data.append(sublist)
+            #     unique_set.add(sorted_sublist)
         return unique_data
 
     @staticmethod
     def _assign_predicate(
-        row, field_name_1, field_name_2, field_name_1_dict, field_name_2_dict, debug
-    ):
+        row: dict,
+        field_name_1: str,
+        field_name_2: str,
+        field_name_1_dict: dict,
+        field_name_2_dict: dict,
+        debug: bool,
+    ) -> str:
+        """
+        Assigns a predicate based on the values of two fields in a row and dictionaries of field values.
+
+        Used to determine if a cluster matches with the other cluster, or if it is its subclass, or if they overlap with each other.
+
+        Args:
+            row (dict): The row containing the fields.
+            field_name_1 (str): The name of the first field.
+            field_name_2 (str): The name of the second field.
+            field_name_1_dict (dict): A dictionary mapping field_name_1 values to associated values.
+            field_name_2_dict (dict): A dictionary mapping field_name_2 values to associated values.
+            debug (bool): Whether to print debugging information.
+
+        Returns:
+            str: The assigned predicate.
+
+        """
         if debug:
             print("Debugging row:", row)
             print("Value of field_name_1:", row[field_name_1])
