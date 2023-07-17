@@ -4,6 +4,7 @@ import os
 from typing import List, Optional
 
 import pandas as pd
+from pandas import DataFrame
 
 from pandasaurus_cxg.anndata_enricher import AnndataEnricher
 from pandasaurus_cxg.anndata_loader import AnndataLoader
@@ -23,7 +24,7 @@ class AnndataAnalyzer:
         schema_path (str): The path to the schema file.
 
     Attributes:
-        _anndata (pd.DataFrame): The observation data from the AnnData object.
+        _anndata (DataFrame): The observation data from the AnnData object.
         _schema (dict): The schema data loaded from the schema file.
 
     """
@@ -54,7 +55,7 @@ class AnndataAnalyzer:
                 Defaults to False.
 
         Returns:
-            pd.DataFrame: The co-annotation report.
+            DataFrame: The co-annotation report.
 
         """
         free_text_cell_type = [key for key, value in self._schema.items() if value]
@@ -63,7 +64,8 @@ class AnndataAnalyzer:
         for combination in cell_type_combinations:
             field_name_1 = combination[1]
             field_name_2 = combination[0]
-            if (field_name_1 in self._anndata.obs.columns
+            if (
+                field_name_1 in self._anndata.obs.columns
                 and field_name_2 in self._anndata.obs.columns
             ):
                 co_oc = self._filter_data_and_remove_duplicates(field_name_1, field_name_2, disease)
@@ -79,23 +81,10 @@ class AnndataAnalyzer:
             for record in temp_result
         ]
         unique_result = AnndataAnalyzer._remove_duplicates(result)
-        return pd.DataFrame(
+        return DataFrame(
             [inner_list[:2] + inner_list[5:6] + inner_list[2:4] for inner_list in unique_result],
             columns=["field_name1", "value1", "predicate", "field_name2", "value2"],
         )
-
-    def _filter_data_and_remove_duplicates(self, field_name_1, field_name_2, disease):
-        # Filter the data based on the disease condition
-        co_oc = (
-            self._anndata.obs[
-                (self._anndata.obs["disease_ontology_term_id"].str.lower() == disease.lower())
-            ][[field_name_1, field_name_2]]
-            if disease
-            else self._anndata.obs[[field_name_1, field_name_2]]
-        )
-        # Drop duplicates
-        co_oc = co_oc.drop_duplicates().reset_index(drop=True)
-        return co_oc
 
     def enriched_co_annotation_report(self, disease: Optional[str] = None):
         """
@@ -113,17 +102,17 @@ class AnndataAnalyzer:
                 desired.
 
         Returns:
-            pd.DataFrame: The co-annotation report.
+            DataFrame: The co-annotation report.
 
         """
-        return self.co_annotation_report(self, disease, True)
+        return self.co_annotation_report(disease, True)
 
     def _enrich_co_annotation(self, co_oc, field_name_1, field_name_2):
         enricher = AnndataEnricher(self._anndata)
         simple = enricher.simple_enrichment()
-        df = simple[simple["o"].isin(enricher.get_seed_list())][
-            ["s_label", "o_label"]
-        ].rename(columns={"s_label": field_name_1, "o_label": field_name_2})
+        df = simple[simple["o"].isin(enricher.get_seed_list())][["s_label", "o_label"]].rename(
+            columns={"s_label": field_name_1, "o_label": field_name_2}
+        )
         co_oc = pd.concat([co_oc, df], axis=0).reset_index(drop=True)
         return co_oc
 
