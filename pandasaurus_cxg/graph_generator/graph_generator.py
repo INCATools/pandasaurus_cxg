@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import List, Dict, Optional
+from typing import List, Optional
 import uuid
 
 import networkx as nx
@@ -64,7 +64,7 @@ class GraphGenerator:
         grouped_dict_uuid = {}
         for (_, _), inner_dict in grouped_df:
             temp_dict = {}
-            for inner_list in list(inner_dict.values.tolist()):
+            for inner_list in inner_dict.values.tolist():
                 if inner_list[2] == "cluster_matches":
                     inner_dict_uuid = {
                         inner_list[0]: inner_list[1],
@@ -123,6 +123,7 @@ class GraphGenerator:
         for curie, label in self.cell_type_dict.items():
             resource = cl_namespace[curie.split(":")[-1]]
             self.graph.add((resource, RDFS.label, Literal(label)))
+            self.graph.add((resource, RDF.type, self.ns["CellType"]))
             for s, _, _ in self.graph.triples((None, self.ns["cell_type"], Literal(label))):
                 self.graph.add((s, self.ns["consists_of"], resource))
         # add subClassOf between terms in CL enrichment
