@@ -158,14 +158,57 @@ class GraphGenerator:
             valid_formats = [valid_format.value for valid_format in RDFFormat]
             raise InvalidGraphFormat(RDFFormat, valid_formats)
 
-    def visualize_rdf_graph(self):
-        nx_graph = rdflib_to_networkx_multidigraph(self.graph)
-        # Plot Networkx instance of RDF Graph
-        pos = nx.spring_layout(nx_graph, scale=2, k=2)
-        edge_labels = nx.get_edge_attributes(nx_graph, "r")
-        nx.draw_networkx_edge_labels(nx_graph, pos, edge_labels=edge_labels)
-        nx.draw(nx_graph, with_labels=True)
+    def visualize_rdf_graph(self, start_node):
+        visited = set()
+        stack = [URIRef(start_node)]
+        subgraph = Graph()
+
+        while stack:
+            node = stack.pop()
+            if node not in visited:
+                visited.add(node)
+                subgraph += self.graph.triples(
+                    (node, None, None)
+                )  # Add all outgoing edges of the current node
+                for _, _, next_node in self.graph.triples((node, None, None)):
+                    stack.append(next_node)
+
+        nx_graph = nx.Graph()
+        edge_labels = {}
+        for subject, predicate, obj in subgraph:
+            if isinstance(obj, URIRef):
+                nx_graph.add_edge(str(subject), str(obj))
+                edge_labels[(str(subject), str(obj))] = "is_a" if predicate == RDF.type else str(predicate)
+
+        # Layout the graph as a hierarchical tree
+        pos = nx.drawing.nx_agraph.graphviz_layout(nx_graph, prog="dot")
+
+        # Plot the graph as a hierarchical tree
+        plt.figure(figsize=(10, 8))
+        nx.draw(
+            nx_graph,
+            pos,
+            with_labels=True,
+            node_size=1500,
+            node_color="skyblue",
+            font_size=8,
+            font_weight="bold",
+        )
+
+        # Draw edge labels on the graph
+        edge_labels_formatted = {edge: label.split("/")[-1] for edge, label in edge_labels.items()}
+        nx.draw_networkx_edge_labels(
+            nx_graph, pos, edge_labels=edge_labels_formatted, font_size=8, font_color="red"
+        )
+
         plt.show()
+        # nx_graph = rdflib_to_networkx_multidigraph(self.graph)
+        # # Plot Networkx instance of RDF Graph
+        # pos = nx.spring_layout(nx_graph, scale=2, k=2)
+        # edge_labels = nx.get_edge_attributes(nx_graph, "r")
+        # nx.draw_networkx_edge_labels(nx_graph, pos, edge_labels=edge_labels)
+        # nx.draw(nx_graph, with_labels=True)
+        # plt.show()
 
 
 class RDFFormat(Enum):
