@@ -1,15 +1,18 @@
+import uuid
 from enum import Enum
 from typing import List, Optional
-import uuid
 
-import networkx as nx
 import matplotlib.pyplot as plt
+import networkx as nx
 import pandas as pd
-from rdflib import Graph, Literal, Namespace, RDF, RDFS, URIRef
+from rdflib import OWL, RDF, RDFS, BNode, Graph, Literal, Namespace, URIRef
 from rdflib.extras.external_graph_libs import rdflib_to_networkx_multidigraph
 
 from pandasaurus_cxg.anndata_enricher import AnndataEnricher
-from pandasaurus_cxg.utils.exceptions import InvalidGraphFormat, MissingEnrichmentProcess
+from pandasaurus_cxg.utils.exceptions import (
+    InvalidGraphFormat,
+    MissingEnrichmentProcess,
+)
 
 
 class GraphGenerator:
@@ -91,12 +94,13 @@ class GraphGenerator:
             if temp_dict not in grouped_dict_uuid.values():
                 grouped_dict_uuid[str(uuid.uuid4())] = temp_dict
 
+        self.graph.add((self.ns["x"], RDF.type, OWL.Ontology))
         # generate a resource for each free-text cell_type annotation and cell_type_ontology_term annotation
         cell_set_class = self.ns["CellSet"]
         self.graph.add((cell_set_class, RDF.type, RDFS.Class))
         for _uuid, inner_dict in grouped_dict_uuid.items():
             resource = self.ns[_uuid]
-            self.graph.add((resource, RDF.type, cell_set_class))
+            self.graph.add((resource, RDFS.subClassOf, cell_set_class))
             for k, v in inner_dict.items():
                 if k == "subcluster_of":
                     continue
@@ -123,9 +127,15 @@ class GraphGenerator:
         for curie, label in self.cell_type_dict.items():
             resource = cl_namespace[curie.split(":")[-1]]
             self.graph.add((resource, RDFS.label, Literal(label)))
-            self.graph.add((resource, RDF.type, self.ns["CellType"]))
+            self.graph.add((resource, RDFS.subClassOf, self.ns["CellType"]))
             for s, _, _ in self.graph.triples((None, self.ns["cell_type"], Literal(label))):
-                self.graph.add((s, self.ns["consists_of"], resource))
+                # Add the triples to represent the restriction
+                class_expression_bnode = BNode()
+                self.graph.add((class_expression_bnode, RDF.type, OWL.Restriction))
+                self.graph.add((class_expression_bnode, OWL.onProperty, self.ns["consist_of"]))
+                self.graph.add((class_expression_bnode, OWL.someValuesFrom, resource))
+                # Add the restriction
+                self.graph.add((s, RDFS.subClassOf, class_expression_bnode))
         # add subClassOf between terms in CL enrichment
         for _, row in self.enriched_df.iterrows():
             for s, _, _ in self.graph.triples((None, RDFS.label, Literal(row["s_label"]))):
