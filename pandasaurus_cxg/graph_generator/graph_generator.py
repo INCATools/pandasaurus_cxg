@@ -188,7 +188,9 @@ class GraphGenerator:
         for subject, predicate, obj in subgraph:
             if isinstance(obj, URIRef):
                 nx_graph.add_edge(str(subject), str(obj))
-                edge_labels[(str(subject), str(obj))] = "is_a" if predicate == RDF.type else str(predicate)
+                edge_labels[(str(subject), str(obj))] = (
+                    "is_a" if predicate == RDF.type else str(predicate)
+                )
 
         # Layout the graph as a hierarchical tree
         pos = nx.drawing.nx_agraph.graphviz_layout(nx_graph, prog="dot")

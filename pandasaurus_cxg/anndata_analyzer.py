@@ -1,12 +1,11 @@
-from enum import Enum
 import os
+from enum import Enum
 from typing import List
 
 import pandas as pd
 
 from pandasaurus_cxg.anndata_loader import AnndataLoader
 from pandasaurus_cxg.schema.schema_loader import read_json_file
-
 
 # Check if the DEBUG environment variable is set
 debug_mode = os.getenv("DEBUG")

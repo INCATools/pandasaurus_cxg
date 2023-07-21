@@ -1,7 +1,7 @@
 from typing import List, Optional
 
-from anndata import AnnData
 import pandas as pd
+from anndata import AnnData
 from pandasaurus.query import Query
 from pandasaurus.slim_manager import SlimManager
 
