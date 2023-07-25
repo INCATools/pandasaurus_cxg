@@ -132,3 +132,9 @@ dmypy.json
 *.owl
 *.ttl
 *.nt
+
+# pycharm/mac1
+.DS_Store
+.idea/
+.DS_Store
+.DS_Store
