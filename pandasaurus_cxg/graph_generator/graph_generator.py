@@ -6,7 +6,6 @@ import matplotlib.pyplot as plt
 import networkx as nx
 import pandas as pd
 from rdflib import OWL, RDF, RDFS, BNode, Graph, Literal, Namespace, URIRef
-from rdflib.extras.external_graph_libs import rdflib_to_networkx_multidigraph
 
 from pandasaurus_cxg.anndata_enricher import AnndataEnricher
 from pandasaurus_cxg.utils.exceptions import (
@@ -94,22 +93,22 @@ class GraphGenerator:
             if temp_dict not in grouped_dict_uuid.values():
                 grouped_dict_uuid[str(uuid.uuid4())] = temp_dict
 
-        self.graph.add((self.ns["x"], RDF.type, OWL.Ontology))
         # generate a resource for each free-text cell_type annotation and cell_type_ontology_term annotation
         cell_set_class = self.ns["CellSet"]
         self.graph.add((cell_set_class, RDF.type, RDFS.Class))
         for _uuid, inner_dict in grouped_dict_uuid.items():
             resource = self.ns[_uuid]
-            self.graph.add((resource, RDFS.subClassOf, cell_set_class))
+            self.graph.add((resource, RDF.type, cell_set_class))
             for k, v in inner_dict.items():
                 if k == "subcluster_of":
                     continue
                 self.graph.add((resource, self.ns[k], Literal(v)))
 
         # add relationship between each resource based on their predicate in the co_annotation_report
+        subcluster = self.ns["subcluster_of"]
+        self.graph.add((subcluster, RDF.type, OWL.ObjectProperty))
         for _uuid, inner_dict in grouped_dict_uuid.items():
-            resource = URIRef(self.ns + _uuid)
-            subcluster = self.ns["subcluster_of"]
+            resource = self.ns[_uuid]
             for ik, iv in inner_dict.get("subcluster_of", {}).items():
                 predicate = URIRef(self.ns + ik)
                 for s, _, _ in self.graph.triples((None, predicate, Literal(iv))):
@@ -127,7 +126,7 @@ class GraphGenerator:
         for curie, label in self.cell_type_dict.items():
             resource = cl_namespace[curie.split(":")[-1]]
             self.graph.add((resource, RDFS.label, Literal(label)))
-            self.graph.add((resource, RDFS.subClassOf, self.ns["CellType"]))
+            self.graph.add((resource, RDF.type, OWL.Class))
             for s, _, _ in self.graph.triples((None, self.ns["cell_type"], Literal(label))):
                 # Add the triples to represent the restriction
                 class_expression_bnode = BNode()
@@ -135,7 +134,8 @@ class GraphGenerator:
                 self.graph.add((class_expression_bnode, OWL.onProperty, self.ns["consist_of"]))
                 self.graph.add((class_expression_bnode, OWL.someValuesFrom, resource))
                 # Add the restriction
-                self.graph.add((s, RDFS.subClassOf, class_expression_bnode))
+                self.graph.add((s, RDF.type, class_expression_bnode))
+                # self.graph.add((s, self.ns["consist_of"], resource))
         # add subClassOf between terms in CL enrichment
         for _, row in self.enriched_df.iterrows():
             for s, _, _ in self.graph.triples((None, RDFS.label, Literal(row["s_label"]))):
@@ -168,37 +168,60 @@ class GraphGenerator:
             valid_formats = [valid_format.value for valid_format in RDFFormat]
             raise InvalidGraphFormat(RDFFormat, valid_formats)
 
-    def visualize_rdf_graph(self, start_node):
+    def visualize_rdf_graph(self, start_node: List[str], file_path: str):
+        graph = Graph().parse(file_path, format="ttl") if file_path else self.graph
+        for node in start_node:
+            if not URIRef(node) in graph.subjects() or URIRef(node) in graph.objects():
+                raise ValueError(f"None of the nodes in the list {node} exist in the RDF graph.")
+
         visited = set()
-        stack = [URIRef(start_node)]
+        stack = [URIRef(node) for node in start_node]
         subgraph = Graph()
 
         while stack:
             node = stack.pop()
             if node not in visited:
                 visited.add(node)
-                subgraph += self.graph.triples(
-                    (node, None, None)
-                )  # Add all outgoing edges of the current node
-                for _, _, next_node in self.graph.triples((node, None, None)):
-                    stack.append(next_node)
+                for subject, predicate, obj in graph.triples((node, None, None)):
+                    if predicate != RDF.type:
+                        subgraph.add(
+                            (subject, predicate, obj)
+                        )  # Add all outgoing edges of the current node
+                for s, p, next_node in graph.triples((node, None, None)):
+                    # stack.append(next_node)
+                    if not isinstance(next_node, BNode):
+                        stack.append(next_node)
+                    else:
+                        subgraph.add(
+                            (
+                                node,
+                                next(graph.objects(next_node, OWL.onProperty)),
+                                next(graph.objects(next_node, OWL.someValuesFrom)),
+                            )
+                        )
 
-        nx_graph = nx.Graph()
-        edge_labels = {}
+        nx_graph = nx.DiGraph()
         for subject, predicate, obj in subgraph:
             if isinstance(obj, URIRef):
-                nx_graph.add_edge(str(subject), str(obj))
-                edge_labels[(str(subject), str(obj))] = (
-                    "is_a" if predicate == RDF.type else str(predicate)
-                )
+                edge_data = {
+                    "label": "is_a" if predicate == RDF.type else str(predicate).split("/")[-1]
+                }
+                nx_graph.add_edge(str(subject).split("/")[-1], str(obj).split("/")[-1], **edge_data)
+
+        # Apply transitive reduction to remove redundancy
+        transitive_reduction_graph = nx.transitive_reduction(nx_graph)
+        transitive_reduction_graph.add_nodes_from(nx_graph.nodes(data=True))
+        transitive_reduction_graph.add_edges_from(
+            (u, v, nx_graph.edges[u, v]) for u, v in transitive_reduction_graph.edges
+        )
 
         # Layout the graph as a hierarchical tree
-        pos = nx.drawing.nx_agraph.graphviz_layout(nx_graph, prog="dot")
+        pos = nx.drawing.nx_agraph.graphviz_layout(transitive_reduction_graph, prog="dot")
 
         # Plot the graph as a hierarchical tree
         plt.figure(figsize=(10, 8))
         nx.draw(
-            nx_graph,
+            transitive_reduction_graph,
             pos,
             with_labels=True,
             node_size=1500,
@@ -206,21 +229,17 @@ class GraphGenerator:
             font_size=8,
             font_weight="bold",
         )
-
         # Draw edge labels on the graph
-        edge_labels_formatted = {edge: label.split("/")[-1] for edge, label in edge_labels.items()}
+        edge_labels = nx.get_edge_attributes(transitive_reduction_graph, "label")
+        edge_labels_formatted = {edge: label for edge, label in edge_labels.items()}
         nx.draw_networkx_edge_labels(
-            nx_graph, pos, edge_labels=edge_labels_formatted, font_size=8, font_color="red"
+            transitive_reduction_graph,
+            pos,
+            edge_labels=edge_labels_formatted,
+            font_size=8,
+            font_color="red",
         )
-
         plt.show()
-        # nx_graph = rdflib_to_networkx_multidigraph(self.graph)
-        # # Plot Networkx instance of RDF Graph
-        # pos = nx.spring_layout(nx_graph, scale=2, k=2)
-        # edge_labels = nx.get_edge_attributes(nx_graph, "r")
-        # nx.draw_networkx_edge_labels(nx_graph, pos, edge_labels=edge_labels)
-        # nx.draw(nx_graph, with_labels=True)
-        # plt.show()
 
 
 class RDFFormat(Enum):
