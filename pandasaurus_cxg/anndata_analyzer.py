@@ -58,21 +58,20 @@ class AnndataAnalyzer:
         """
         free_text_cell_type = [key for key, value in self._schema.items() if value]
         temp_result = []
-        cell_type_combinations = list(itertools.combinations(free_text_cell_type, 2))
-        for combination in cell_type_combinations:
-            field_name_1 = combination[1]
-            field_name_2 = combination[0]
-            if (
-                field_name_1 in self._anndata.obs.columns
-                and field_name_2 in self._anndata.obs.columns
-            ):
-                co_oc = self._filter_data_and_remove_duplicates(field_name_1, field_name_2, disease)
+        for field_name_2 in free_text_cell_type:
+            for field_name_1 in free_text_cell_type:
+                if (
+                    field_name_1 != field_name_2
+                    and field_name_1 in self._anndata.obs.columns
+                    and field_name_2 in self._anndata.obs.columns
+                ):
+                    co_oc = self._filter_data_and_drop_duplicates(field_name_1, field_name_2, disease)
 
-                if enrich:
-                    co_oc = self._enrich_co_annotation(co_oc, field_name_1, field_name_2)
+                    if enrich:
+                        co_oc = self._enrich_co_annotation(co_oc, field_name_1, field_name_2)
 
-                AnndataAnalyzer._assign_predicate_column(co_oc, field_name_1, field_name_2)
-                temp_result.extend(co_oc.to_dict(orient="records"))
+                    AnndataAnalyzer._assign_predicate_column(co_oc, field_name_1, field_name_2)
+                    temp_result.extend(co_oc.to_dict(orient="records"))
 
         result = [
             [item for sublist in [[k, v] for k, v in record.items()] for item in sublist]
@@ -114,7 +113,7 @@ class AnndataAnalyzer:
         co_oc = pd.concat([co_oc, df], axis=0).reset_index(drop=True)
         return co_oc
 
-    def _filter_data_and_remove_duplicates(self, field_name_1, field_name_2, disease):
+    def _filter_data_and_drop_duplicates(self, field_name_1, field_name_2, disease):
         # Filter the data based on the disease condition
         co_oc = (
             self._anndata.obs[
@@ -129,7 +128,8 @@ class AnndataAnalyzer:
 
     @staticmethod
     def _remove_duplicates(data: List[List[str]]):
-        # TODO do a clean up if it is necessary
+        # TODO do a clean up/rename if it is necessary
+        # Currently used only to clean up supercluster_of relations
         unique_data = []
 
         for sublist in data:
