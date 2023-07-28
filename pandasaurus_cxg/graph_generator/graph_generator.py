@@ -169,14 +169,19 @@ class GraphGenerator:
             raise InvalidGraphFormat(RDFFormat, valid_formats)
 
     def visualize_rdf_graph(self, start_node: List[str], file_path: str):
-        graph = Graph().parse(file_path, format="ttl") if file_path else self.graph
-        for node in start_node:
-            if not URIRef(node) in graph.subjects() or URIRef(node) in graph.objects():
-                raise ValueError(f"None of the nodes in the list {node} exist in the RDF graph.")
-
+        # TODO visualize all graph, with parametric annotation properties to better visualize the nodes.
+        # TODO apply redundancy striping to owl directly
+        stack = []
         visited = set()
-        stack = [URIRef(node) for node in start_node]
         subgraph = Graph()
+        graph = Graph().parse(file_path, format="ttl") if file_path else self.graph
+        if start_node:
+            for node in start_node:
+                if not URIRef(node) in graph.subjects():
+                    raise ValueError(
+                        f"None of the nodes in the list {node} exist in the RDF graph."
+                    )
+            stack = [URIRef(node) for node in start_node]
 
         while stack:
             node = stack.pop()
@@ -184,9 +189,8 @@ class GraphGenerator:
                 visited.add(node)
                 for subject, predicate, obj in graph.triples((node, None, None)):
                     if predicate != RDF.type:
-                        subgraph.add(
-                            (subject, predicate, obj)
-                        )  # Add all outgoing edges of the current node
+                        # Add all outgoing edges of the current node  # and not isinstance(obj, Literal)
+                        subgraph.add((subject, predicate, obj))
                 for s, p, next_node in graph.triples((node, None, None)):
                     # stack.append(next_node)
                     if not isinstance(next_node, BNode):
@@ -202,11 +206,25 @@ class GraphGenerator:
 
         nx_graph = nx.DiGraph()
         for subject, predicate, obj in subgraph:
-            if isinstance(obj, URIRef):
+            if isinstance(obj, URIRef) and predicate != RDF.type:
                 edge_data = {
                     "label": "is_a" if predicate == RDF.type else str(predicate).split("/")[-1]
                 }
-                nx_graph.add_edge(str(subject).split("/")[-1], str(obj).split("/")[-1], **edge_data)
+                nx_graph.add_edge(
+                    str(subject).split("/")[-1],
+                    str(obj).split("/")[-1],
+                    **edge_data,
+                )
+                # str([o for s, p, o in graph.triples((subject, None, None)) if isinstance(o, Literal)][-1])
+                # nx_graph.add_edge(
+                #     str(subgraph.value(subject=subject, predicate=self.ns["cell_type"]))
+                #     if subgraph.value(subject=subject, predicate=self.ns["cell_type"])
+                #     else str(subject).split("/")[-1],
+                #     subgraph.value(subject=obj, predicate=self.ns["cell_type"])
+                #     if subgraph.value(subject=obj, predicate=self.ns["cell_type"])
+                #     else str(obj).split("/")[-1],
+                #     **edge_data,
+                # )
 
         # Apply transitive reduction to remove redundancy
         transitive_reduction_graph = nx.transitive_reduction(nx_graph)
@@ -224,7 +242,7 @@ class GraphGenerator:
             transitive_reduction_graph,
             pos,
             with_labels=True,
-            node_size=1500,
+            node_size=1000,
             node_color="skyblue",
             font_size=8,
             font_weight="bold",
