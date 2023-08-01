@@ -133,8 +133,7 @@ dmypy.json
 *.ttl
 *.nt
 
-# pycharm/mac1
+# pycharm/mac
 .DS_Store
 .idea/
-.DS_Store
 .DS_Store
