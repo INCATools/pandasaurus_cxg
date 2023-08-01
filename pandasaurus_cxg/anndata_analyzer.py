@@ -1,4 +1,3 @@
-import itertools
 import os
 from enum import Enum
 from typing import List, Optional
@@ -65,7 +64,9 @@ class AnndataAnalyzer:
                     and field_name_1 in self._anndata.obs.columns
                     and field_name_2 in self._anndata.obs.columns
                 ):
-                    co_oc = self._filter_data_and_drop_duplicates(field_name_1, field_name_2, disease)
+                    co_oc = self._filter_data_and_drop_duplicates(
+                        field_name_1, field_name_2, disease
+                    )
 
                     if enrich:
                         co_oc = self._enrich_co_annotation(co_oc, field_name_1, field_name_2)
