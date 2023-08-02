@@ -41,12 +41,6 @@ class AnndataEnricher:
         # TODO Do we need to keep whole anndata? Would it be enough to keep the obs only?
         # file_path: The path to the file containing the anndata object.
         self._anndata = anndata
-        self.cell_type_dict = (
-            self._anndata.obs[["cell_type_ontology_term_id", "cell_type"]]
-            .drop_duplicates()
-            .set_index("cell_type_ontology_term_id")["cell_type"]
-            .to_dict()
-        )
         self.__seed_list = self._anndata.obs[cell_type_field].unique().tolist()
         self.__enricher = Query(self.__seed_list)
         self.__context_list = (
