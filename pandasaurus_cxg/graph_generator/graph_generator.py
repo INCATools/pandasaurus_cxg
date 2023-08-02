@@ -41,10 +41,18 @@ class GraphGenerator:
         else:
             self.enriched_df = enricher.enriched_df
         self.cell_type_dict = (
-            enricher.get_anndata()
-            .obs[["cell_type_ontology_term_id", "cell_type"]]
+            pd.concat(
+                [
+                    self.enriched_df[["s", "s_label"]],
+                    self.enriched_df[["o", "o_label"]].rename(
+                        columns={"o": "s", "o_label": "s_label"}
+                    ),
+                ],
+                axis=0,
+                ignore_index=True,
+            )
             .drop_duplicates()
-            .set_index("cell_type_ontology_term_id")["cell_type"]
+            .set_index("s")["s_label"]
             .to_dict()
         )
         self.ns = Namespace("http://example.org/")
