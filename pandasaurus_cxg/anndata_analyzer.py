@@ -4,7 +4,6 @@ from enum import Enum
 from typing import List, Optional
 
 import pandas as pd
-from pandas import DataFrame
 
 from pandasaurus_cxg.anndata_enricher import AnndataEnricher
 from pandasaurus_cxg.anndata_loader import AnndataLoader
@@ -23,7 +22,7 @@ class AnndataAnalyzer:
         schema_path (str): The path to the schema file.
 
     Attributes:
-        _anndata (DataFrame): The observation data from the AnnData object.
+        _anndata (pd.DataFrame): The observation data from the AnnData object.
         _schema (dict): The schema data loaded from the schema file.
 
     """
@@ -54,7 +53,7 @@ class AnndataAnalyzer:
                 Defaults to False.
 
         Returns:
-            DataFrame: The co-annotation report.
+            pd.DataFrame: The co-annotation report.
 
         """
         free_text_cell_type = [key for key, value in self._schema.items() if value]
@@ -81,7 +80,7 @@ class AnndataAnalyzer:
             for record in temp_result
         ]
         unique_result = AnndataAnalyzer._remove_duplicates(result)
-        return DataFrame(
+        return pd.DataFrame(
             [inner_list[:2] + inner_list[5:6] + inner_list[2:4] for inner_list in unique_result],
             columns=["field_name1", "value1", "predicate", "field_name2", "value2"],
         )
@@ -102,7 +101,7 @@ class AnndataAnalyzer:
                 desired.
 
         Returns:
-            DataFrame: The co-annotation report.
+            pd.DataFrame: The co-annotation report.
 
         """
         return self.co_annotation_report(disease, True)
