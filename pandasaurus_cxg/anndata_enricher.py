@@ -227,16 +227,14 @@ class AnndataEnricher:
 
     def create_cell_type_dict(self):
         # TODO Add empty dataframe exception
-        temp_df = pd.concat(
+        return pd.concat(
             [
                 self.enriched_df[["s", "s_label"]],
                 self.enriched_df[["o", "o_label"]].rename(columns={"o": "s", "o_label": "s_label"}),
             ],
             axis=0,
             ignore_index=True,
-        )
-        cell_type_dict = temp_df.drop_duplicates().set_index("s")["s_label"].to_dict()
-        return cell_type_dict
+        ).drop_duplicates().set_index("s")["s_label"].to_dict()
 
     def check_subclass_relationships(self, cell_type_list: List[str]):
         # TODO Add empty dataframe exception
