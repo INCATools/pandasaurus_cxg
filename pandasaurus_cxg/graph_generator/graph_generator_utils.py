@@ -3,7 +3,7 @@ from rdflib import Graph, URIRef
 
 
 def add_edge(nx_graph, subject, predicate, obj):
-    edge_data = {"label": str(predicate).split("/")[-1]}
+    edge_data = {"label": str(predicate).split("#")[-1] if "#" in predicate else str(predicate).split("/")[-1]}
     nx_graph.add_edge(
         str(subject),
         str(obj),
