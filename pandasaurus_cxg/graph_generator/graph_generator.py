@@ -1,3 +1,4 @@
+import logging
 import uuid
 from enum import Enum
 from typing import List, Optional
@@ -8,10 +9,19 @@ import pandas as pd
 from rdflib import OWL, RDF, RDFS, BNode, Graph, Literal, Namespace, URIRef
 
 from pandasaurus_cxg.anndata_enricher import AnndataEnricher
+from pandasaurus_cxg.graph_generator.graph_generator_utils import (
+    add_edge,
+    add_outgoing_edges_to_subgraph,
+    find_and_rotate_center_layout,
+)
+from pandasaurus_cxg.utils.logging_config import configure_logger
 from pandasaurus_cxg.utils.exceptions import (
     InvalidGraphFormat,
     MissingEnrichmentProcess,
 )
+
+# Set up logger
+logger = configure_logger()
 
 
 class GraphGenerator:
@@ -103,7 +113,7 @@ class GraphGenerator:
 
         # generate a resource for each free-text cell_type annotation and cell_type_ontology_term annotation
         cell_set_class = self.ns["CellSet"]
-        self.graph.add((cell_set_class, RDF.type, RDFS.Class))
+        self.graph.add((cell_set_class, RDF.type, OWL.Class))
         for _uuid, inner_dict in grouped_dict_uuid.items():
             resource = self.ns[_uuid]
             self.graph.add((resource, RDF.type, cell_set_class))
@@ -151,7 +161,7 @@ class GraphGenerator:
 
     def save_rdf_graph(
         self,
-        graph: Optional[Graph],
+        graph: Optional[Graph] = None,
         file_name: Optional[str] = "mygraph",
         _format: Optional[str] = "xml",
     ):
@@ -199,43 +209,40 @@ class GraphGenerator:
         visited = set()
         subgraph = Graph()
         stack = [URIRef(node) for node in start_node] if start_node else None
+        predicate_uri = URIRef(predicate) if predicate else None
 
         while stack:
             node = stack.pop()
             if node not in visited:
                 visited.add(node)
-            for s, p, o in graph.triples((node, self.ns[predicate] if predicate else None, None)):
+            for s, p, o in graph.triples((node, predicate_uri, None)):
                 # Add all outgoing edges of the current node
                 subgraph.add((s, p, o))
-            for s, p, next_node in graph.triples(
-                (node, self.ns[predicate] if predicate else None, None)
-            ):
+            for s, p, next_node in graph.triples((node, predicate_uri, None)):
                 if not isinstance(next_node, BNode):
                     stack.append(next_node)
-                # else:
-                #     subgraph.add(
-                #         (
-                #             node,
-                #             next(graph.objects(next_node, OWL.onProperty)),
-                #             next(graph.objects(next_node, OWL.someValuesFrom)),
-                #         )
-                #     )
+                else:
+                    _p = next(graph.objects(next_node, OWL.onProperty))
+                    _o = next(graph.objects(next_node, OWL.someValuesFrom))
+                    subgraph.add(
+                        (
+                            node,
+                            _p,
+                            _o,
+                        )
+                    )
+                    stack.append(_o)
                 # TODO not sure if we need this else or not
 
         if not start_node:
-            for s, p, o in graph.triples((None, self.ns[predicate] if predicate else None, None)):
-                # Add all outgoing edges of the current node
-                subgraph.add((s, p, o))
+            subgraph = add_outgoing_edges_to_subgraph(graph, predicate_uri)
 
         nx_graph = nx.DiGraph()
-        for subject, predicate, obj in subgraph:
-            if isinstance(obj, URIRef) and predicate != RDF.type:
-                edge_data = {"label": str(predicate).split("/")[-1]}
-                nx_graph.add_edge(
-                    str(subject).split("/")[-1],
-                    str(obj).split("/")[-1],
-                    **edge_data,
-                )
+        for s, p, o in subgraph:
+            if isinstance(o, URIRef) and p != RDF.type:
+                add_edge(nx_graph, o, p, s)
+            elif p != RDF.type:
+                nx_graph.add_node(str(s).split("/")[-1], label=str(o))
 
         # Apply transitive reduction to remove redundancy
         transitive_reduction_graph = nx.transitive_reduction(nx_graph)
@@ -244,12 +251,11 @@ class GraphGenerator:
             (u, v, nx_graph.edges[u, v]) for u, v in transitive_reduction_graph.edges
         )
 
-        # Layout the graph as a hierarchical tree
-        pos = nx.drawing.nx_agraph.graphviz_layout(transitive_reduction_graph, prog="dot")
+        pos = find_and_rotate_center_layout(transitive_reduction_graph)
+        plt.figure(figsize=(10, 10))
 
         # Plot the graph as a hierarchical tree
         node_labels = nx.get_node_attributes(transitive_reduction_graph, "label")
-        plt.figure(figsize=(10, 10))
         nx.draw(
             transitive_reduction_graph,
             pos,
@@ -272,44 +278,44 @@ class GraphGenerator:
         )
         plt.show()
 
-    def transitive_reduction(self, predicate: str, file_path: str, _format: str = "xml"):
+    def transitive_reduction(self, predicate_list: List[str], file_path: str, _format: str = "xml"):
         graph = Graph().parse(file_path, format="ttl") if file_path else self.graph
-        if predicate and not graph.query(f"ASK {{ ?s {self.ns[predicate].n3()} ?o }}"):
-            raise ValueError(f"The {self.ns[predicate]} relation does not exist in the graph")
+        invalid_predicates = []
+        for predicate in predicate_list:
+            if predicate and not graph.query(f"ASK {{ ?s <{predicate}> ?o }}"):
+                invalid_predicates.append(predicate)
+                continue
 
-        subgraph = Graph()
-        for s, p, o in graph.triples((None, self.ns[predicate] if predicate else None, None)):
-            # Add all outgoing edges of the current node
-            subgraph.add((s, p, o))
+            predicate_uri = URIRef(predicate) if predicate else None
+            subgraph = add_outgoing_edges_to_subgraph(graph, predicate_uri)
 
-        nx_graph = nx.DiGraph()
-        for subject, _predicate, obj in subgraph:
-            if isinstance(obj, URIRef) and _predicate != RDF.type:
-                edge_data = {
-                    "label": "is_a" if _predicate == RDF.type else str(predicate).split("/")[-1]
-                }
-                nx_graph.add_edge(
-                    str(subject).split("/")[-1],
-                    str(obj).split("/")[-1],
-                    **edge_data,
-                )
+            nx_graph = nx.DiGraph()
+            for s, p, o in subgraph:
+                if isinstance(o, URIRef) and p != RDF.type:
+                    add_edge(nx_graph, s, predicate, o)
 
-        # Apply transitive reduction to remove redundancy
-        transitive_reduction_graph = nx.transitive_reduction(nx_graph)
-        transitive_reduction_graph.add_edges_from(
-            (u, v, nx_graph.edges[u, v]) for u, v in transitive_reduction_graph.edges
-        )
-
-        # Remove redundant triples using nx graph
-        edge_diff = list(set(nx_graph.edges) - set(transitive_reduction_graph.edges))
-
-        for edge in edge_diff:
-            if graph.query(
-                f"ASK {{ {self.ns[edge[0]].n3()} {self.ns[predicate].n3()} {self.ns[edge[1]].n3()} }}"
-            ):
-                graph.remove((self.ns[edge[0]], self.ns[predicate], self.ns[edge[1]]))
+            # Apply transitive reduction to remove redundancy
+            transitive_reduction_graph = nx.transitive_reduction(nx_graph)
+            transitive_reduction_graph.add_edges_from(
+                (u, v, nx_graph.edges[u, v]) for u, v in transitive_reduction_graph.edges
+            )
+            # Remove redundant triples using nx graph
+            edge_diff = list(set(nx_graph.edges) - set(transitive_reduction_graph.edges))
+            for edge in edge_diff:
+                if graph.query(f"ASK {{ <{edge[0]}> <{predicate}> <{edge[1]}> }}"):
+                    graph.remove((URIRef(edge[0]), URIRef(predicate), URIRef(edge[1])))
+            logger.info(f"Transitive reduction has been applied on {predicate}.")
 
         self.save_rdf_graph(graph, f"{file_path.split('.')[0]}_non_redundant", _format)
+        logger.info(f"{file_path.split('.')[0]}_non_redundant has been saved.")
+
+        if invalid_predicates:
+            error_msg = (
+                f"The predicate '{invalid_predicates[0]}' do not exist in the graph"
+                if len(invalid_predicates) == 1
+                else f"The predicates {' ,'.join(invalid_predicates)} does not exist in the graph"
+            )
+            logger.error(error_msg)
 
 
 class RDFFormat(Enum):
