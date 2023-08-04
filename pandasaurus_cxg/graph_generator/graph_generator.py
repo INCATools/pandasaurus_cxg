@@ -240,9 +240,9 @@ class GraphGenerator:
         nx_graph = nx.DiGraph()
         for s, p, o in subgraph:
             if isinstance(o, URIRef) and p != RDF.type:
-                add_edge(nx_graph, o, p, s)
+                add_edge(nx_graph, s, p, o)
             elif p != RDF.type:
-                nx_graph.add_node(str(s).split("/")[-1], label=str(o))
+                nx_graph.add_node(str(s), label=str(o))
 
         # Apply transitive reduction to remove redundancy
         transitive_reduction_graph = nx.transitive_reduction(nx_graph)
@@ -277,6 +277,7 @@ class GraphGenerator:
             font_color="red",
         )
         plt.show()
+        plt.savefig("xx.png")
 
     def transitive_reduction(self, predicate_list: List[str], file_path: str, _format: str = "xml"):
         graph = Graph().parse(file_path, format="ttl") if file_path else self.graph
@@ -311,9 +312,9 @@ class GraphGenerator:
 
         if invalid_predicates:
             error_msg = (
-                f"The predicate '{invalid_predicates[0]}' do not exist in the graph"
+                f"The predicate '{invalid_predicates[0]}' does not exist in the graph"
                 if len(invalid_predicates) == 1
-                else f"The predicates {' ,'.join(invalid_predicates)} does not exist in the graph"
+                else f"The predicates {' ,'.join(invalid_predicates)} do not exist in the graph"
             )
             logger.error(error_msg)
 
