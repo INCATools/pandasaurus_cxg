@@ -12,6 +12,9 @@ python = "^3.9"
 pandas = "^2.0.2"
 pandasaurus = "0.2.3"
 anndata = "^0.9.1"
+rdflib = "^6.3.2"
+pygraphviz = "^1.11"
+oaklib = "^0.5.13"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.3.1"
@@ -29,6 +32,11 @@ secondary = true
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+[build-system.config-options]
+# Add the custom build options for pygraphviz here
+install = ["--use-pep517"]
+build_ext = ["--global-option=build_ext", "--build-option=-I$(brew --prefix graphviz)/include/", "--build-option=-L$(brew --prefix graphviz)/lib/"]
 
 [tool.black]
 line-length = 100

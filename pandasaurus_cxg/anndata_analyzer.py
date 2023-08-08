@@ -1,4 +1,3 @@
-import itertools
 import os
 from enum import Enum
 from typing import List, Optional
@@ -61,9 +60,9 @@ class AnndataAnalyzer:
         for field_name_2 in free_text_cell_type:
             for field_name_1 in free_text_cell_type:
                 if (
-                        field_name_1 != field_name_2
-                        and field_name_1 in self._anndata.obs.columns
-                        and field_name_2 in self._anndata.obs.columns
+                    field_name_1 != field_name_2
+                    and field_name_1 in self._anndata.obs.columns
+                    and field_name_2 in self._anndata.obs.columns
                 ):
                     co_oc = self._filter_data_and_drop_duplicates(
                         field_name_1, field_name_2, disease
@@ -129,17 +128,15 @@ class AnndataAnalyzer:
         return co_oc
 
     @staticmethod
-    def _remove_duplicates(data: List[List[str]]) -> List[List[str]]:
+    def _remove_duplicates(data: List[List[str]]):
+        # TODO do a clean up/rename if it is necessary
+        # Currently used only to clean up supercluster_of relations
         unique_data = []
-        unique_set = set()
 
         for sublist in data:
             if Predicate.SUPERCLUSTER_OF.value in sublist:
                 continue
-            sorted_sublist = tuple(sorted(set(sublist)))
-            if sorted_sublist not in unique_set:
-                unique_data.append(sublist)
-                unique_set.add(sorted_sublist)
+            unique_data.append(sublist)
         return unique_data
 
     @staticmethod

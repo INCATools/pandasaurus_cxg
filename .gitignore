@@ -128,8 +128,12 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
+# Ontology files
+*.owl
+*.ttl
+*.nt
+
 # pycharm/mac
 .DS_Store
 .idea/
-.DS_Store
 .DS_Store

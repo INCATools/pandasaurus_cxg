@@ -23,9 +23,9 @@ class AnndataEnricher:
         anndata: AnnData,
         cell_type_field: Optional[str] = "cell_type_ontology_term_id",
         context_field: Optional[str] = "tissue_ontology_term_id",
-        ontology_list_for_slims: Optional[List[str]] = ["Cell Ontology"],
+        ontology_list_for_slims: Optional[List[str]] = None,
     ):
-        """Initialize the AnndataEnricher instance.
+        """Initialize the AnndataEnricher instance with AnnData object.
 
         Args:
 
@@ -38,8 +38,9 @@ class AnndataEnricher:
                 The slim list is used in minimal_slim_enrichment and full_slim_enrichment.
                 Defaults to "Cell Ontology"
         """
+        if ontology_list_for_slims is None:
+            ontology_list_for_slims = ["Cell Ontology"]
         # TODO Do we need to keep whole anndata? Would it be enough to keep the obs only?
-        # file_path: The path to the file containing the anndata object.
         self._anndata = anndata
         self.__seed_list = self._anndata.obs[cell_type_field].unique().tolist()
         self.__enricher = Query(self.__seed_list)
@@ -60,8 +61,23 @@ class AnndataEnricher:
         file_path: str,
         cell_type_field: Optional[str] = "cell_type_ontology_term_id",
         context_field: Optional[str] = "tissue_ontology_term_id",
-        ontology_list_for_slims: Optional[List[str]] = ["Cell Ontology"],
+        ontology_list_for_slims: Optional[List[str]] = None,
     ):
+        """Initialize the AnndataEnricher instance with file path.
+
+        Args:
+
+            file_path: The path to the file containing the anndata object.
+            cell_type_field: The cell type information in the anndata object.
+                Defaults to "cell_type_ontology_term_id".
+            context_field: The context information in the anndata object.
+                Defaults to "tissue_ontology_term_id".
+            ontology_list_for_slims: The ontology list for generating the slim list.
+                The slim list is used in minimal_slim_enrichment and full_slim_enrichment.
+                Defaults to "Cell Ontology"
+        """
+        if ontology_list_for_slims is None:
+            ontology_list_for_slims = ["Cell Ontology"]
         return AnndataEnricher(
             AnndataLoader.load_from_file(file_path),
             cell_type_field,
@@ -218,6 +234,9 @@ class AnndataEnricher:
 
     def get_seed_list(self):
         return self.__seed_list
+
+    def get_anndata(self):
+        return self._anndata
 
     def create_cell_type_dict(self):
         # TODO Add empty dataframe exception
