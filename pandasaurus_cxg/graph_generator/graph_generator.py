@@ -246,7 +246,7 @@ class GraphGenerator:
             if isinstance(o, URIRef) and p != RDF.type:
                 add_edge(nx_graph, s, p, o)
             elif p == RDFS.label:
-                add_node(nx_graph, s, p, o, {})
+                add_node(nx_graph, s, o)
 
         # Apply transitive reduction to remove redundancy
         transitive_reduction_graph = nx.transitive_reduction(nx_graph)

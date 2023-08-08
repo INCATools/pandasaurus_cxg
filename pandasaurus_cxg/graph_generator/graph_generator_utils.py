@@ -1,14 +1,24 @@
+from typing import Dict
+
 import networkx as nx
 from rdflib import Graph, URIRef
 
 
 def add_edge(nx_graph, subject, predicate, obj):
-    edge_data = {"label": str(predicate).split("#")[-1] if "#" in predicate else str(predicate).split("/")[-1]}
+    edge_data = {
+        "label": str(predicate).split("#")[-1]
+        if "#" in predicate
+        else str(predicate).split("/")[-1]
+    }
     nx_graph.add_edge(
         str(subject),
         str(obj),
         **edge_data,
     )
+
+
+def add_node(nx_graph, subject, obj):
+    nx_graph.add_node(str(subject), label=str(obj))
 
 
 def add_outgoing_edges_to_subgraph(graph, predicate_uri=None):
