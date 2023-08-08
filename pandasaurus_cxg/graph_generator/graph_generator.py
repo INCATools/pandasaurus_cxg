@@ -1,24 +1,26 @@
-import logging
+import textwrap
 import uuid
 from enum import Enum
-from typing import List, Optional
+from typing import Dict, List, Optional
 
 import matplotlib.pyplot as plt
 import networkx as nx
 import pandas as pd
 from rdflib import OWL, RDF, RDFS, BNode, Graph, Literal, Namespace, URIRef
+from rdflib.plugins.sparql import prepareQuery
 
 from pandasaurus_cxg.anndata_enricher import AnndataEnricher
 from pandasaurus_cxg.graph_generator.graph_generator_utils import (
     add_edge,
+    add_node,
     add_outgoing_edges_to_subgraph,
     find_and_rotate_center_layout,
 )
-from pandasaurus_cxg.utils.logging_config import configure_logger
 from pandasaurus_cxg.utils.exceptions import (
     InvalidGraphFormat,
     MissingEnrichmentProcess,
 )
+from pandasaurus_cxg.utils.logging_config import configure_logger
 
 # Set up logger
 logger = configure_logger()
@@ -121,6 +123,8 @@ class GraphGenerator:
                 if k == "subcluster_of":
                     continue
                 self.graph.add((resource, self.ns[k], Literal(v)))
+
+        self.add_label_to_terms()
 
         # add relationship between each resource based on their predicate in the co_annotation_report
         subcluster = self.ns["subcluster_of"]
@@ -241,8 +245,8 @@ class GraphGenerator:
         for s, p, o in subgraph:
             if isinstance(o, URIRef) and p != RDF.type:
                 add_edge(nx_graph, s, p, o)
-            elif p != RDF.type:
-                nx_graph.add_node(str(s), label=str(o))
+            elif p == RDFS.label:
+                add_node(nx_graph, s, p, o, {})
 
         # Apply transitive reduction to remove redundancy
         transitive_reduction_graph = nx.transitive_reduction(nx_graph)
@@ -256,12 +260,15 @@ class GraphGenerator:
 
         # Plot the graph as a hierarchical tree
         node_labels = nx.get_node_attributes(transitive_reduction_graph, "label")
+        node_labels = {
+            node: "\n".join(textwrap.wrap(label, width=10)) for node, label in node_labels.items()
+        }
         nx.draw(
             transitive_reduction_graph,
             pos,
             with_labels=True,
             labels=node_labels,
-            node_size=1000,
+            node_size=2000,
             node_color="skyblue",
             font_size=8,
             font_weight="bold",
@@ -277,7 +284,6 @@ class GraphGenerator:
             font_color="red",
         )
         plt.show()
-        plt.savefig("xx.png")
 
     def transitive_reduction(self, predicate_list: List[str], file_path: str, _format: str = "xml"):
         graph = Graph().parse(file_path, format="ttl") if file_path else self.graph
@@ -317,6 +323,60 @@ class GraphGenerator:
                 else f"The predicates {' ,'.join(invalid_predicates)} do not exist in the graph"
             )
             logger.error(error_msg)
+
+    def add_label_to_terms(self, graph_: Graph = None):
+        graph = graph_ if graph_ else self.graph
+        # TODO have a better way to handle priority assignment and have an auto default assignment
+        priority = {
+            "subclass.l3": 1,
+            "subclass.l2": 2,
+            "subclass.full": 3,
+            "subclass.l1": 4,
+            "cell_type": 5,
+            "class": 6,
+        }
+        unique_subjects_query = (
+            "SELECT DISTINCT ?subject WHERE { ?subject ?predicate ?object FILTER (isIRI(?subject))}"
+        )
+        properties_query = prepareQuery(
+            "SELECT ?predicate ?object WHERE { ?subject ?predicate ?object. filter (isLiteral(?object) && ?predicate != rdfs:label)}"
+        )
+        for result in graph.query(unique_subjects_query):
+            resource = result.subject
+            label_field = (None, 0)
+            for properties_result in graph.query(
+                properties_query, initBindings={"subject": result.subject}, initNs={"rdfs": RDFS}
+            ):
+                predicate = properties_result.predicate
+                object_ = properties_result.object
+                priority_value = priority.get(str(predicate).split("/")[-1], 0)
+                if priority_value > label_field[1]:
+                    label_field = [str(object_), priority_value]
+            if label_field[0]:
+                graph.add((resource, RDFS.label, Literal(label_field[0])))
+
+    def set_default_priority(self) -> Dict[str, int]:
+        """
+        Retrieve distinct predicates associated with non-label literal objects in the RDF graph.
+
+        This function prepares and executes a SPARQL query to find predicates that are associated
+        with triples where the object is a literal and the predicate is not 'rdfs:label'.
+
+        Returns:
+            A dictionary containing the distinct non-label literal predicates as keys and their
+                  corresponding order index (starting from 1) as values.
+        """
+        # TODO This will be refactored
+        sparql_query = prepareQuery(
+            """
+            SELECT DISTINCT ?predicate
+            WHERE {
+                ?subject ?predicate ?object. FILTER(isLiteral(?object) && ?predicate != rdfs:label)
+            }
+        """
+        )
+        results = self.graph.query(sparql_query, initNs={"rdfs": RDFS})
+        return {str(result["predicate"]): i + 1 for i, result in enumerate(results)}
 
 
 class RDFFormat(Enum):
