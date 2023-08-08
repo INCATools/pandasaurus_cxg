@@ -48,7 +48,7 @@ class AnndataAnalyzer:
                 given disease. If provided, only the rows matching the specified disease will be
                 included in the filtering process. Defaults to None if no disease filtering is
                 desired.
-            enrich: Flag to either enable or disable enrichment in co_annotation report.
+            enrich (bool): Flag to either enable or disable enrichment in co_annotation report.
                 Defaults to False.
 
         Returns:
@@ -103,7 +103,7 @@ class AnndataAnalyzer:
             pd.DataFrame: The co-annotation report.
 
         """
-        return self.co_annotation_report(self, disease, True)
+        return self.co_annotation_report(disease, True)
 
     def _enrich_co_annotation(self, co_oc, field_name_1, field_name_2):
         enricher = AnndataEnricher(self._anndata)
