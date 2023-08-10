@@ -29,7 +29,7 @@ class AnndataEnricher:
 
         Args:
 
-            anndata: The AnnData object
+            anndata: The AnnData object.
             cell_type_field: The cell type information in the anndata object.
                 Defaults to "cell_type_ontology_term_id".
             context_field: The context information in the anndata object.
