@@ -159,9 +159,9 @@ class GraphGenerator:
                 self.graph.add((s, RDF.type, class_expression_bnode))
         # add subClassOf between terms in CL enrichment
         for _, row in self.enriched_df.iterrows():
-            for s, _, _ in self.graph.triples((None, RDFS.label, Literal(row["s_label"]))):
-                for o, _, _ in self.graph.triples((None, RDFS.label, Literal(row["o_label"]))):
-                    self.graph.add((s, RDFS.subClassOf, o))
+            s = cl_namespace[row["s"].split(":")[-1]]
+            o = cl_namespace[row["o"].split(":")[-1]]
+            self.graph.add((s, RDFS.subClassOf, o))
 
     def save_rdf_graph(
         self,
