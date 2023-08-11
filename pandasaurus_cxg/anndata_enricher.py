@@ -3,10 +3,10 @@ from typing import List, Optional
 
 import pandas as pd
 from anndata import AnnData
-from pandasaurus.query import Query
+from pandasaurus.query import Graph, Query
 from pandasaurus.slim_manager import SlimManager
 
-from pandasaurus_cxg.anndata_loader import AnndataLoader
+from pandasaurus_cxg.utils.anndata_loader import AnndataLoader
 from pandasaurus_cxg.utils.exceptions import (
     CellTypeNotFoundError,
     InvalidSlimName,
@@ -43,7 +43,7 @@ class AnndataEnricher:
         # TODO Do we need to keep whole anndata? Would it be enough to keep the obs only?
         self._anndata = anndata
         self.__seed_list = self._anndata.obs[cell_type_field].unique().tolist()
-        self.__enricher = Query(self.__seed_list)
+        self.enricher = Query(self.__seed_list)
         self.__context_list = (
             None
             if context_field not in self._anndata.obs.keys()
@@ -54,7 +54,6 @@ class AnndataEnricher:
             for ontology in ontology_list_for_slims
             for slim in SlimManager.get_slim_list(ontology)
         ]
-        self.enriched_df = pd.DataFrame()
 
     @staticmethod
     def from_file_path(
@@ -91,8 +90,8 @@ class AnndataEnricher:
         Returns:
             The enriched results as a pandas DataFrame.
         """
-        self.enriched_df = self.__enricher.simple_enrichment()
-        return self.enriched_df
+        # self.enriched_df = self.enricher.simple_enrichment()
+        return self.enricher.simple_enrichment()
 
     def minimal_slim_enrichment(self, slim_list: List[str]) -> pd.DataFrame:
         """Perform minimal slim enrichment analysis.
@@ -104,8 +103,8 @@ class AnndataEnricher:
            The enriched results as a pandas DataFrame.
         """
         self.validate_slim_list(slim_list)
-        self.enriched_df = self.__enricher.minimal_slim_enrichment(slim_list)
-        return self.enriched_df
+        # self.enriched_df = self.enricher.minimal_slim_enrichment(slim_list)
+        return self.enricher.minimal_slim_enrichment(slim_list)
 
     def full_slim_enrichment(self, slim_list: List[str]) -> pd.DataFrame:
         """Perform full slim enrichment analysis.
@@ -117,8 +116,8 @@ class AnndataEnricher:
             The enriched results as a pandas DataFrame.
         """
         self.validate_slim_list(slim_list)
-        self.enriched_df = self.__enricher.full_slim_enrichment(slim_list)
-        return self.enriched_df
+        # self.enriched_df = self.enricher.full_slim_enrichment(slim_list)
+        return self.enricher.full_slim_enrichment(slim_list)
 
     def contextual_slim_enrichment(self) -> Optional[pd.DataFrame]:
         """Perform contextual slim enrichment analysis.
@@ -128,12 +127,16 @@ class AnndataEnricher:
                 otherwise None.
         """
         # TODO Better handle datasets without tissue field
-        self.enriched_df = (
-            self.__enricher.contextual_slim_enrichment(self.__context_list)
+        # self.enriched_df = (
+        #     self.enricher.contextual_slim_enrichment(self.__context_list)
+        #     if self.__context_list
+        #     else None
+        # )
+        return (
+            self.enricher.contextual_slim_enrichment(self.__context_list)
             if self.__context_list
             else None
         )
-        return self.enriched_df
 
     def filter_anndata_with_enriched_cell_type(self, cell_type: str) -> pd.DataFrame:
         """Filter the original anndata object based on enriched cell types.
@@ -152,9 +155,11 @@ class AnndataEnricher:
         # TODO Add empty dataframe exception
         cell_type_dict = self.create_cell_type_dict()
         if cell_type not in cell_type_dict:
-            raise CellTypeNotFoundError(cell_type, cell_type_dict.keys())
+            raise CellTypeNotFoundError([cell_type], cell_type_dict.keys())
 
-        cell_type_group = self.enriched_df[self.enriched_df["o"] == cell_type]["s"].tolist()
+        cell_type_group = self.enricher.enriched_df[self.enricher.enriched_df["o"] == cell_type][
+            "s"
+        ].tolist()
         cell_type_group.append(cell_type)
 
         return self._anndata.obs[
@@ -195,7 +200,7 @@ class AnndataEnricher:
         # Check if any cell_type in cell_type_list is not in cell_type_dict
         missing_cell_types = set(cell_type_list) - set(cell_type_dict.keys())
         if missing_cell_types:
-            raise CellTypeNotFoundError(missing_cell_types, list(cell_type_dict.keys()))
+            raise CellTypeNotFoundError(list(missing_cell_types), list(cell_type_dict.keys()))
 
         # preprocess
         subclass_relation = self.check_subclass_relationships(cell_type_list)
@@ -214,7 +219,7 @@ class AnndataEnricher:
         Args:
             property_list (List[str]): The list of properties to include in the enrichment analysis.
         """
-        self.__enricher = Query(self.__seed_list, property_list)
+        self.enricher = Query(self.__seed_list, property_list)
 
     def validate_slim_list(self, slim_list):
         """Check if any slim term in the given list is invalid.
@@ -243,8 +248,8 @@ class AnndataEnricher:
         return (
             pd.concat(
                 [
-                    self.enriched_df[["s", "s_label"]],
-                    self.enriched_df[["o", "o_label"]].rename(
+                    self.enricher.enriched_df[["s", "s_label"]],
+                    self.enricher.enriched_df[["o", "o_label"]].rename(
                         columns={"o": "s", "o_label": "s_label"}
                     ),
                 ],
@@ -260,17 +265,17 @@ class AnndataEnricher:
         # TODO Add empty dataframe exception
         subclass_relation = []
         for s, o in itertools.combinations(cell_type_list, 2):
-            if not self.enriched_df[
-                (self.enriched_df["s"] == s)
-                & (self.enriched_df["p"] == "rdfs:subClassOf")
-                & (self.enriched_df["o"] == o)
+            if not self.enricher.enriched_df[
+                (self.enricher.enriched_df["s"] == s)
+                & (self.enricher.enriched_df["p"] == "rdfs:subClassOf")
+                & (self.enricher.enriched_df["o"] == o)
             ].empty:
                 subclass_relation.append([s, o])
 
-            if not self.enriched_df[
-                (self.enriched_df["s"] == o)
-                & (self.enriched_df["p"] == "rdfs:subClassOf")
-                & (self.enriched_df["o"] == s)
+            if not self.enricher.enriched_df[
+                (self.enricher.enriched_df["s"] == o)
+                & (self.enricher.enriched_df["p"] == "rdfs:subClassOf")
+                & (self.enricher.enriched_df["o"] == s)
             ].empty:
                 subclass_relation.append([o, s])
         return subclass_relation
