@@ -3,7 +3,7 @@ from typing import List, Optional
 
 import pandas as pd
 from anndata import AnnData
-from pandasaurus.query import Graph, Query
+from pandasaurus.query import Query
 from pandasaurus.slim_manager import SlimManager
 
 from pandasaurus_cxg.utils.anndata_loader import AnndataLoader
@@ -90,7 +90,6 @@ class AnndataEnricher:
         Returns:
             The enriched results as a pandas DataFrame.
         """
-        # self.enriched_df = self.enricher.simple_enrichment()
         return self.enricher.simple_enrichment()
 
     def minimal_slim_enrichment(self, slim_list: List[str]) -> pd.DataFrame:
@@ -103,7 +102,6 @@ class AnndataEnricher:
            The enriched results as a pandas DataFrame.
         """
         self.validate_slim_list(slim_list)
-        # self.enriched_df = self.enricher.minimal_slim_enrichment(slim_list)
         return self.enricher.minimal_slim_enrichment(slim_list)
 
     def full_slim_enrichment(self, slim_list: List[str]) -> pd.DataFrame:
@@ -116,7 +114,6 @@ class AnndataEnricher:
             The enriched results as a pandas DataFrame.
         """
         self.validate_slim_list(slim_list)
-        # self.enriched_df = self.enricher.full_slim_enrichment(slim_list)
         return self.enricher.full_slim_enrichment(slim_list)
 
     def contextual_slim_enrichment(self) -> Optional[pd.DataFrame]:
@@ -127,11 +124,6 @@ class AnndataEnricher:
                 otherwise None.
         """
         # TODO Better handle datasets without tissue field
-        # self.enriched_df = (
-        #     self.enricher.contextual_slim_enrichment(self.__context_list)
-        #     if self.__context_list
-        #     else None
-        # )
         return (
             self.enricher.contextual_slim_enrichment(self.__context_list)
             if self.__context_list
