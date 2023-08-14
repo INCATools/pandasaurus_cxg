@@ -13,7 +13,6 @@ pandas = "^2.0.2"
 pandasaurus = "0.3.0"
 anndata = "^0.9.1"
 rdflib = "^6.3.2"
-pygraphviz = "^1.11"
 oaklib = "^0.5.13"
 
 [tool.poetry.group.dev.dependencies]
