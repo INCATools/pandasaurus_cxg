@@ -10,8 +10,7 @@ packages = [{include = "pandasaurus_cxg"}]
 [tool.poetry.dependencies]
 python = "^3.9"
 pandas = "^2.0.2"
-pandasaurus = { path = "/Users/ugur/github/PandaSaurus/dist/pandasaurus-0.3.1.tar.gz" }
-#pandasaurus = "0.3.0"
+pandasaurus = "0.3.1"
 anndata = "^0.9.1"
 rdflib = "^6.3.2"
 oaklib = "^0.5.13"

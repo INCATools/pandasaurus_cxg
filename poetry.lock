@@ -1619,15 +1619,8 @@ name = "pandasaurus"
 version = "0.3.1"
 description = "Supporting simple queries over ontology annotations in dataframes, using UberGraph queries."
 optional = false
-python-versions = ">=3.9,<4.0"
-files = [
-    {file = "pandasaurus-0.3.1.tar.gz", hash = "sha256:a8996a8b67c069da107142d8c376f04713453b5225a143a6f0879d9c5712544f"},
-]
-
-[package.dependencies]
-oaklib = ">=0.5.8,<0.6.0"
-pandas = ">=2.0.1,<3.0.0"
-rdflib = ">=6.3.2,<7.0.0"
+python-versions = "*"
+files = []
 
 [package.source]
 type = "file"
@@ -3049,4 +3042,4 @@ testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "p
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.9"
-content-hash = "165e4a8e1780533b3dd5b115181aef15ba39109f7699ebe0b3edde299dff71c8"
+content-hash = "d1a03da81bcd5c8663252c291f0621775cc5905d15e40a7c515a2f53d9fc0b87"
