@@ -1619,12 +1619,21 @@ name = "pandasaurus"
 version = "0.3.1"
 description = "Supporting simple queries over ontology annotations in dataframes, using UberGraph queries."
 optional = false
-python-versions = "*"
-files = []
+python-versions = ">=3.9,<4.0"
+files = [
+    {file = "pandasaurus-0.3.1-py3-none-any.whl", hash = "sha256:340f26209373e55cb7f9ba3bfe4531871519aab4e39da68049e198a9dd8008c6"},
+    {file = "pandasaurus-0.3.1.tar.gz", hash = "sha256:d7824139ff9209559db1e899379983a16a98c3084e2a9c8650e36e893cb2252d"},
+]
+
+[package.dependencies]
+oaklib = ">=0.5.8,<0.6.0"
+pandas = ">=2.0.1,<3.0.0"
+rdflib = ">=6.3.2,<7.0.0"
 
 [package.source]
-type = "file"
-url = "../PandaSaurus/dist/pandasaurus-0.3.1.tar.gz"
+type = "legacy"
+url = "https://test.pypi.org/simple"
+reference = "test"
 
 [[package]]
 name = "pansql"
