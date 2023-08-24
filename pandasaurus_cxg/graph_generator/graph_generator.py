@@ -19,6 +19,7 @@ from pandasaurus_cxg.graph_generator.graph_generator_utils import (
     add_outgoing_edges_to_subgraph,
     find_and_rotate_center_layout,
 )
+from pandasaurus_cxg.graph_generator.graph_predicates import CLUSTER, CONSIST_OF, SUBCLUSTER_OF
 from pandasaurus_cxg.utils.exceptions import (
     InvalidGraphFormat,
     MissingEnrichmentProcess,
@@ -116,8 +117,10 @@ class GraphGenerator:
                 grouped_dict_uuid[str(uuid.uuid4())] = temp_dict
 
         # generate a resource for each free-text cell_type annotation and cell_type_ontology_term annotation
-        cell_set_class = self.ns["CellSet"]
+        # cell_set_class = self.ns["CellSet"]
+        cell_set_class = URIRef(CLUSTER.get("iri"))
         self.graph.add((cell_set_class, RDF.type, OWL.Class))
+        self.graph.add((cell_set_class, RDFS.label, Literal(CLUSTER.get("label"))))
         for _uuid, inner_dict in grouped_dict_uuid.items():
             resource = self.ns[_uuid]
             self.graph.add((resource, RDF.type, cell_set_class))
@@ -127,7 +130,9 @@ class GraphGenerator:
                 self.graph.add((resource, self.ns[k], Literal(v)))
 
         # add relationship between each resource based on their predicate in the co_annotation_report
-        subcluster = self.ns["subcluster_of"]
+        # subcluster = self.ns["subcluster_of"]
+        subcluster = URIRef(SUBCLUSTER_OF.get("iri"))
+        self.graph.add((subcluster, RDFS.label, Literal(SUBCLUSTER_OF.get("label"))))
         self.graph.add((subcluster, RDF.type, OWL.ObjectProperty))
         for _uuid, inner_dict in grouped_dict_uuid.items():
             resource = self.ns[_uuid]
@@ -145,6 +150,8 @@ class GraphGenerator:
         """
         # add cell_type nodes and consists_of relations
         cl_namespace = Namespace("http://purl.obolibrary.org/obo/CL_")
+        consist_of = URIRef(CONSIST_OF.get("iri"))
+        self.graph.add((consist_of, RDFS.label, Literal(CONSIST_OF.get("label"))))
         for curie, label in self.cell_type_dict.items():
             resource = cl_namespace[curie.split(":")[-1]]
             self.graph.add((resource, RDFS.label, Literal(label)))
@@ -153,7 +160,8 @@ class GraphGenerator:
                 # Add the triples to represent the restriction
                 class_expression_bnode = BNode()
                 self.graph.add((class_expression_bnode, RDF.type, OWL.Restriction))
-                self.graph.add((class_expression_bnode, OWL.onProperty, self.ns["consist_of"]))
+                # self.graph.add((class_expression_bnode, OWL.onProperty, self.ns["consist_of"]))
+                self.graph.add((class_expression_bnode, OWL.onProperty, consist_of))
                 self.graph.add((class_expression_bnode, OWL.someValuesFrom, resource))
                 # Add the restriction
                 self.graph.add((s, RDF.type, class_expression_bnode))
