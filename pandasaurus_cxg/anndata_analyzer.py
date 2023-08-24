@@ -1,12 +1,14 @@
+import json
 import os
 from enum import Enum
 from typing import List, Optional
 
 import pandas as pd
+from anndata import AnnData
 
 from pandasaurus_cxg.anndata_enricher import AnndataEnricher
 from pandasaurus_cxg.anndata_loader import AnndataLoader
-from pandasaurus_cxg.schema.schema_loader import read_json_file
+from pandasaurus_cxg.schema.cell_x_gene_schema import required_fields
 
 # Check if the DEBUG environment variable is set
 debug_mode = os.getenv("DEBUG")
@@ -17,27 +19,72 @@ class AnndataAnalyzer:
     A class for providing methods for different type of analysis in an AnnData object.
 
     Args:
-        file_path (str): The path to the AnnData file.
-        schema_path (str): The path to the schema file.
+        anndata (AnnData): The AnnData object.
+        author_cell_type_list (Optional[str]):Names of optional free text cell type fields.
 
     Attributes:
         _anndata (pd.DataFrame): The observation data from the AnnData object.
-        _schema (dict): The schema data loaded from the schema file.
+        all_cell_type_identifiers (List[str]): All available cell type identifiers.
 
     """
 
-    def __init__(self, file_path: str, schema_path: str):
+    def __init__(self, anndata: AnnData, author_cell_type_list: Optional[str] = None):
         """
-        Initializes an instance of the AnndataAnalyzer class.
+        IInitializes the AnndataAnalyzer instance with AnnData object.
+
+        Args:
+            anndata (AnnData): The AnnData object.
+            author_cell_type_list (Optional[str]): Names of optional free text cell type fields.
+                If the 'obs_meta' field is missing in 'anndata.uns', this parameter should be set.
+                This is used to define free text cell type fields.
+
+        Raises:
+            ValueError: If the 'obs_meta' field is missing in anndata.uns and author_cell_type_list is not provided.
+                This indicates that the necessary information about cell types is not available.
+        """
+        self._anndata = anndata
+        try:
+            obs_meta = json.loads(anndata.uns["obs_meta"])
+            self.all_cell_type_identifiers = [
+                meta.get("field_name")
+                for meta in obs_meta
+                if meta.get("field_type") == "author_cell_type_label"
+            ] + ["cell_type"]
+        except KeyError as e:
+            if author_cell_type_list:
+                self.all_cell_type_identifiers = author_cell_type_list + ["cell_type"]
+                self._anndata.uns["obs_meta"] = json.dumps(
+                    [
+                        [{"field_name": item, "field_type": "author_cell_type_label"}]
+                        for item in author_cell_type_list
+                    ]
+                )
+                # TODO do we need to save this?
+            else:
+                available_free_text_fields = sorted(
+                    list(set(self._anndata.obs.columns) - set(required_fields))
+                )
+                raise ValueError(
+                    "AnndataAnalyzer initialization error:\n\n"
+                    "The 'obs_meta' field is missing in anndata.uns!\n"
+                    "If this field is absent, you can provide a list of field names from the AnnData file "
+                    "using the free_text_fields parameter.\n"
+                    f"Available free text fields are: {', '.join(available_free_text_fields)}"
+                )
+
+    @staticmethod
+    def from_file_path(file_path: str, author_cell_type_list: Optional[str] = None):
+        """
+        Initializes the AnndataAnalyzer instance with file path.
 
         Args:
             file_path (str): The path to the AnnData file.
-            schema_path (str): The path to the schema file.
+            author_cell_type_list (Optional[str]): Names of optional free text cell type fields.
+                If the 'obs_meta' field is missing in 'anndata.uns', this parameter should be set.
+                This is used to define free text cell type fields.
 
         """
-        self.file_path = file_path
-        self._anndata = AnndataLoader.load_from_file(file_path)
-        self._schema = read_json_file(schema_path)
+        return AnndataAnalyzer(AnndataLoader.load_from_file(file_path), author_cell_type_list)
 
     def co_annotation_report(self, disease: Optional[str] = None, enrich: bool = False):
         """
@@ -55,10 +102,9 @@ class AnndataAnalyzer:
             pd.DataFrame: The co-annotation report.
 
         """
-        free_text_cell_type = [key for key, value in self._schema.items() if value]
         temp_result = []
-        for field_name_2 in free_text_cell_type:
-            for field_name_1 in free_text_cell_type:
+        for field_name_2 in self.all_cell_type_identifiers:
+            for field_name_1 in self.all_cell_type_identifiers:
                 if (
                     field_name_1 != field_name_2
                     and field_name_1 in self._anndata.obs.columns
