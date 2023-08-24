@@ -19,7 +19,11 @@ from pandasaurus_cxg.graph_generator.graph_generator_utils import (
     add_outgoing_edges_to_subgraph,
     find_and_rotate_center_layout,
 )
-from pandasaurus_cxg.graph_generator.graph_predicates import CLUSTER, CONSIST_OF, SUBCLUSTER_OF
+from pandasaurus_cxg.graph_generator.graph_predicates import (
+    CLUSTER,
+    CONSIST_OF,
+    SUBCLUSTER_OF,
+)
 from pandasaurus_cxg.utils.exceptions import (
     InvalidGraphFormat,
     MissingEnrichmentProcess,
@@ -205,6 +209,31 @@ class GraphGenerator:
             raise InvalidGraphFormat(RDFFormat, valid_formats)
 
     def visualize_rdf_graph(self, start_node: List[str], predicate: str, file_path: str):
+        """
+        Visualizes an RDF graph using NetworkX and Matplotlib, focusing on specified nodes and predicates.
+
+        Args:
+            start_node (List[str]): A list of starting node URIs for visualization.
+                If provided, the visualization will focus on these nodes and their relationships.
+            predicate (str): The predicate URI to visualize relationships.
+                If provided, the visualization will show relationships with this predicate.
+            file_path (str): Path to an RDF file in TTL format to load the graph from.
+                If provided, the graph will be loaded from this file. If empty, the method
+                will use the instance's 'graph' attribute.
+
+        Raises:
+            ValueError: If the 'predicate' does not exist in the graph or if none of the 'start_node'
+                URIs exist in the RDF graph.
+
+        Note:
+            - The method uses NetworkX to create a hierarchical tree visualization of the RDF graph.
+            - The visualization is focused on specific nodes and their relationships using the 'start_node'
+              and 'predicate' parameters.
+            - If the 'start_node' and 'predicate' parameter are not provided all graph will be visualized.
+              Since it is not optimized to visualize all graph, it is not suggested to use without
+              setting these parameters.
+
+        """
         # TODO visualize all graph, with parametric annotation properties to better visualize the nodes.
         # TODO apply redundancy striping to owl directly
         graph = Graph().parse(file_path, format="ttl") if file_path else self.graph
@@ -292,6 +321,7 @@ class GraphGenerator:
         plt.show()
 
     def transitive_reduction(self, predicate_list: List[str], file_path: str, _format: str = "xml"):
+        # TODO We do not need this anymore since it is moved to pandasaurus
         graph = Graph().parse(file_path, format="ttl") if file_path else self.graph
         invalid_predicates = []
         for predicate in predicate_list:
