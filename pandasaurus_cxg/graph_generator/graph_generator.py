@@ -45,7 +45,9 @@ class GraphGenerator:
 
         """
         self.ea = enrichment_analyzer
-        self.df = self.ea.analyzer_manager.report_df[keys] if keys else self.ea.analyzer_manager.report_df
+        self.df = (
+            self.ea.analyzer_manager.report_df[keys] if keys else self.ea.analyzer_manager.report_df
+        )
         if self.ea.enricher_manager.enricher.enriched_df.empty:
             # TODO or we can just call simple_enrichment method
             enrichment_methods = [i for i in dir(AnndataEnricher) if "_enrichment" in i]

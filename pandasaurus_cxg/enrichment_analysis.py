@@ -79,7 +79,7 @@ class AnndataEnrichmentAnalyzer:
         return self.enricher_manager.filter_anndata_with_enriched_cell_type(cell_type)
 
     def annotate_anndata_with_cell_type(
-            self, cell_type_list: List[str], field_name: str, field_value: str
+        self, cell_type_list: List[str], field_name: str, field_value: str
     ) -> pd.DataFrame:
         """Annotates the AnnData object with cell type information.
 
@@ -107,8 +107,9 @@ class AnndataEnrichmentAnalyzer:
                 one cell type is a subclass of another, indicating a potential issue with the
                 provided annotations.
         """
-        return self.enricher_manager.annotate_anndata_with_cell_type(cell_type_list, field_name, field_value)
-
+        return self.enricher_manager.annotate_anndata_with_cell_type(
+            cell_type_list, field_name, field_value
+        )
 
     def co_annotation_report(self, disease: Optional[str] = None, enrich: bool = False):
         """
