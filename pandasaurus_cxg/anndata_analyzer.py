@@ -20,7 +20,9 @@ class AnndataAnalyzer:
 
     Args:
         anndata (AnnData): The AnnData object.
-        author_cell_type_list (Optional[str]):Names of optional free text cell type fields.
+        author_cell_type_list (Optional[List[str]]): Names of optional free text cell type fields.
+            If the 'obs_meta' field is missing in 'anndata.uns', this parameter should be set.
+                This is used to define free text cell type fields.
 
     Attributes:
         _anndata (pd.DataFrame): The observation data from the AnnData object.
@@ -30,7 +32,7 @@ class AnndataAnalyzer:
 
     def __init__(self, anndata: AnnData, author_cell_type_list: Optional[List[str]] = None):
         """
-        IInitializes the AnndataAnalyzer instance with AnnData object.
+        Initializes the AnndataAnalyzer instance with AnnData object.
 
         Args:
             anndata (AnnData): The AnnData object.
