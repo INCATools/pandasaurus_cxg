@@ -1,7 +1,7 @@
 import textwrap
 import uuid
 from enum import Enum
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Union
 
 import matplotlib.pyplot as plt
 import networkx as nx
@@ -9,12 +9,20 @@ import pandas as pd
 from rdflib import OWL, RDF, RDFS, BNode, Graph, Literal, Namespace, URIRef
 from rdflib.plugins.sparql import prepareQuery
 
-from pandasaurus_cxg.anndata_enricher import AnndataEnricher
+from pandasaurus_cxg.enrichment_analysis import (
+    AnndataEnricher,
+    AnndataEnrichmentAnalyzer,
+)
 from pandasaurus_cxg.graph_generator.graph_generator_utils import (
     add_edge,
     add_node,
     add_outgoing_edges_to_subgraph,
     find_and_rotate_center_layout,
+)
+from pandasaurus_cxg.graph_generator.graph_predicates import (
+    CLUSTER,
+    CONSIST_OF,
+    SUBCLUSTER_OF,
 )
 from pandasaurus_cxg.utils.exceptions import (
     InvalidGraphFormat,
@@ -29,34 +37,32 @@ logger = configure_logger()
 class GraphGenerator:
     def __init__(
         self,
-        co_annotation_report: pd.DataFrame,
-        enricher: AnndataEnricher,
+        enrichment_analyzer: AnndataEnrichmentAnalyzer,
         keys: Optional[List[str]] = None,
     ):
         """
         Initializes GraphGenerator instance.
 
         Args:
-            co_annotation_report (pd.DataFrame): The input DataFrame to generate rdf graph.
-                Co-annotation report output.
-            enricher (AnndataEnricher): Anndata enricher instance.
-            keys (Optional[List[str]]): List of column names to select from the DataFrame.
-                Defaults to None.
+            enrichment_analyzer: A wrapper object for AnndataEnricher and AnndataAnalyzer.
+            keys (Optional[List[str]]): List of column names to select from the DataFrame to
+                generate the report. Defaults to None.
 
         """
-        self.df = co_annotation_report[keys] if keys else co_annotation_report
-        if enricher.enriched_df.empty:
+        self.ea = enrichment_analyzer
+        self.df = (
+            self.ea.analyzer_manager.report_df[keys] if keys else self.ea.analyzer_manager.report_df
+        )
+        if self.ea.enricher_manager.enricher.enriched_df.empty:
             # TODO or we can just call simple_enrichment method
             enrichment_methods = [i for i in dir(AnndataEnricher) if "_enrichment" in i]
             enrichment_methods.sort()
             raise MissingEnrichmentProcess(enrichment_methods)
-        else:
-            self.enriched_df = enricher.enriched_df
         self.cell_type_dict = (
             pd.concat(
                 [
-                    self.enriched_df[["s", "s_label"]],
-                    self.enriched_df[["o", "o_label"]].rename(
+                    self.ea.enricher_manager.enricher.enriched_df[["s", "s_label"]],
+                    self.ea.enricher_manager.enricher.enriched_df[["o", "o_label"]].rename(
                         columns={"o": "s", "o_label": "s_label"}
                     ),
                 ],
@@ -69,6 +75,7 @@ class GraphGenerator:
         )
         self.ns = Namespace("http://example.org/")
         self.graph = Graph()
+        self.label_priority = None
 
     def generate_rdf_graph(self):
         """
@@ -114,8 +121,10 @@ class GraphGenerator:
                 grouped_dict_uuid[str(uuid.uuid4())] = temp_dict
 
         # generate a resource for each free-text cell_type annotation and cell_type_ontology_term annotation
-        cell_set_class = self.ns["CellSet"]
+        # cell_set_class = self.ns["CellSet"]
+        cell_set_class = URIRef(CLUSTER.get("iri"))
         self.graph.add((cell_set_class, RDF.type, OWL.Class))
+        self.graph.add((cell_set_class, RDFS.label, Literal(CLUSTER.get("label"))))
         for _uuid, inner_dict in grouped_dict_uuid.items():
             resource = self.ns[_uuid]
             self.graph.add((resource, RDF.type, cell_set_class))
@@ -124,10 +133,10 @@ class GraphGenerator:
                     continue
                 self.graph.add((resource, self.ns[k], Literal(v)))
 
-        self.add_label_to_terms()
-
         # add relationship between each resource based on their predicate in the co_annotation_report
-        subcluster = self.ns["subcluster_of"]
+        # subcluster = self.ns["subcluster_of"]
+        subcluster = URIRef(SUBCLUSTER_OF.get("iri"))
+        self.graph.add((subcluster, RDFS.label, Literal(SUBCLUSTER_OF.get("label"))))
         self.graph.add((subcluster, RDF.type, OWL.ObjectProperty))
         for _uuid, inner_dict in grouped_dict_uuid.items():
             resource = self.ns[_uuid]
@@ -145,6 +154,8 @@ class GraphGenerator:
         """
         # add cell_type nodes and consists_of relations
         cl_namespace = Namespace("http://purl.obolibrary.org/obo/CL_")
+        consist_of = URIRef(CONSIST_OF.get("iri"))
+        self.graph.add((consist_of, RDFS.label, Literal(CONSIST_OF.get("label"))))
         for curie, label in self.cell_type_dict.items():
             resource = cl_namespace[curie.split(":")[-1]]
             self.graph.add((resource, RDFS.label, Literal(label)))
@@ -153,15 +164,14 @@ class GraphGenerator:
                 # Add the triples to represent the restriction
                 class_expression_bnode = BNode()
                 self.graph.add((class_expression_bnode, RDF.type, OWL.Restriction))
-                self.graph.add((class_expression_bnode, OWL.onProperty, self.ns["consist_of"]))
+                # self.graph.add((class_expression_bnode, OWL.onProperty, self.ns["consist_of"]))
+                self.graph.add((class_expression_bnode, OWL.onProperty, consist_of))
                 self.graph.add((class_expression_bnode, OWL.someValuesFrom, resource))
                 # Add the restriction
                 self.graph.add((s, RDF.type, class_expression_bnode))
-        # add subClassOf between terms in CL enrichment
-        for _, row in self.enriched_df.iterrows():
-            for s, _, _ in self.graph.triples((None, RDFS.label, Literal(row["s_label"]))):
-                for o, _, _ in self.graph.triples((None, RDFS.label, Literal(row["o_label"]))):
-                    self.graph.add((s, RDFS.subClassOf, o))
+
+        # add enrichment graph
+        self.graph += self.ea.enricher_manager.enricher.graph
 
     def save_rdf_graph(
         self,
@@ -199,6 +209,31 @@ class GraphGenerator:
             raise InvalidGraphFormat(RDFFormat, valid_formats)
 
     def visualize_rdf_graph(self, start_node: List[str], predicate: str, file_path: str):
+        """
+        Visualizes an RDF graph using NetworkX and Matplotlib, focusing on specified nodes and predicates.
+
+        Args:
+            start_node (List[str]): A list of starting node URIs for visualization.
+                If provided, the visualization will focus on these nodes and their relationships.
+            predicate (str): The predicate URI to visualize relationships.
+                If provided, the visualization will show relationships with this predicate.
+            file_path (str): Path to an RDF file in TTL format to load the graph from.
+                If provided, the graph will be loaded from this file. If empty, the method
+                will use the instance's 'graph' attribute.
+
+        Raises:
+            ValueError: If the 'predicate' does not exist in the graph or if none of the 'start_node'
+                URIs exist in the RDF graph.
+
+        Note:
+            - The method uses NetworkX to create a hierarchical tree visualization of the RDF graph.
+            - The visualization is focused on specific nodes and their relationships using the 'start_node'
+              and 'predicate' parameters.
+            - If the 'start_node' and 'predicate' parameter are not provided all graph will be visualized.
+              Since it is not optimized to visualize all graph, it is not suggested to use without
+              setting these parameters.
+
+        """
         # TODO visualize all graph, with parametric annotation properties to better visualize the nodes.
         # TODO apply redundancy striping to owl directly
         graph = Graph().parse(file_path, format="ttl") if file_path else self.graph
@@ -286,6 +321,7 @@ class GraphGenerator:
         plt.show()
 
     def transitive_reduction(self, predicate_list: List[str], file_path: str, _format: str = "xml"):
+        # TODO We do not need this anymore since it is moved to pandasaurus
         graph = Graph().parse(file_path, format="ttl") if file_path else self.graph
         invalid_predicates = []
         for predicate in predicate_list:
@@ -325,16 +361,21 @@ class GraphGenerator:
             logger.error(error_msg)
 
     def add_label_to_terms(self, graph_: Graph = None):
+        if not self.label_priority:
+            raise ValueError(
+                "The priority order for adding labels is missing. Please use set_label_adding_priority method."
+            )
         graph = graph_ if graph_ else self.graph
         # TODO have a better way to handle priority assignment and have an auto default assignment
-        priority = {
-            "subclass.l3": 1,
-            "subclass.l2": 2,
-            "subclass.full": 3,
-            "subclass.l1": 4,
-            "cell_type": 5,
-            "class": 6,
-        }
+        # priority = {
+        #     "subclass.l3": 1,
+        #     "subclass.l2": 2,
+        #     "subclass.full": 3,
+        #     "subclass.l1": 4,
+        #     "cell_type": 5,
+        #     "class": 6,
+        # }
+        priority = self.label_priority
         unique_subjects_query = (
             "SELECT DISTINCT ?subject WHERE { ?subject ?predicate ?object FILTER (isIRI(?subject))}"
         )
@@ -355,28 +396,32 @@ class GraphGenerator:
             if label_field[0]:
                 graph.add((resource, RDFS.label, Literal(label_field[0])))
 
-    def set_default_priority(self) -> Dict[str, int]:
+    def set_label_adding_priority(self, label_priority: Union[List[str], Dict[str, int]]):
         """
-        Retrieve distinct predicates associated with non-label literal objects in the RDF graph.
+        Set the priority order for adding labels.
 
-        This function prepares and executes a SPARQL query to find predicates that are associated
-        with triples where the object is a literal and the predicate is not 'rdfs:label'.
+        Args:
+            label_priority (Optional[Union[List[str], Dict[str, int]]]): Either a list of strings,
+                a dictionary with string keys and int values, representing the priority
+                order for adding labels.
 
-        Returns:
-            A dictionary containing the distinct non-label literal predicates as keys and their
-                  corresponding order index (starting from 1) as values.
         """
-        # TODO This will be refactored
-        sparql_query = prepareQuery(
-            """
-            SELECT DISTINCT ?predicate
-            WHERE {
-                ?subject ?predicate ?object. FILTER(isLiteral(?object) && ?predicate != rdfs:label)
+        if isinstance(label_priority, list):
+            self.label_priority = {
+                label: len(label_priority) - i for i, label in enumerate(label_priority)
             }
-        """
-        )
-        results = self.graph.query(sparql_query, initNs={"rdfs": RDFS})
-        return {str(result["predicate"]): i + 1 for i, result in enumerate(results)}
+
+        elif isinstance(label_priority, dict):
+            if all(
+                isinstance(key, str) and isinstance(value, int)
+                for key, value in label_priority.items()
+            ):
+                self.label_priority = label_priority
+            else:
+                raise ValueError("Invalid types in priority dictionary")
+
+        else:
+            raise ValueError("Invalid priority format")
 
 
 class RDFFormat(Enum):

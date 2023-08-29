@@ -7,8 +7,8 @@ import pandas as pd
 from anndata import AnnData
 
 from pandasaurus_cxg.anndata_enricher import AnndataEnricher
-from pandasaurus_cxg.anndata_loader import AnndataLoader
 from pandasaurus_cxg.schema.cell_x_gene_schema import required_fields
+from pandasaurus_cxg.utils.anndata_loader import AnndataLoader
 
 # Check if the DEBUG environment variable is set
 debug_mode = os.getenv("DEBUG")
@@ -20,7 +20,9 @@ class AnndataAnalyzer:
 
     Args:
         anndata (AnnData): The AnnData object.
-        author_cell_type_list (Optional[str]):Names of optional free text cell type fields.
+        author_cell_type_list (Optional[List[str]]): Names of optional free text cell type fields.
+            If the 'obs_meta' field is missing in 'anndata.uns', this parameter should be set.
+                This is used to define free text cell type fields.
 
     Attributes:
         _anndata (pd.DataFrame): The observation data from the AnnData object.
@@ -28,13 +30,13 @@ class AnndataAnalyzer:
 
     """
 
-    def __init__(self, anndata: AnnData, author_cell_type_list: Optional[str] = None):
+    def __init__(self, anndata: AnnData, author_cell_type_list: Optional[List[str]] = None):
         """
-        IInitializes the AnndataAnalyzer instance with AnnData object.
+        Initializes the AnndataAnalyzer instance with AnnData object.
 
         Args:
             anndata (AnnData): The AnnData object.
-            author_cell_type_list (Optional[str]): Names of optional free text cell type fields.
+            author_cell_type_list (Optional[List[str]]): Names of optional free text cell type fields.
                 If the 'obs_meta' field is missing in 'anndata.uns', this parameter should be set.
                 This is used to define free text cell type fields.
 
@@ -71,15 +73,16 @@ class AnndataAnalyzer:
                     "using the free_text_fields parameter.\n"
                     f"Available free text fields are: {', '.join(available_free_text_fields)}"
                 )
+        self.report_df = pd.DataFrame()
 
     @staticmethod
-    def from_file_path(file_path: str, author_cell_type_list: Optional[str] = None):
+    def from_file_path(file_path: str, author_cell_type_list: Optional[List[str]] = None):
         """
         Initializes the AnndataAnalyzer instance with file path.
 
         Args:
             file_path (str): The path to the AnnData file.
-            author_cell_type_list (Optional[str]): Names of optional free text cell type fields.
+            author_cell_type_list (Optional[List[str]]): Names of optional free text cell type fields.
                 If the 'obs_meta' field is missing in 'anndata.uns', this parameter should be set.
                 This is used to define free text cell type fields.
 
@@ -125,10 +128,11 @@ class AnndataAnalyzer:
             for record in temp_result
         ]
         unique_result = AnndataAnalyzer._remove_duplicates(result)
-        return pd.DataFrame(
+        self.report_df = pd.DataFrame(
             [inner_list[:2] + inner_list[5:6] + inner_list[2:4] for inner_list in unique_result],
             columns=["field_name1", "value1", "predicate", "field_name2", "value2"],
         )
+        return self.report_df
 
     def enriched_co_annotation_report(self, disease: Optional[str] = None):
         """

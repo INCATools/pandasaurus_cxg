@@ -21,11 +21,10 @@ class InvalidGraphFormat(Exception):
 
 
 class CellTypeNotFoundError(Exception):
-    def __init__(self, cell_type: str, cell_type_list: List[str]):
+    def __init__(self, missing_cell_types: List[str], cell_type_list: List[str]):
         self.message = (
-            f"{cell_type} not found in the annotations."
-            f"Please use cell types from: "
-            f"{', '.join(cell_type_list)}."
+            f"Following cell types not found in the annotation: {', '.join(missing_cell_types)}. "
+            f"Please use cell types from: {', '.join(cell_type_list)}."
         )
         super().__init__(self.message)
 
