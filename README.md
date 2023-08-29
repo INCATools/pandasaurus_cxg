@@ -1,4 +1,4 @@
-STATUS: DRAFT/EXPERIMENTAL 
+STATUS: Beta
 
 # pandasaurus_cxg
 
