@@ -7,3 +7,17 @@ Ontology enrichment tool for [CxG standard](https://github.com/chanzuckerberg/si
 Slide summarising intended functionality
 ![image](https://github.com/INCATools/pandasaurus_cxg/assets/112839/3082dcd2-dd2f-469d-9076-4eabcc83130d)
 
+## Installation
+
+Available on PyPi
+
+pip install pandasaurus_cxg
+
+## Snippets
+
+https://github.com/INCATools/pandasaurus_cxg/blob/roadmap/walkthrough.ipynb
+
+## Roadmap
+
+https://github.com/INCATools/pandasaurus_cxg/blob/roadmap/ROADMAP.md
+
