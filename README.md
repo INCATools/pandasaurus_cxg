@@ -9,9 +9,9 @@ Slide summarising intended functionality
 
 ## Installation
 
-Available on PyPi
+Available on [PyPi](https://pypi.org/project/pandasaurus-cxg/0.1.1/)
 
-pip install pandasaurus_cxg
+$ pip3 install pandasaurus_cxg
 
 ## Snippets
 
