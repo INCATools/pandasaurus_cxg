@@ -15,8 +15,11 @@ $ pip3 install pandasaurus_cxg
 
 ## Usage
 
-`AnndataEnricher` and `AnndataAnalyzer` can be used individually as well as with `AnndataEnrichmentAnalyzer`, A wrapper class for AnndataEnricher and AnndataAnalyzer.
-You can find a couple of examples below;
+The `AnndataEnricher` and `AnndataAnalyzer` classes can be used both individually and in conjunction with the `AnndataEnrichmentAnalyzer` wrapper class. The `AnndataEnrichmentAnalyzer` class serves as a convenient way to leverage the functionalities of both `AnndataEnricher` and `AnndataAnalyzer`.
+
+### Using AnndataEnricher and AnndataAnalyzer Individually
+
+You can use the `AnndataEnricher` and `AnndataAnalyzer` classes separately to perform specific tasks on your data. For instance, `AnndataEnricher` facilitates data enrichment, while `AnndataAnalyzer` provides various analysis tools for Anndata objects.
 
 ```python
 from pandasaurus_cxg.anndata_enricher import AnndataEnricher
@@ -30,6 +33,10 @@ from pandasaurus_cxg.anndata_analyzer import AnndataAnalyzer
 ada = AnndataAnalyzer.from_file_path("./immune_example.h5ad", author_cell_type_list = ['subclass.full', 'subclass.l3', 'subclass.l2', 'subclass.l1', 'class', 'author_cell_type'])
 ada.co_annotation_report()
 ```
+
+### Using AnndataEnrichmentAnalyzer Wrapper
+
+The AnndataEnrichmentAnalyzer class wraps the functionality of both AnndataEnricher and AnndataAnalyzer, offering a seamless way to perform enrichment and analysis in one go.
 
 ```python
 from pandasaurus_cxg.enrichment_analysis import AnndataEnrichmentAnalyzer
