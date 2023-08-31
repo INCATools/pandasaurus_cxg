@@ -39,3 +39,14 @@
 
 * Add support for cell type annotation schema (CAP)
 
+
+## Potential future functionality
+
+Both of these are probably better served by workflows with existing libraries
+
+- Automatic Cross checking retrieved gene sets against cluster expression
+- interfacing with standard enrichment tools 
+
+
+
+
