@@ -1,6 +1,6 @@
-STATUS: Beta
-
 # pandasaurus_cxg
+
+STATUS: early Beta
 
 A library for retreiving and leveraging the semantic context of ontogy annotation in [CxG standard](https://github.com/chanzuckerberg/single-cell-curation/blob/main/schema/3.0.0/schema.md) [AnnData files](https://anndata.readthedocs.io/en/latest/).
 
