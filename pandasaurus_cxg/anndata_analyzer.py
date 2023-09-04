@@ -192,8 +192,12 @@ class AnndataAnalyzer:
     @staticmethod
     def _assign_predicate_column(co_oc, field_name_1, field_name_2):
         # Group by field_name_2 and field_name_1 to create dictionaries
-        field_name_2_dict = co_oc.groupby(field_name_2, observed=True)[field_name_1].apply(list).to_dict()
-        field_name_1_dict = co_oc.groupby(field_name_1, observed=True)[field_name_2].apply(list).to_dict()
+        field_name_2_dict = (
+            co_oc.groupby(field_name_2, observed=True)[field_name_1].apply(list).to_dict()
+        )
+        field_name_1_dict = (
+            co_oc.groupby(field_name_1, observed=True)[field_name_2].apply(list).to_dict()
+        )
         # Assign the "predicate" column using self._assign_predicate method
         co_oc["predicate"] = co_oc.apply(
             AnndataAnalyzer._assign_predicate,
