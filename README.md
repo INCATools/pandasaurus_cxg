@@ -55,9 +55,9 @@ More examples and detailed explanation can be found in jupyter notebook given in
 
 ## Snippets
 
-https://github.com/INCATools/pandasaurus_cxg/blob/roadmap/walkthrough.ipynb
+https://github.com/INCATools/pandasaurus_cxg/blob/main/walkthrough.ipynb
 
 ## Roadmap
 
-https://github.com/INCATools/pandasaurus_cxg/blob/roadmap/ROADMAP.md
+https://github.com/INCATools/pandasaurus_cxg/blob/main/ROADMAP.md
 
