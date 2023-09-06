@@ -18,6 +18,7 @@ from pandasaurus_cxg.graph_generator.graph_generator_utils import (
     add_node,
     add_outgoing_edges_to_subgraph,
     find_and_rotate_center_layout,
+    select_node_with_property,
 )
 from pandasaurus_cxg.graph_generator.graph_predicates import (
     CLUSTER,
@@ -76,6 +77,9 @@ class GraphGenerator:
         self.ns = Namespace("http://example.org/")
         self.graph = Graph()
         self.label_priority = None
+        # TODO This part needs a better approach in the future
+        self.graph.bind("ns", self.ns)
+        self.graph.bind("obo", Namespace("http://purl.obolibrary.org/obo/"))
 
     def generate_rdf_graph(self):
         """
@@ -249,6 +253,9 @@ class GraphGenerator:
         subgraph = Graph()
         stack = [URIRef(node) for node in start_node] if start_node else None
         predicate_uri = URIRef(predicate) if predicate else None
+        #
+        # select_node_with_property(graph, "label", "parietal epithelial cell")
+        # select_node_with_property(graph, "subclass.l1", "PEC")
 
         while stack:
             node = stack.pop()

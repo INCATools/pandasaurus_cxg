@@ -1,10 +1,8 @@
-from typing import Dict
-
 import networkx as nx
-from rdflib import Graph, URIRef
+from rdflib import Graph, Literal, Namespace, RDFS, URIRef
 
 
-def add_edge(nx_graph, subject, predicate, obj):
+def add_edge(nx_graph: nx.Graph, subject, predicate, obj):
     edge_data = {
         "label": str(predicate).split("#")[-1]
         if "#" in predicate
@@ -17,7 +15,7 @@ def add_edge(nx_graph, subject, predicate, obj):
     )
 
 
-def add_node(nx_graph, subject, obj):
+def add_node(nx_graph: nx.Graph, subject, obj):
     nx_graph.add_node(str(subject), label=str(obj))
 
 
@@ -62,3 +60,11 @@ def find_and_rotate_center_layout(graph):
     # Reflect the positions with respect to the center to rotate by 180 degrees
     rotated_pos = {node: (2 * x_center - x, 2 * y_center - y) for node, (x, y) in pos.items()}
     return rotated_pos
+
+
+def select_node_with_property(graph: Graph, _property: str, value: str):
+    ns = Namespace({k: v for k, v in graph.namespaces()}.get("ns"))
+    if _property == "label":
+        return [s for s in graph.subjects(predicate=RDFS.label, object=Literal(value))]
+    else:
+        return [s for s in graph.subjects(predicate=ns[_property], object=Literal(value))]
