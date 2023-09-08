@@ -18,6 +18,7 @@ from pandasaurus_cxg.graph_generator.graph_generator_utils import (
     add_node,
     add_outgoing_edges_to_subgraph,
     find_and_rotate_center_layout,
+    generate_subgraph,
     select_node_with_property,
 )
 from pandasaurus_cxg.graph_generator.graph_predicates import (
@@ -212,18 +213,38 @@ class GraphGenerator:
             valid_formats = [valid_format.value for valid_format in RDFFormat]
             raise InvalidGraphFormat(RDFFormat, valid_formats)
 
-    def visualize_rdf_graph(self, start_node: List[str], predicate: str, file_path: str):
+    def visualize_rdf_graph(
+        self,
+        predicate: Optional[str] = None,
+        start_node: Optional[List[str]] = None,
+        node_selector: Optional[Dict[str, str]] = None,
+        file_path: Optional[str] = None,
+        bottom_up: Optional[bool] = True,
+    ):
         """
         Visualizes an RDF graph using NetworkX and Matplotlib, focusing on specified nodes and predicates.
 
         Args:
-            start_node (List[str]): A list of starting node URIs for visualization.
-                If provided, the visualization will focus on these nodes and their relationships.
-            predicate (str): The predicate URI to visualize relationships.
+            predicate: The predicate URI to visualize relationships. Defaults to None.
                 If provided, the visualization will show relationships with this predicate.
-            file_path (str): Path to an RDF file in TTL format to load the graph from.
+            start_node: A list of starting node URIs for visualization. Defaults to None.
+                If provided, the visualization will focus on these nodes and their relationships.
+            node_selector: A dictionary specifying how to select a node when node URIs are not used.
+                Defaults to None. The dictionary should have the following format:
+
+                - To select by label:
+                    {'property': 'label', 'value': 'x label'}
+
+                - To select by annotation:
+                    {'property': 'x_annotation', 'value': 'xxxx'}
+
+                - The 'property' key represents the property that will be queried.
+                - The 'value' key represents the desired property value to match.
+            file_path: Path to an RDF file in TTL format to load the graph from. Defaults to None.
                 If provided, the graph will be loaded from this file. If empty, the method
                 will use the instance's 'graph' attribute.
+            bottom_up: Determines the graph visualization approach. The default approach is
+                bottom-up (default=True). Set it to False for a top-down approach.
 
         Raises:
             ValueError: If the 'predicate' does not exist in the graph or if none of the 'start_node'
@@ -243,43 +264,26 @@ class GraphGenerator:
         graph = Graph().parse(file_path, format="ttl") if file_path else self.graph
         if predicate and not graph.query(f"ASK {{ ?s {self.ns[predicate].n3()} ?o }}"):
             raise ValueError(f"The {self.ns[predicate]} relation does not exist in the graph")
+        required_keys = {"property", "value"}
+        if node_selector:
+            if not required_keys.issubset(node_selector.keys()):
+                raise ValueError("node_selector must contain 'property' and 'value' keys")
+            start_node = select_node_with_property(
+                graph, node_selector.get("property"), node_selector.get("value")
+            )
         if start_node:
             for node in start_node:
                 if not URIRef(node) in graph.subjects():
                     raise ValueError(
                         f"None of the nodes in the list {node} exist in the RDF graph."
                     )
-        visited = set()
-        subgraph = Graph()
+
         stack = [URIRef(node) for node in start_node] if start_node else None
         predicate_uri = URIRef(predicate) if predicate else None
-        #
-        # select_node_with_property(graph, "label", "parietal epithelial cell")
-        # select_node_with_property(graph, "subclass.l1", "PEC")
 
-        while stack:
-            node = stack.pop()
-            if node not in visited:
-                visited.add(node)
-            for s, p, o in graph.triples((node, predicate_uri, None)):
-                # Add all outgoing edges of the current node
-                subgraph.add((s, p, o))
-            for s, p, next_node in graph.triples((node, predicate_uri, None)):
-                if not isinstance(next_node, BNode):
-                    stack.append(next_node)
-                else:
-                    _p = next(graph.objects(next_node, OWL.onProperty))
-                    _o = next(graph.objects(next_node, OWL.someValuesFrom))
-                    subgraph.add(
-                        (
-                            node,
-                            _p,
-                            _o,
-                        )
-                    )
-                    stack.append(_o)
-                # TODO not sure if we need this else or not
+        subgraph = generate_subgraph(graph, predicate_uri, stack, bottom_up)
 
+        # TODO Discussion: Is it necessary to visualize a subgraph containing only the specified predicate if a start_node is not provided?
         if not start_node:
             subgraph = add_outgoing_edges_to_subgraph(graph, predicate_uri)
 
@@ -289,6 +293,12 @@ class GraphGenerator:
                 add_edge(nx_graph, s, p, o)
             elif p == RDFS.label:
                 add_node(nx_graph, s, o)
+
+        # Identify and remove nodes without any edge
+        # cell cluster type generate a node independent of the whole graph. this fix it
+        if len(nx_graph.nodes()) != 1:
+            nodes_to_remove = [node for node, degree in dict(nx_graph.degree()).items() if degree == 0]
+            nx_graph.remove_nodes_from(nodes_to_remove)
 
         # Apply transitive reduction to remove redundancy
         transitive_reduction_graph = nx.transitive_reduction(nx_graph)

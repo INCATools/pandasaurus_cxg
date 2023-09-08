@@ -1,5 +1,5 @@
 import networkx as nx
-from rdflib import Graph, Literal, Namespace, RDFS, URIRef
+from rdflib import BNode, RDF, RDFS, Graph, Literal, Namespace, OWL, URIRef
 
 
 def add_edge(nx_graph: nx.Graph, subject, predicate, obj):
@@ -61,10 +61,54 @@ def find_and_rotate_center_layout(graph):
     rotated_pos = {node: (2 * x_center - x, 2 * y_center - y) for node, (x, y) in pos.items()}
     return rotated_pos
 
+def generate_subgraph(graph, predicate_uri, stack, bottom_up):
+    subgraph = Graph()
+    visited = set()
+    while stack:
+        node = stack.pop()
+        if node not in visited:
+            visited.add(node)
+            for s, p, o in graph.triples((node, predicate_uri, None)):
+                # Add all outgoing edges of the current node
+                if isinstance(o, Literal):
+                    subgraph.add((s, p, o))
+            if bottom_up:
+                triples = graph.triples((node, predicate_uri, None))
+            else:
+                triples = graph.triples((None, predicate_uri, node))
+            for s, p, o in triples:
+                focused_node = o if bottom_up else s
+                if not isinstance(focused_node, BNode):
+                    stack.append(focused_node)
+                    subgraph.add((s, p, o))
+                else:
+                    _s = next(graph.subjects(RDF.type, focused_node))
+                    _p = next(graph.objects(focused_node, OWL.onProperty))
+                    _o = next(graph.objects(focused_node, OWL.someValuesFrom))
+                    subgraph.add((_s, _p, _o))
+                    if bottom_up:
+                        stack.append(_o)
+                    else:
+                        stack.append(_s)
+        # for s, p, next_node in graph.triples((node, predicate_uri, None)):
+        #     if not isinstance(next_node, BNode):
+        #         stack.append(next_node)
+        #     else:
+        #         _p = next(graph.objects(next_node, OWL.onProperty))
+        #         _o = next(graph.objects(next_node, OWL.someValuesFrom))
+        #         subgraph.add(
+        #             (
+        #                 node,
+        #                 _p,
+        #                 _o,
+        #             )
+        #         )
+        #         stack.append(_o)
+    return subgraph
 
 def select_node_with_property(graph: Graph, _property: str, value: str):
     ns = Namespace({k: v for k, v in graph.namespaces()}.get("ns"))
     if _property == "label":
-        return [s for s in graph.subjects(predicate=RDFS.label, object=Literal(value))]
+        return [str(s) for s in graph.subjects(predicate=RDFS.label, object=Literal(value))]
     else:
-        return [s for s in graph.subjects(predicate=ns[_property], object=Literal(value))]
+        return [str(s) for s in graph.subjects(predicate=ns[_property], object=Literal(value))]
