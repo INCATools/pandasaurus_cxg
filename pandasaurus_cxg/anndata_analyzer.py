@@ -22,7 +22,7 @@ class AnndataAnalyzer:
         anndata (AnnData): The AnnData object.
         author_cell_type_list (Optional[List[str]]): Names of optional free text cell type fields.
             If the 'obs_meta' field is missing in 'anndata.uns', this parameter should be set.
-                This is used to define free text cell type fields.
+            This is used to define free text cell type fields.
 
     Attributes:
         _anndata (pd.DataFrame): The observation data from the AnnData object.
