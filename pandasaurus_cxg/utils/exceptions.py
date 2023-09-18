@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Tuple
 
 
 class InvalidSlimName(Exception):
@@ -93,7 +93,7 @@ class SubclassWarning(Exception):
         message (str): A descriptive warning message.
     """
 
-    def __init__(self, relation: List[List[str]]):
+    def __init__(self, relation: List[Tuple[str]]):
         joined_relations = ", ".join(["-".join(rel) for rel in relation])
         self.message = (
             f"The following cell type terms are related with subClassOf relation. "

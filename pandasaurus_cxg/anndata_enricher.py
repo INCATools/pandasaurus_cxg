@@ -1,5 +1,5 @@
 import itertools
-from typing import List, Optional
+from typing import List, Optional, Tuple
 
 import pandas as pd
 from anndata import AnnData
@@ -23,6 +23,7 @@ class AnndataEnricher:
         anndata: AnnData,
         cell_type_field: Optional[str] = "cell_type_ontology_term_id",
         context_field: Optional[str] = "tissue_ontology_term_id",
+        context_field_label: Optional[str] = "tissue",
         ontology_list_for_slims: Optional[List[str]] = None,
     ):
         """Initialize the AnndataEnricher instance with AnnData object.
@@ -42,12 +43,13 @@ class AnndataEnricher:
             ontology_list_for_slims = ["Cell Ontology"]
         # TODO Do we need to keep whole anndata? Would it be enough to keep the obs only?
         self._anndata = anndata
-        self.__seed_list = self._anndata.obs[cell_type_field].unique().tolist()
-        self.enricher = Query(self.__seed_list)
-        self.__context_list = (
+        self._seed_list = self._anndata.obs[cell_type_field].unique().tolist()
+        self.enricher = Query(self._seed_list)
+        unique_context = self._anndata.obs[[context_field, context_field_label]].drop_duplicates()
+        self._context_list = (
             None
             if context_field not in self._anndata.obs.keys()
-            else self._anndata.obs[context_field].unique().tolist()
+            else dict(zip(unique_context[context_field], unique_context[context_field_label]))
         )
         self.slim_list = [
             slim
@@ -125,8 +127,8 @@ class AnndataEnricher:
         """
         # TODO Better handle datasets without tissue field
         return (
-            self.enricher.contextual_slim_enrichment(self.__context_list)
-            if self.__context_list
+            self.enricher.contextual_slim_enrichment(list(self._context_list.keys()))
+            if self._context_list
             else None
         )
 
@@ -211,7 +213,7 @@ class AnndataEnricher:
         Args:
             property_list (List[str]): The list of properties to include in the enrichment analysis.
         """
-        self.enricher = Query(self.__seed_list, property_list)
+        self.enricher = Query(self._seed_list, property_list)
 
     def validate_slim_list(self, slim_list):
         """Check if any slim term in the given list is invalid.
@@ -230,10 +232,13 @@ class AnndataEnricher:
             raise InvalidSlimName(invalid_slim_list, self.slim_list)
 
     def get_seed_list(self):
-        return self.__seed_list
+        return self._seed_list
 
     def get_anndata(self):
         return self._anndata
+
+    def get_context_list(self):
+        return self._context_list
 
     def create_cell_type_dict(self):
         # TODO Add empty dataframe exception
@@ -253,7 +258,17 @@ class AnndataEnricher:
             .to_dict()
         )
 
-    def check_subclass_relationships(self, cell_type_list: List[str]):
+    def check_subclass_relationships(self, cell_type_list: List[str]) -> List[Tuple[str, str]]:
+        """
+        Check for subclass relationships between cell type ontology terms.
+
+        Args:
+            cell_type_list: A list of cell type ontology term IDs to be used
+                for cell type annotation.
+
+        Returns:
+            A list of cell type pairs that have a subClassOf relationship between them.
+        """
         # TODO Add empty dataframe exception
         subclass_relation = []
         for s, o in itertools.combinations(cell_type_list, 2):
@@ -262,12 +277,12 @@ class AnndataEnricher:
                 & (self.enricher.enriched_df["p"] == "rdfs:subClassOf")
                 & (self.enricher.enriched_df["o"] == o)
             ].empty:
-                subclass_relation.append([s, o])
+                subclass_relation.append((s, o))
 
             if not self.enricher.enriched_df[
                 (self.enricher.enriched_df["s"] == o)
                 & (self.enricher.enriched_df["p"] == "rdfs:subClassOf")
                 & (self.enricher.enriched_df["o"] == s)
             ].empty:
-                subclass_relation.append([o, s])
+                subclass_relation.append((o, s))
         return subclass_relation
