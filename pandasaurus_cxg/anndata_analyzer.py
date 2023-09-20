@@ -69,9 +69,9 @@ class AnndataAnalyzer:
                 raise ValueError(
                     "AnndataAnalyzer initialization error:\n\n"
                     "The 'obs_meta' field is missing in anndata.uns!\n"
-                    "If this field is absent, you can provide a list of field names from the AnnData file "
-                    "using the free_text_fields parameter.\n"
-                    f"Available free text fields are: {', '.join(available_free_text_fields)}"
+                    "If this field is absent, you can provide a list of field names from the "
+                    "AnnData file using the author_cell_type_list parameter.\n"
+                    f"Available author cell type fields are: {', '.join(available_free_text_fields)}"
                 )
         self.report_df = pd.DataFrame()
 

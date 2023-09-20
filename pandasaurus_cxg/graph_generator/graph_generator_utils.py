@@ -1,12 +1,31 @@
 import networkx as nx
-from rdflib import BNode, RDF, RDFS, Graph, Literal, Namespace, OWL, URIRef
+from rdflib import OWL, RDF, RDFS, BNode, Graph, Literal, Namespace, URIRef
+
+from pandasaurus_cxg.graph_generator.graph_predicates import (
+    CLUSTER,
+    CONSIST_OF,
+    SUBCLUSTER_OF,
+)
+
+colour_mapping = {
+    "http://www.w3.org/2002/07/owl#Class": "deepskyblue",
+    "http://purl.obolibrary.org/obo/PCL_0010001": "cyan",
+}
 
 
 def add_edge(nx_graph: nx.Graph, subject, predicate, obj):
     edge_data = {
-        "label": str(predicate).split("#")[-1]
-        if "#" in predicate
-        else str(predicate).split("/")[-1]
+        "label": (
+            CONSIST_OF["label"]
+            if str(predicate) == CONSIST_OF["iri"]
+            else SUBCLUSTER_OF["label"]
+            if str(predicate) == SUBCLUSTER_OF["iri"]
+            else CLUSTER["label"]
+            if str(predicate) == CLUSTER["iri"]
+            else str(predicate).split("#")[-1]
+            if predicate and "#" in predicate
+            else str(predicate).split("/")[-1]
+        )
     }
     nx_graph.add_edge(
         str(subject),
@@ -15,8 +34,9 @@ def add_edge(nx_graph: nx.Graph, subject, predicate, obj):
     )
 
 
-def add_node(nx_graph: nx.Graph, subject, obj):
-    nx_graph.add_node(str(subject), label=str(obj))
+def add_node(nx_graph: nx.Graph, subject, annotation):
+    # nx_graph.add_node(str(subject), annotation=str(obj))
+    nx_graph.add_node(str(subject), **annotation)
 
 
 def add_outgoing_edges_to_subgraph(graph, predicate_uri=None):
@@ -61,6 +81,7 @@ def find_and_rotate_center_layout(graph):
     rotated_pos = {node: (2 * x_center - x, 2 * y_center - y) for node, (x, y) in pos.items()}
     return rotated_pos
 
+
 def generate_subgraph(graph, predicate_uri, stack, bottom_up):
     subgraph = Graph()
     visited = set()
@@ -70,7 +91,7 @@ def generate_subgraph(graph, predicate_uri, stack, bottom_up):
             visited.add(node)
             for s, p, o in graph.triples((node, predicate_uri, None)):
                 # Add all outgoing edges of the current node
-                if isinstance(o, Literal):
+                if isinstance(o, Literal) or p == RDF.type and not isinstance(o, BNode):
                     subgraph.add((s, p, o))
             if bottom_up:
                 triples = graph.triples((node, predicate_uri, None))
@@ -90,21 +111,8 @@ def generate_subgraph(graph, predicate_uri, stack, bottom_up):
                         stack.append(_o)
                     else:
                         stack.append(_s)
-        # for s, p, next_node in graph.triples((node, predicate_uri, None)):
-        #     if not isinstance(next_node, BNode):
-        #         stack.append(next_node)
-        #     else:
-        #         _p = next(graph.objects(next_node, OWL.onProperty))
-        #         _o = next(graph.objects(next_node, OWL.someValuesFrom))
-        #         subgraph.add(
-        #             (
-        #                 node,
-        #                 _p,
-        #                 _o,
-        #             )
-        #         )
-        #         stack.append(_o)
     return subgraph
+
 
 def select_node_with_property(graph: Graph, _property: str, value: str):
     ns = Namespace({k: v for k, v in graph.namespaces()}.get("ns"))

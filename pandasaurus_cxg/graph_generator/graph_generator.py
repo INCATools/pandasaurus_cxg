@@ -17,6 +17,7 @@ from pandasaurus_cxg.graph_generator.graph_generator_utils import (
     add_edge,
     add_node,
     add_outgoing_edges_to_subgraph,
+    colour_mapping,
     find_and_rotate_center_layout,
     generate_subgraph,
     select_node_with_property,
@@ -292,12 +293,16 @@ class GraphGenerator:
             if isinstance(o, URIRef) and p != RDF.type:
                 add_edge(nx_graph, s, p, o)
             elif p == RDFS.label:
-                add_node(nx_graph, s, o)
+                add_node(nx_graph, s, {"label": str(o)})
+            elif p == RDF.type:
+                add_node(nx_graph, s, {"type": str(o)})
 
         # Identify and remove nodes without any edge
         # cell cluster type generate a node independent of the whole graph. this fix it
         if len(nx_graph.nodes()) != 1:
-            nodes_to_remove = [node for node, degree in dict(nx_graph.degree()).items() if degree == 0]
+            nodes_to_remove = [
+                node for node, degree in dict(nx_graph.degree()).items() if degree == 0
+            ]
             nx_graph.remove_nodes_from(nodes_to_remove)
 
         # Apply transitive reduction to remove redundancy
@@ -306,6 +311,17 @@ class GraphGenerator:
         transitive_reduction_graph.add_edges_from(
             (u, v, nx_graph.edges[u, v]) for u, v in transitive_reduction_graph.edges
         )
+
+        node_colors = []
+        # Get node colors based on node types
+        for node in transitive_reduction_graph.nodes:
+            node_colors.append(
+                colour_mapping.get(transitive_reduction_graph.nodes[node]["type"], "red")
+            )
+        # node_colors = [
+        #     colour_mapping[transitive_reduction_graph.nodes[node]["type"]]
+        #     for node in transitive_reduction_graph.nodes
+        # ]
 
         pos = find_and_rotate_center_layout(transitive_reduction_graph)
         plt.figure(figsize=(10, 10))
@@ -321,17 +337,20 @@ class GraphGenerator:
             with_labels=True,
             labels=node_labels,
             node_size=2000,
-            node_color="skyblue",
+            node_color=node_colors,
             font_size=8,
             font_weight="bold",
         )
         # Draw edge labels on the graph
         edge_labels = nx.get_edge_attributes(transitive_reduction_graph, "label")
-        edge_labels_formatted = {edge: label for edge, label in edge_labels.items()}
+        edge_labels = {
+            edge: "\n".join(textwrap.wrap(label, width=10)) for edge, label in edge_labels.items()
+        }
+        # edge_labels_formatted = {edge: label for edge, label in edge_labels.items()}
         nx.draw_networkx_edge_labels(
             transitive_reduction_graph,
             pos,
-            edge_labels=edge_labels_formatted,
+            edge_labels=edge_labels,
             font_size=8,
             font_color="red",
         )
@@ -423,6 +442,7 @@ class GraphGenerator:
                 order for adding labels.
 
         """
+        label_priority.append("cell_type") if "cell_type" not in label_priority else None
         if isinstance(label_priority, list):
             self.label_priority = {
                 label: len(label_priority) - i for i, label in enumerate(label_priority)
