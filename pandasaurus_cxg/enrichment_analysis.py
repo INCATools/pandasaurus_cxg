@@ -148,4 +148,4 @@ class AnndataEnrichmentAnalyzer:
             pd.DataFrame: The co-annotation report.
 
         """
-        return self.analyzer_manager.enriched_co_annotation_report(disease, True)
+        return self.analyzer_manager.enriched_co_annotation_report(disease)

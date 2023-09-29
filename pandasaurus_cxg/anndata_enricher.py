@@ -10,6 +10,7 @@ from pandasaurus_cxg.utils.anndata_loader import AnndataLoader
 from pandasaurus_cxg.utils.exceptions import (
     CellTypeNotFoundError,
     InvalidSlimName,
+    MissingEnrichmentProcess,
     SubclassWarning,
 )
 
@@ -44,15 +45,22 @@ class AnndataEnricher:
         if ontology_list_for_slims is None:
             ontology_list_for_slims = ["Cell Ontology"]
         # TODO Do we need to keep whole anndata? Would it be enough to keep the obs only?
-        self._anndata = anndata
-        self._seed_list = self._anndata.obs[cell_type_field].unique().tolist()
-        self.enricher = Query(self._seed_list)
-        unique_context = self._anndata.obs[[context_field, context_field_label]].drop_duplicates()
-        self._context_list = (
-            None
-            if context_field not in self._anndata.obs.keys()
-            else dict(zip(unique_context[context_field], unique_context[context_field_label]))
-        )
+        self.anndata = anndata
+        self.seed_list = self.anndata.obs[cell_type_field].unique().tolist()
+        self.enricher = Query(self.seed_list)
+        try:
+            unique_context = self.anndata.obs[
+                [context_field, context_field_label]
+            ].drop_duplicates()
+            self._context_list = (
+                None
+                if context_field not in self.anndata.obs.keys()
+                else dict(zip(unique_context[context_field], unique_context[context_field_label]))
+            )
+        except KeyError as e:
+            raise KeyError(
+                "Please use a valid 'context_field' and 'context_field_label' that exist in your anndata file."
+            )
         self.slim_list = [
             slim
             for ontology in ontology_list_for_slims
@@ -132,6 +140,7 @@ class AnndataEnricher:
                 otherwise None.
         """
         # TODO Better handle datasets without tissue field
+        # TODO self._context_list is refactored and cannot be None in any case. 'else' needs an update
         return (
             self.enricher.contextual_slim_enrichment(list(self._context_list.keys()))
             if self._context_list
@@ -152,7 +161,6 @@ class AnndataEnricher:
             CellTypeNotFoundError: If the provided cell_type is not found in the enriched cell types.
 
         """
-        # TODO Add empty dataframe exception
         cell_type_dict = self.create_cell_type_dict()
         if cell_type not in cell_type_dict:
             raise CellTypeNotFoundError([cell_type], cell_type_dict.keys())
@@ -162,8 +170,8 @@ class AnndataEnricher:
         ].tolist()
         cell_type_group.append(cell_type)
 
-        return self._anndata.obs[
-            self._anndata.obs["cell_type_ontology_term_id"].isin(cell_type_group)
+        return self.anndata.obs[
+            self.anndata.obs["cell_type_ontology_term_id"].isin(cell_type_group)
         ]
 
     def annotate_anndata_with_cell_type(
@@ -195,7 +203,6 @@ class AnndataEnricher:
                 one cell type is a subclass of another, indicating a potential issue with the
                 provided annotations.
         """
-        # TODO Add empty dataframe exception
         cell_type_dict = self.create_cell_type_dict()
         # Check if any cell_type in cell_type_list is not in cell_type_dict
         missing_cell_types = set(cell_type_list) - set(cell_type_dict.keys())
@@ -208,10 +215,10 @@ class AnndataEnricher:
             raise SubclassWarning(subclass_relation)
 
         # annotation phase
-        self._anndata.obs[field_name] = ""
-        condition = self._anndata.obs["cell_type_ontology_term_id"].isin(cell_type_list)
-        self._anndata.obs.loc[condition, field_name] = field_value
-        return self._anndata.obs[self._anndata.obs[field_name] == field_value]
+        self.anndata.obs[field_name] = ""
+        condition = self.anndata.obs["cell_type_ontology_term_id"].isin(cell_type_list)
+        self.anndata.obs.loc[condition, field_name] = field_value
+        return self.anndata.obs[self.anndata.obs[field_name] == field_value]
 
     def set_enricher_property_list(self, property_list: List[str]):
         """Set the property list for the enricher.
@@ -219,7 +226,7 @@ class AnndataEnricher:
         Args:
             property_list (List[str]): The list of properties to include in the enrichment analysis.
         """
-        self.enricher = Query(self._seed_list, property_list)
+        self.enricher = Query(self.seed_list, property_list)
 
     def validate_slim_list(self, slim_list):
         """Check if any slim term in the given list is invalid.
@@ -237,17 +244,22 @@ class AnndataEnricher:
         if invalid_slim_list:
             raise InvalidSlimName(invalid_slim_list, self.slim_list)
 
-    def get_seed_list(self):
-        return self._seed_list
-
-    def get_anndata(self):
-        return self._anndata
-
-    def get_context_list(self):
-        return self._context_list
-
     def create_cell_type_dict(self):
-        # TODO Add empty dataframe exception
+        """
+        Create a dictionary from enriched_df for mapping cell type ontology term IDs to their labels.
+
+        Returns:
+            A dictionary where keys are cell type ontology term IDs (e.g., "CL:000001") and values are
+            corresponding cell type labels (e.g., "Neuron").
+
+        Raises:
+            MissingEnrichmentProcess: If the enrichment process has not been performed, and the
+                `enriched_df` is empty.
+        """
+        if self.enricher.enriched_df.empty:
+            enrichment_methods = [i for i in dir(AnndataEnricher) if "_enrichment" in i]
+            enrichment_methods.sort()
+            raise MissingEnrichmentProcess(enrichment_methods)
         return (
             pd.concat(
                 [
@@ -266,7 +278,7 @@ class AnndataEnricher:
 
     def check_subclass_relationships(self, cell_type_list: List[str]) -> List[Tuple[str, str]]:
         """
-        Check for subclass relationships between cell type ontology terms.
+        Check for subclass relationships between cell type ontology terms using enriched_df.
 
         Args:
             cell_type_list: A list of cell type ontology term IDs to be used
@@ -274,8 +286,15 @@ class AnndataEnricher:
 
         Returns:
             A list of cell type pairs that have a subClassOf relationship between them.
+
+        Raises:
+            MissingEnrichmentProcess: If the enrichment process has not been performed, and the
+                `enriched_df` is empty.
         """
-        # TODO Add empty dataframe exception
+        if self.enricher.enriched_df.empty:
+            enrichment_methods = [i for i in dir(AnndataEnricher) if "_enrichment" in i]
+            enrichment_methods.sort()
+            raise MissingEnrichmentProcess(enrichment_methods)
         subclass_relation = []
         for s, o in itertools.combinations(cell_type_list, 2):
             if not self.enricher.enriched_df[

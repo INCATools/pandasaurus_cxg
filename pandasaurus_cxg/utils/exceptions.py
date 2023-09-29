@@ -12,7 +12,7 @@ class InvalidSlimName(Exception):
 
 
 class InvalidGraphFormat(Exception):
-    def __int__(self, _format: str, valid_formats: List[str]):
+    def __init__(self, _format: str, valid_formats: List[str]):
         self.message = (
             f"Graph format, {_format}, provided for save_rdf_graph is invalid. "
             f"Please use one of {', '.join(valid_formats)}"
