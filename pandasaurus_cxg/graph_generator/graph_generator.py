@@ -305,6 +305,12 @@ class GraphGenerator:
             ]
             nx_graph.remove_nodes_from(nodes_to_remove)
 
+        # Identify and remove nodes without any edge
+        # cell cluster type generate a node independent of the whole graph. this fix it
+        if len(nx_graph.nodes()) != 1:
+            nodes_to_remove = [node for node, degree in dict(nx_graph.degree()).items() if degree == 0]
+            nx_graph.remove_nodes_from(nodes_to_remove)
+
         # Apply transitive reduction to remove redundancy
         transitive_reduction_graph = nx.transitive_reduction(nx_graph)
         transitive_reduction_graph.add_nodes_from(nx_graph.nodes(data=True))

@@ -81,7 +81,7 @@ def find_and_rotate_center_layout(graph):
     rotated_pos = {node: (2 * x_center - x, 2 * y_center - y) for node, (x, y) in pos.items()}
     return rotated_pos
 
-
+  
 def generate_subgraph(graph, predicate_uri, stack, bottom_up):
     subgraph = Graph()
     visited = set()
@@ -113,7 +113,7 @@ def generate_subgraph(graph, predicate_uri, stack, bottom_up):
                         stack.append(_s)
     return subgraph
 
-
+  
 def select_node_with_property(graph: Graph, _property: str, value: str):
     ns = Namespace({k: v for k, v in graph.namespaces()}.get("ns"))
     if _property == "label":
