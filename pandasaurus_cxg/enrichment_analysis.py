@@ -8,7 +8,7 @@ from pandasaurus_cxg.utils.anndata_loader import AnndataLoader
 
 
 class AnndataEnrichmentAnalyzer:
-    def __init__(self, file_path: str, author_cell_type_list: Optional[str] = None):
+    def __init__(self, file_path: str, author_cell_type_list: Optional[List[str]] = None):
         """
         Initializes the AnndataEnrichmentAnalyzer, a wrapper for AnndataEnricher and AnndataAnalyzer.
 

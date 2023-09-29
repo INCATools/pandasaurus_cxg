@@ -1,4 +1,4 @@
-CONSIST_OF = {"iri": "http://purl.obolibrary.org/obo/RO_0002473", "label": "composed_primarily_of"}
+CONSIST_OF = {"iri": "http://purl.obolibrary.org/obo/RO_0002473", "label": "composed primarily of"}
 
 SUBCLUSTER_OF = {"iri": "http://purl.obolibrary.org/obo/RO_0015003", "label": "subcluster of"}
 

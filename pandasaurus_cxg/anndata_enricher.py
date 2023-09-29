@@ -33,8 +33,10 @@ class AnndataEnricher:
             anndata: The AnnData object.
             cell_type_field: The cell type information in the anndata object.
                 Defaults to "cell_type_ontology_term_id".
-            context_field: The context information in the anndata object.
+            context_field: Ontology ID of the context information in the anndata object.
                 Defaults to "tissue_ontology_term_id".
+            context_field_label: Label of the context information in the anndata object.
+                Defaults to "tissue".
             ontology_list_for_slims: The ontology list for generating the slim list.
                 The slim list is used in minimal_slim_enrichment and full_slim_enrichment.
                 Defaults to "Cell Ontology"
@@ -62,6 +64,7 @@ class AnndataEnricher:
         file_path: str,
         cell_type_field: Optional[str] = "cell_type_ontology_term_id",
         context_field: Optional[str] = "tissue_ontology_term_id",
+        context_field_label: Optional[str] = "tissue",
         ontology_list_for_slims: Optional[List[str]] = None,
     ):
         """Initialize the AnndataEnricher instance with file path.
@@ -71,8 +74,10 @@ class AnndataEnricher:
             file_path: The path to the file containing the anndata object.
             cell_type_field: The cell type information in the anndata object.
                 Defaults to "cell_type_ontology_term_id".
-            context_field: The context information in the anndata object.
+            context_field: Ontology ID of the context information in the anndata object.
                 Defaults to "tissue_ontology_term_id".
+            context_field_label: Label of the context information in the anndata object.
+                Defaults to "tissue".
             ontology_list_for_slims: The ontology list for generating the slim list.
                 The slim list is used in minimal_slim_enrichment and full_slim_enrichment.
                 Defaults to "Cell Ontology"
@@ -83,6 +88,7 @@ class AnndataEnricher:
             AnndataLoader.load_from_file(file_path),
             cell_type_field,
             context_field,
+            context_field_label,
             ontology_list_for_slims,
         )
 
