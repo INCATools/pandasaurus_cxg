@@ -2,7 +2,7 @@
 
 STATUS: early Beta
 
-A library for retreiving and leveraging the semantic context of ontogy annotation in [CxG standard](https://github.com/chanzuckerberg/single-cell-curation/blob/main/schema/3.0.0/schema.md) [AnnData files](https://anndata.readthedocs.io/en/latest/).
+A library for retrieving and leveraging the semantic context of ontology annotation in [CxG standard](https://github.com/chanzuckerberg/single-cell-curation/blob/main/schema/3.0.0/schema.md) [AnnData files](https://anndata.readthedocs.io/en/latest/).
 
 Slide summarising intended functionality
 ![image](https://github.com/INCATools/pandasaurus_cxg/assets/112839/3082dcd2-dd2f-469d-9076-4eabcc83130d)
@@ -12,6 +12,20 @@ Slide summarising intended functionality
 Available on [PyPi](https://pypi.org/project/pandasaurus-cxg/0.1.1/)
 
 $ pip3 install pandasaurus_cxg
+
+#### Detailed installation guide for pygraphviz issue
+
+During package installation, sometimes the pygraphviz package installation is failing on **macOS** due to Graphviz may be 
+installed in a location that is not on the default search path. In this case, it may be necessary to manually 
+specify the path to the graphviz include and/or library directories. To do that use following instructions and install 
+pygraphviz manually.
+
+```
+brew install graphviz
+export CFLAGS="-I $(brew --prefix graphviz)/include"
+export LDFLAGS="-L $(brew --prefix graphviz)/lib"
+pip install pygraphviz
+```
 
 ## Usage
 
@@ -55,9 +69,8 @@ More examples and detailed explanation can be found in jupyter notebook given in
 
 ## Snippets
 
-https://github.com/INCATools/pandasaurus_cxg/blob/roadmap/walkthrough.ipynb
+https://github.com/INCATools/pandasaurus_cxg/blob/main/walkthrough.ipynb
 
 ## Roadmap
 
-https://github.com/INCATools/pandasaurus_cxg/blob/roadmap/ROADMAP.md
-
+https://github.com/INCATools/pandasaurus_cxg/blob/main/ROADMAP.md
