@@ -52,7 +52,7 @@ class AnndataAnalyzer:
                 for meta in obs_meta
                 if meta.get("field_type") == "author_cell_type_label"
             ] + ["cell_type"]
-        except KeyError as e:
+        except KeyError:
             if author_cell_type_list:
                 self.all_cell_type_identifiers = author_cell_type_list + ["cell_type"]
                 self._anndata.uns["obs_meta"] = json.dumps(
@@ -105,6 +105,13 @@ class AnndataAnalyzer:
             pd.DataFrame: The co-annotation report.
 
         """
+        # TODO needs a refactoring about what enrichment method to use. Or would it better to accept
+        #  enriched_df as parameter, so users get to decide?
+        enriched_co_oc = None
+        if enrich:
+            enricher = AnndataEnricher(self._anndata)
+            enricher.simple_enrichment()
+            enriched_co_oc = AnndataAnalyzer._enrich_co_annotation(enricher)
         temp_result = []
         for field_name_2 in self.all_cell_type_identifiers:
             for field_name_1 in self.all_cell_type_identifiers:
@@ -118,7 +125,15 @@ class AnndataAnalyzer:
                     )
 
                     if enrich:
-                        co_oc = self._enrich_co_annotation(co_oc, field_name_1, field_name_2)
+                        co_oc = pd.concat(
+                            [
+                                co_oc,
+                                enriched_co_oc.rename(
+                                    columns={"s_label": field_name_1, "o_label": field_name_2}
+                                ),
+                            ],
+                            axis=0,
+                        ).reset_index(drop=True)
 
                     AnndataAnalyzer._assign_predicate_column(co_oc, field_name_1, field_name_2)
                     temp_result.extend(co_oc.to_dict(orient="records"))
@@ -155,14 +170,12 @@ class AnndataAnalyzer:
         """
         return self.co_annotation_report(disease, True)
 
-    def _enrich_co_annotation(self, co_oc, field_name_1, field_name_2):
-        enricher = AnndataEnricher(self._anndata)
-        simple = enricher.simple_enrichment()
-        df = simple[simple["o"].isin(enricher.get_seed_list())][["s_label", "o_label"]].rename(
-            columns={"s_label": field_name_1, "o_label": field_name_2}
-        )
-        co_oc = pd.concat([co_oc, df], axis=0).reset_index(drop=True)
-        return co_oc
+    @staticmethod
+    def _enrich_co_annotation(enricher: AnndataEnricher):
+        enriched_df = enricher.enricher.enriched_df
+        if enriched_df.empty:
+            return pd.DataFrame()
+        return enriched_df[enriched_df["o"].isin(enricher.seed_list)][["s_label", "o_label"]]
 
     def _filter_data_and_drop_duplicates(self, field_name_1, field_name_2, disease):
         # Filter the data based on the disease condition

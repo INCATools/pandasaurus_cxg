@@ -50,11 +50,16 @@ class GraphGenerator:
             enrichment_analyzer: A wrapper object for AnndataEnricher and AnndataAnalyzer.
             keys (Optional[List[str]]): List of column names to select from the DataFrame to
                 generate the report. Defaults to None.
+                Please refrain from using this parameter until the next notification
 
         """
+        # TODO need to think about how to handle the requirement of enrichment and co_annotation_analysis methods
         self.ea = enrichment_analyzer
+        # TODO need to handle invalid keys. We also need to discuss about keeping the keys param. DO NOT USE
         self.df = (
-            self.ea.analyzer_manager.report_df[keys] if keys else self.ea.analyzer_manager.report_df
+            enrichment_analyzer.analyzer_manager.report_df[keys]
+            if keys
+            else enrichment_analyzer.analyzer_manager.report_df
         )
         if self.ea.enricher_manager.enricher.enriched_df.empty:
             # TODO or we can just call simple_enrichment method
@@ -212,7 +217,7 @@ class GraphGenerator:
             graph.serialize(f"{file_name}.{file_extension}", format=_format)
         else:
             valid_formats = [valid_format.value for valid_format in RDFFormat]
-            raise InvalidGraphFormat(RDFFormat, valid_formats)
+            raise InvalidGraphFormat(_format, valid_formats)
 
     def visualize_rdf_graph(
         self,
@@ -305,12 +310,6 @@ class GraphGenerator:
             ]
             nx_graph.remove_nodes_from(nodes_to_remove)
 
-        # Identify and remove nodes without any edge
-        # cell cluster type generate a node independent of the whole graph. this fix it
-        if len(nx_graph.nodes()) != 1:
-            nodes_to_remove = [node for node, degree in dict(nx_graph.degree()).items() if degree == 0]
-            nx_graph.remove_nodes_from(nodes_to_remove)
-
         # Apply transitive reduction to remove redundancy
         transitive_reduction_graph = nx.transitive_reduction(nx_graph)
         transitive_reduction_graph.add_nodes_from(nx_graph.nodes(data=True))
@@ -324,10 +323,6 @@ class GraphGenerator:
             node_colors.append(
                 colour_mapping.get(transitive_reduction_graph.nodes[node]["type"], "red")
             )
-        # node_colors = [
-        #     colour_mapping[transitive_reduction_graph.nodes[node]["type"]]
-        #     for node in transitive_reduction_graph.nodes
-        # ]
 
         pos = find_and_rotate_center_layout(transitive_reduction_graph)
         plt.figure(figsize=(10, 10))
@@ -362,61 +357,12 @@ class GraphGenerator:
         )
         plt.show()
 
-    def transitive_reduction(self, predicate_list: List[str], file_path: str, _format: str = "xml"):
-        # TODO We do not need this anymore since it is moved to pandasaurus
-        graph = Graph().parse(file_path, format="ttl") if file_path else self.graph
-        invalid_predicates = []
-        for predicate in predicate_list:
-            if predicate and not graph.query(f"ASK {{ ?s <{predicate}> ?o }}"):
-                invalid_predicates.append(predicate)
-                continue
-
-            predicate_uri = URIRef(predicate) if predicate else None
-            subgraph = add_outgoing_edges_to_subgraph(graph, predicate_uri)
-
-            nx_graph = nx.DiGraph()
-            for s, p, o in subgraph:
-                if isinstance(o, URIRef) and p != RDF.type:
-                    add_edge(nx_graph, s, predicate, o)
-
-            # Apply transitive reduction to remove redundancy
-            transitive_reduction_graph = nx.transitive_reduction(nx_graph)
-            transitive_reduction_graph.add_edges_from(
-                (u, v, nx_graph.edges[u, v]) for u, v in transitive_reduction_graph.edges
-            )
-            # Remove redundant triples using nx graph
-            edge_diff = list(set(nx_graph.edges) - set(transitive_reduction_graph.edges))
-            for edge in edge_diff:
-                if graph.query(f"ASK {{ <{edge[0]}> <{predicate}> <{edge[1]}> }}"):
-                    graph.remove((URIRef(edge[0]), URIRef(predicate), URIRef(edge[1])))
-            logger.info(f"Transitive reduction has been applied on {predicate}.")
-
-        self.save_rdf_graph(graph, f"{file_path.split('.')[0]}_non_redundant", _format)
-        logger.info(f"{file_path.split('.')[0]}_non_redundant has been saved.")
-
-        if invalid_predicates:
-            error_msg = (
-                f"The predicate '{invalid_predicates[0]}' does not exist in the graph"
-                if len(invalid_predicates) == 1
-                else f"The predicates {' ,'.join(invalid_predicates)} do not exist in the graph"
-            )
-            logger.error(error_msg)
-
     def add_label_to_terms(self, graph_: Graph = None):
         if not self.label_priority:
             raise ValueError(
                 "The priority order for adding labels is missing. Please use set_label_adding_priority method."
             )
         graph = graph_ if graph_ else self.graph
-        # TODO have a better way to handle priority assignment and have an auto default assignment
-        # priority = {
-        #     "subclass.l3": 1,
-        #     "subclass.l2": 2,
-        #     "subclass.full": 3,
-        #     "subclass.l1": 4,
-        #     "cell_type": 5,
-        #     "class": 6,
-        # }
         priority = self.label_priority
         unique_subjects_query = (
             "SELECT DISTINCT ?subject WHERE { ?subject ?predicate ?object FILTER (isIRI(?subject))}"
@@ -443,13 +389,14 @@ class GraphGenerator:
         Set the priority order for adding labels.
 
         Args:
-            label_priority (Optional[Union[List[str], Dict[str, int]]]): Either a list of strings,
+            label_priority (Union[List[str], Dict[str, int]]): Either a list of strings,
                 a dictionary with string keys and int values, representing the priority
                 order for adding labels.
 
         """
-        label_priority.append("cell_type") if "cell_type" not in label_priority else None
         if isinstance(label_priority, list):
+            # TODO Do we need to append the 'cell_type'?
+            label_priority.append("cell_type") if "cell_type" not in label_priority else None
             self.label_priority = {
                 label: len(label_priority) - i for i, label in enumerate(label_priority)
             }
@@ -459,6 +406,7 @@ class GraphGenerator:
                 isinstance(key, str) and isinstance(value, int)
                 for key, value in label_priority.items()
             ):
+                # TODO Do we need to append the 'cell_type'?
                 self.label_priority = label_priority
             else:
                 raise ValueError("Invalid types in priority dictionary")
