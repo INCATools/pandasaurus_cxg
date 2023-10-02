@@ -18,19 +18,11 @@ jobs:
         with:
           python-version: 3.9
 
-      - name: Install Poetry
-        run: |
-          curl -sSL https://install.python-poetry.org | python -
-          export PATH="$HOME/.poetry/bin:$PATH"
-          poetry --version
-
       - name: Install Dependencies and Build Documentation
         run: |
-          poetry install -E docs
+          sudo apt-get install python3-sphinx
           cd docs
-          poetry run make html
-        env:
-          POETRY_VIRTUALENVS_IN_PROJECT: true
+          make html
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
