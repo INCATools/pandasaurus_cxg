@@ -26,7 +26,7 @@ jobs:
 
       - name: Install Dependencies and Build Documentation
         run: |
-          apt-get install python3-sphinx
+          sudo apt-get install python3-sphinx
           # poetry install
           cd docs
           # poetry run make html
