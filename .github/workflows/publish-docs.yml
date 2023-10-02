@@ -31,4 +31,4 @@ jobs:
         with:
           branch: gh-pages
           force: true
-          folder: docs/_build
+          folder: docs/_build/html
