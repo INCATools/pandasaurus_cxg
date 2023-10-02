@@ -58,7 +58,7 @@ The AnndataEnrichmentAnalyzer class wraps the functionality of both AnndataEnric
     gg.enrich_rdf_graph()
     gg.save_rdf_graph(file_name="kidney_new", _format="ttl")
 
-More examples and detailed explanation can be found in jupyter notebook given in [Snippets](#Snippets)
+More examples and detailed explanation can be found in jupyter notebook given in `Snippets <#snippets>`_.
 
 Snippets
 =========
