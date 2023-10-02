@@ -21,6 +21,7 @@ jobs:
       - name: Install Dependencies and Build Documentation
         run: |
           sudo apt-get install python3-sphinx
+          pip install sphinx-rtd-theme
           cd docs
           make html
 
