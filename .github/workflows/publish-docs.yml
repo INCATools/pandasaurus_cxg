@@ -18,7 +18,6 @@ jobs:
         with:
           python-version: 3.9
 
-
       - name: Install Poetry
         run: |
           curl -sSL https://install.python-poetry.org | python -
@@ -30,8 +29,8 @@ jobs:
           poetry install -E docs
           cd docs
           poetry run make html
-         env:
-           POETRY_VIRTUALENVS_IN_PROJECT: true
+        env:
+          POETRY_VIRTUALENVS_IN_PROJECT: true
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
