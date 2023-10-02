@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Introduction &mdash; pandasaurus-cxg 0.1.3 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="_static/documentation_options.js?v=360bc84d"></script>
+        <script src="_static/doctools.js?v=888ff710"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="pandasaurus-cxg’s documentation!" href="index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            pandasaurus-cxg
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Introduction</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#installation">Installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#usage">Usage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#using-anndataenricher-and-anndataanalyzer-individually">Using AnndataEnricher and AnndataAnalyzer Individually</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#using-anndataenrichmentanalyzer-wrapper">Using AnndataEnrichmentAnalyzer Wrapper</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#snippets">Snippets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#roadmap">Roadmap</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">pandasaurus-cxg</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Introduction</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/introduction.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="introduction">
+<h1>Introduction<a class="headerlink" href="#introduction" title="Link to this heading"></a></h1>
+<p>STATUS: early Beta</p>
+<p>A library for retrieving and leveraging the semantic context of ontology annotation in [CxG standard](<a class="reference external" href="https://github.com/chanzuckerberg/single-cell-curation/blob/main/schema/3.0.0/schema.md">https://github.com/chanzuckerberg/single-cell-curation/blob/main/schema/3.0.0/schema.md</a>) [AnnData files](<a class="reference external" href="https://anndata.readthedocs.io/en/latest/">https://anndata.readthedocs.io/en/latest/</a>).</p>
+<p>Slide summarising intended functionality
+![image](<a class="reference external" href="https://github.com/INCATools/pandasaurus_cxg/assets/112839/3082dcd2-dd2f-469d-9076-4eabcc83130d">https://github.com/INCATools/pandasaurus_cxg/assets/112839/3082dcd2-dd2f-469d-9076-4eabcc83130d</a>)</p>
+<section id="installation">
+<h2>Installation<a class="headerlink" href="#installation" title="Link to this heading"></a></h2>
+<p>Available on [PyPi](<a class="reference external" href="https://pypi.org/project/pandasaurus-cxg/0.1.1/">https://pypi.org/project/pandasaurus-cxg/0.1.1/</a>)</p>
+<p>$ pip3 install pandasaurus_cxg</p>
+</section>
+<section id="usage">
+<h2>Usage<a class="headerlink" href="#usage" title="Link to this heading"></a></h2>
+<p>The <cite>AnndataEnricher</cite> and <cite>AnndataAnalyzer</cite> classes can be used both individually and in conjunction with the <cite>AnndataEnrichmentAnalyzer</cite> wrapper class. The <cite>AnndataEnrichmentAnalyzer</cite> class serves as a convenient way to leverage the functionalities of both <cite>AnndataEnricher</cite> and <cite>AnndataAnalyzer</cite>.</p>
+</section>
+<section id="using-anndataenricher-and-anndataanalyzer-individually">
+<h2>Using AnndataEnricher and AnndataAnalyzer Individually<a class="headerlink" href="#using-anndataenricher-and-anndataanalyzer-individually" title="Link to this heading"></a></h2>
+<p>You can use the <cite>AnndataEnricher</cite> and <cite>AnndataAnalyzer</cite> classes separately to perform specific tasks on your data. For instance, <cite>AnndataEnricher</cite> facilitates data enrichment, while <cite>AnndataAnalyzer</cite> provides various analysis tools for Anndata objects.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">pandasaurus_cxg.anndata_enricher</span> <span class="kn">import</span> <span class="n">AnndataEnricher</span>
+<span class="n">ade</span> <span class="o">=</span> <span class="n">AnndataEnricher</span><span class="o">.</span><span class="n">from_file_path</span><span class="p">(</span><span class="s2">&quot;test/data/modified_human_kidney.h5ad&quot;</span><span class="p">)</span>
+<span class="n">ade</span><span class="o">.</span><span class="n">simple_enrichment</span><span class="p">()</span>
+<span class="n">ade</span><span class="o">.</span><span class="n">minimal_slim_enrichment</span><span class="p">([</span><span class="s2">&quot;blood_and_immune_upper_slim&quot;</span><span class="p">])</span>
+</pre></div>
+</div>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">pandasaurus_cxg.anndata_analyzer</span> <span class="kn">import</span> <span class="n">AnndataAnalyzer</span>
+<span class="n">ada</span> <span class="o">=</span> <span class="n">AnndataAnalyzer</span><span class="o">.</span><span class="n">from_file_path</span><span class="p">(</span><span class="s2">&quot;./immune_example.h5ad&quot;</span><span class="p">,</span> <span class="n">author_cell_type_list</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;subclass.full&#39;</span><span class="p">,</span> <span class="s1">&#39;subclass.l3&#39;</span><span class="p">,</span> <span class="s1">&#39;subclass.l2&#39;</span><span class="p">,</span> <span class="s1">&#39;subclass.l1&#39;</span><span class="p">,</span> <span class="s1">&#39;class&#39;</span><span class="p">,</span> <span class="s1">&#39;author_cell_type&#39;</span><span class="p">])</span>
+<span class="n">ada</span><span class="o">.</span><span class="n">co_annotation_report</span><span class="p">()</span>
+</pre></div>
+</div>
+</section>
+<section id="using-anndataenrichmentanalyzer-wrapper">
+<h2>Using AnndataEnrichmentAnalyzer Wrapper<a class="headerlink" href="#using-anndataenrichmentanalyzer-wrapper" title="Link to this heading"></a></h2>
+<p>The AnndataEnrichmentAnalyzer class wraps the functionality of both AnndataEnricher and AnndataAnalyzer, offering a seamless way to perform enrichment and analysis in one go.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">pandasaurus_cxg.enrichment_analysis</span> <span class="kn">import</span> <span class="n">AnndataEnrichmentAnalyzer</span>
+<span class="kn">from</span> <span class="nn">pandasaurus_cxg.graph_generator.graph_generator</span> <span class="kn">import</span> <span class="n">GraphGenerator</span>
+<span class="n">aea</span> <span class="o">=</span> <span class="n">AnndataEnrichmentAnalyzer</span><span class="p">(</span><span class="s2">&quot;test/data/modified_human_kidney.h5ad&quot;</span><span class="p">)</span>
+<span class="n">aea</span><span class="o">.</span><span class="n">contextual_slim_enrichment</span><span class="p">()</span>
+<span class="n">aea</span><span class="o">.</span><span class="n">co_annotation_report</span><span class="p">()</span>
+<span class="n">gg</span> <span class="o">=</span> <span class="n">GraphGenerator</span><span class="p">(</span><span class="n">aea</span><span class="p">)</span>
+<span class="n">gg</span><span class="o">.</span><span class="n">generate_rdf_graph</span><span class="p">()</span>
+<span class="n">gg</span><span class="o">.</span><span class="n">set_label_adding_priority</span><span class="p">([</span><span class="s2">&quot;class&quot;</span><span class="p">,</span> <span class="s2">&quot;cell_type&quot;</span><span class="p">,</span> <span class="s2">&quot;subclass.l1&quot;</span><span class="p">,</span> <span class="s2">&quot;subclass.l1&quot;</span><span class="p">,</span> <span class="s2">&quot;subclass.full&quot;</span><span class="p">,</span> <span class="s2">&quot;subclass.l2&quot;</span><span class="p">,</span> <span class="s2">&quot;subclass.l3&quot;</span><span class="p">])</span>
+<span class="n">gg</span><span class="o">.</span><span class="n">add_label_to_terms</span><span class="p">()</span>
+<span class="n">gg</span><span class="o">.</span><span class="n">enrich_rdf_graph</span><span class="p">()</span>
+<span class="n">gg</span><span class="o">.</span><span class="n">save_rdf_graph</span><span class="p">(</span><span class="n">file_name</span><span class="o">=</span><span class="s2">&quot;kidney_new&quot;</span><span class="p">,</span> <span class="n">_format</span><span class="o">=</span><span class="s2">&quot;ttl&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>More examples and detailed explanation can be found in jupyter notebook given in [Snippets](#Snippets)</p>
+</section>
+<section id="snippets">
+<h2>Snippets<a class="headerlink" href="#snippets" title="Link to this heading"></a></h2>
+<p><a class="reference external" href="https://github.com/INCATools/pandasaurus_cxg/blob/roadmap/walkthrough.ipynb">https://github.com/INCATools/pandasaurus_cxg/blob/roadmap/walkthrough.ipynb</a></p>
+</section>
+<section id="roadmap">
+<h2>Roadmap<a class="headerlink" href="#roadmap" title="Link to this heading"></a></h2>
+<p><a class="reference external" href="https://github.com/INCATools/pandasaurus_cxg/blob/roadmap/ROADMAP.md">https://github.com/INCATools/pandasaurus_cxg/blob/roadmap/ROADMAP.md</a></p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="index.html" class="btn btn-neutral float-left" title="pandasaurus-cxg’s documentation!" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Ugur Bayindir.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
