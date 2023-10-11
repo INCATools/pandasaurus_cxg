@@ -18,12 +18,19 @@ jobs:
         with:
           python-version: 3.9
 
+      - name: Install Poetry
+        run: |
+          curl -sSL https://install.python-poetry.org | python -
+          export PATH="$HOME/.poetry/bin:$PATH"
+          poetry --version
+
       - name: Install Dependencies and Build Documentation
         run: |
-          sudo apt-get install python3-sphinx
-          pip install sphinx-rtd-theme
+          poetry install -E docs
           cd docs
-          make html
+          poetry run make html
+        env:
+          POETRY_VIRTUALENVS_IN_PROJECT: true
 
       - name: Deploy documentation.
         if: ${{ github.event_name == 'push' }}
