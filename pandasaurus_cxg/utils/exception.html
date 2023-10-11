@@ -52,7 +52,7 @@
 <li class="toctree-l2 current"><a class="reference internal" href="index.html">Utils</a><ul class="current">
 <li class="toctree-l3"><a class="reference internal" href="anndata_loader.html">Anndata Loader</a></li>
 <li class="toctree-l3 current"><a class="current reference internal" href="#">Exception Module</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#documentation">Documentation</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-pandasaurus_cxg.utils.exceptions">Documentation</a></li>
 </ul>
 </li>
 </ul>
@@ -91,8 +91,38 @@
   <section id="exception-module">
 <h1>Exception Module<a class="headerlink" href="#exception-module" title="Link to this heading"></a></h1>
 <p>This module contains custom exception classes used in our project.</p>
-<section id="documentation">
-<h2>Documentation<a class="headerlink" href="#documentation" title="Link to this heading"></a></h2>
+<section id="module-pandasaurus_cxg.utils.exceptions">
+<span id="documentation"></span><h2>Documentation<a class="headerlink" href="#module-pandasaurus_cxg.utils.exceptions" title="Link to this heading"></a></h2>
+<dl class="py exception">
+<dt class="sig sig-object py" id="pandasaurus_cxg.utils.exceptions.CellTypeNotFoundError">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pandasaurus_cxg.utils.exceptions.</span></span><span class="sig-name descname"><span class="pre">CellTypeNotFoundError</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">missing_cell_types</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cell_type_list</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/pandasaurus_cxg/utils/exceptions.html#CellTypeNotFoundError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pandasaurus_cxg.utils.exceptions.CellTypeNotFoundError" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code></p>
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="pandasaurus_cxg.utils.exceptions.InvalidGraphFormat">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pandasaurus_cxg.utils.exceptions.</span></span><span class="sig-name descname"><span class="pre">InvalidGraphFormat</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">_format</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">valid_formats</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/pandasaurus_cxg/utils/exceptions.html#InvalidGraphFormat"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pandasaurus_cxg.utils.exceptions.InvalidGraphFormat" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code></p>
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="pandasaurus_cxg.utils.exceptions.InvalidSlimName">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pandasaurus_cxg.utils.exceptions.</span></span><span class="sig-name descname"><span class="pre">InvalidSlimName</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">invalid_slim_list</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">valid_slim_list</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/pandasaurus_cxg/utils/exceptions.html#InvalidSlimName"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pandasaurus_cxg.utils.exceptions.InvalidSlimName" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code></p>
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="pandasaurus_cxg.utils.exceptions.MissingEnrichmentProcess">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pandasaurus_cxg.utils.exceptions.</span></span><span class="sig-name descname"><span class="pre">MissingEnrichmentProcess</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">enrichment_methods</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/pandasaurus_cxg/utils/exceptions.html#MissingEnrichmentProcess"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pandasaurus_cxg.utils.exceptions.MissingEnrichmentProcess" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code></p>
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="pandasaurus_cxg.utils.exceptions.SubclassWarning">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pandasaurus_cxg.utils.exceptions.</span></span><span class="sig-name descname"><span class="pre">SubclassWarning</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">relation</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/pandasaurus_cxg/utils/exceptions.html#SubclassWarning"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pandasaurus_cxg.utils.exceptions.SubclassWarning" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code></p>
+</dd></dl>
+
 </section>
 </section>
 
