@@ -53,7 +53,7 @@
 <li class="toctree-l3"><a class="reference internal" href="graph_generator.html">Graph Generator</a></li>
 <li class="toctree-l3 current"><a class="current reference internal" href="#">Graph Generator Utils</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#documentation">Documentation</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#functions">Functions</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-pandasaurus_cxg.graph_generator.graph_generator_utils">Functions</a></li>
 </ul>
 </li>
 </ul>
@@ -95,8 +95,45 @@
 <section id="documentation">
 <h2>Documentation<a class="headerlink" href="#documentation" title="Link to this heading"></a></h2>
 </section>
-<section id="functions">
-<h2>Functions<a class="headerlink" href="#functions" title="Link to this heading"></a></h2>
+<section id="module-pandasaurus_cxg.graph_generator.graph_generator_utils">
+<span id="functions"></span><h2>Functions<a class="headerlink" href="#module-pandasaurus_cxg.graph_generator.graph_generator_utils" title="Link to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="pandasaurus_cxg.graph_generator.graph_generator_utils.add_outgoing_edges_to_subgraph">
+<span class="sig-prename descclassname"><span class="pre">pandasaurus_cxg.graph_generator.graph_generator_utils.</span></span><span class="sig-name descname"><span class="pre">add_outgoing_edges_to_subgraph</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">predicate_uri</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/pandasaurus_cxg/graph_generator/graph_generator_utils.html#add_outgoing_edges_to_subgraph"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pandasaurus_cxg.graph_generator.graph_generator_utils.add_outgoing_edges_to_subgraph" title="Link to this definition"></a></dt>
+<dd><p>Add all outgoing edges of a node in the graph to the subgraph.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>graph</strong> (<em>Graph</em>) – The RDF graph containing the triples.</p></li>
+<li><p><strong>predicate_uri</strong> (<em>URIRef</em><em> or </em><em>None</em>) – The predicate to filter triples (optional).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The subgraph containing the outgoing edges of the nodes.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>rdflib.Graph</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="pandasaurus_cxg.graph_generator.graph_generator_utils.find_and_rotate_center_layout">
+<span class="sig-prename descclassname"><span class="pre">pandasaurus_cxg.graph_generator.graph_generator_utils.</span></span><span class="sig-name descname"><span class="pre">find_and_rotate_center_layout</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/pandasaurus_cxg/graph_generator/graph_generator_utils.html#find_and_rotate_center_layout"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pandasaurus_cxg.graph_generator.graph_generator_utils.find_and_rotate_center_layout" title="Link to this definition"></a></dt>
+<dd><p>Find and rotate the center of the hierarchical tree layout.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>graph</strong> (<em>nx.Graph</em><em> or </em><em>nx.DiGraph</em>) – The graph to be visualized.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Rotated layout positions.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
 </section>
 </section>
 
