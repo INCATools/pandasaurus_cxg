@@ -32,9 +32,17 @@ class CellTypeNotFoundError(Exception):
 class MissingEnrichmentProcess(Exception):
     def __init__(self, enrichment_methods: List[str]):
         self.message = (
-            f"Any of the following enrichment methods from AnndataEnricher must be used before "
-            f"using enriched_rdf_graph method: "
+            f"Any of the following enrichment methods from AnndataEnricher must be used first; "
             f"{', '.join(enrichment_methods)}"
+        )
+        super().__init__(self.message)
+
+
+class MissingAnalysisProcess(Exception):
+    def __init__(self, analysis_methods: List[str]):
+        self.message = (
+            f"Any of the following analysis methods from AnndataAnalyser must be used first; "
+            f"{', '.join(analysis_methods)}"
         )
         super().__init__(self.message)
 

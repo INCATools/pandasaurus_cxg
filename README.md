@@ -71,6 +71,10 @@ More examples and detailed explanation can be found in jupyter notebook given in
 
 https://github.com/INCATools/pandasaurus_cxg/blob/main/walkthrough.ipynb
 
+## Library Documentation
+
+https://incatools.github.io/pandasaurus_cxg/
+
 ## Roadmap
 
 https://github.com/INCATools/pandasaurus_cxg/blob/main/ROADMAP.md

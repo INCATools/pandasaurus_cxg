@@ -9,6 +9,7 @@ from pandasaurus_cxg.graph_generator.graph_generator import GraphGenerator
 from pandasaurus_cxg.graph_generator.graph_predicates import CONSIST_OF
 from pandasaurus_cxg.utils.exceptions import (
     InvalidGraphFormat,
+    MissingAnalysisProcess,
     MissingEnrichmentProcess,
 )
 
@@ -53,33 +54,45 @@ def graph_generator_instance_for_kidney(enrichment_analyzer_instance_for_kidney_
     return GraphGenerator(ea)
 
 
-def test_graph_generator_init(enrichment_analyzer_instance_for_immune_data):
+def test_graph_generator_init_missing_enrichment_process(enrichment_analyzer_instance_for_immune_data):
     ea = enrichment_analyzer_instance_for_immune_data
+    ea.co_annotation_report()
+
     with pytest.raises(MissingEnrichmentProcess) as exc_info:
         GraphGenerator(ea)
 
     exception = exc_info.value
     expected_message = (
-        "Any of the following enrichment methods from AnndataEnricher must be used before using "
-        "enriched_rdf_graph method: contextual_slim_enrichment, full_slim_enrichment, "
-        "minimal_slim_enrichment, simple_enrichment"
+        "Any of the following enrichment methods from AnndataEnricher must be used first; "
+        "contextual_slim_enrichment, full_slim_enrichment, minimal_slim_enrichment, "
+        "simple_enrichment"
     )
 
     assert isinstance(exception, MissingEnrichmentProcess)
     assert exception.args[0] == expected_message
 
+
+def test_graph_generator_init_missing_analysis_process(enrichment_analyzer_instance_for_immune_data):
+    ea = enrichment_analyzer_instance_for_immune_data
+    ea.enricher_manager.simple_enrichment()
+
+    with pytest.raises(MissingAnalysisProcess) as exc_info:
+        GraphGenerator(ea)
+
+    exception = exc_info.value
+    expected_message = (
+        "Any of the following analysis methods from AnndataAnalyser must be used first; "
+        "co_annotation_report, enriched_co_annotation_report"
+    )
+
+    assert isinstance(exception, MissingAnalysisProcess)
+    assert exception.args[0] == expected_message
+
+
+def test_graph_generator_init_with_valid_input(enrichment_analyzer_instance_for_immune_data):
+    ea = enrichment_analyzer_instance_for_immune_data
     ea.enricher_manager.simple_enrichment()
     ea.co_annotation_report()
-
-    # keys = ["author_cell_type", "cell_type"]
-    # graph_generator = GraphGenerator(ea, keys)
-    #
-    # assert graph_generator.ea == ea
-    # assert graph_generator.df.equals(ea.analyzer_manager.report_df[keys])
-    # assert graph_generator.cell_type_dict == {}
-    # assert graph_generator.ns == Namespace("http://example.org/")
-    # assert graph_generator.graph is not None
-    # assert graph_generator.label_priority is None
 
     graph_generator = GraphGenerator(ea)
 
