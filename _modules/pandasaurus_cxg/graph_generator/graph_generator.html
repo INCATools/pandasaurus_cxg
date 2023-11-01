@@ -83,6 +83,7 @@
 <span class="kn">from</span> <span class="nn">rdflib.plugins.sparql</span> <span class="kn">import</span> <span class="n">prepareQuery</span>
 
 <span class="kn">from</span> <span class="nn">pandasaurus_cxg.enrichment_analysis</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">AnndataAnalyzer</span><span class="p">,</span>
     <span class="n">AnndataEnricher</span><span class="p">,</span>
     <span class="n">AnndataEnrichmentAnalyzer</span><span class="p">,</span>
 <span class="p">)</span>
@@ -102,6 +103,7 @@
 <span class="p">)</span>
 <span class="kn">from</span> <span class="nn">pandasaurus_cxg.utils.exceptions</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">InvalidGraphFormat</span><span class="p">,</span>
+    <span class="n">MissingAnalysisProcess</span><span class="p">,</span>
     <span class="n">MissingEnrichmentProcess</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="kn">from</span> <span class="nn">pandasaurus_cxg.utils.logging_config</span> <span class="kn">import</span> <span class="n">configure_logger</span>
@@ -130,6 +132,10 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># TODO need to think about how to handle the requirement of enrichment and co_annotation_analysis methods</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">ea</span> <span class="o">=</span> <span class="n">enrichment_analyzer</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ea</span><span class="o">.</span><span class="n">analyzer_manager</span><span class="o">.</span><span class="n">report_df</span><span class="o">.</span><span class="n">empty</span><span class="p">:</span>
+            <span class="n">analysis_methods</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">dir</span><span class="p">(</span><span class="n">AnndataAnalyzer</span><span class="p">)</span> <span class="k">if</span> <span class="s2">&quot;_report&quot;</span> <span class="ow">in</span> <span class="n">i</span><span class="p">]</span>
+            <span class="n">analysis_methods</span><span class="o">.</span><span class="n">sort</span><span class="p">()</span>
+            <span class="k">raise</span> <span class="n">MissingAnalysisProcess</span><span class="p">(</span><span class="n">analysis_methods</span><span class="p">)</span>
         <span class="c1"># TODO need to handle invalid keys. We also need to discuss about keeping the keys param. DO NOT USE</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">df</span> <span class="o">=</span> <span class="p">(</span>
             <span class="n">enrichment_analyzer</span><span class="o">.</span><span class="n">analyzer_manager</span><span class="o">.</span><span class="n">report_df</span><span class="p">[</span><span class="n">keys</span><span class="p">]</span>
