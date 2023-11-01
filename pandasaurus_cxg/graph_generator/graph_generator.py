@@ -10,6 +10,7 @@ from rdflib import OWL, RDF, RDFS, BNode, Graph, Literal, Namespace, URIRef
 from rdflib.plugins.sparql import prepareQuery
 
 from pandasaurus_cxg.enrichment_analysis import (
+    AnndataAnalyzer,
     AnndataEnricher,
     AnndataEnrichmentAnalyzer,
 )
@@ -29,6 +30,7 @@ from pandasaurus_cxg.graph_generator.graph_predicates import (
 )
 from pandasaurus_cxg.utils.exceptions import (
     InvalidGraphFormat,
+    MissingAnalysisProcess,
     MissingEnrichmentProcess,
 )
 from pandasaurus_cxg.utils.logging_config import configure_logger
@@ -55,6 +57,10 @@ class GraphGenerator:
         """
         # TODO need to think about how to handle the requirement of enrichment and co_annotation_analysis methods
         self.ea = enrichment_analyzer
+        if self.ea.analyzer_manager.report_df.empty:
+            analysis_methods = [i for i in dir(AnndataAnalyzer) if "_report" in i]
+            analysis_methods.sort()
+            raise MissingAnalysisProcess(analysis_methods)
         # TODO need to handle invalid keys. We also need to discuss about keeping the keys param. DO NOT USE
         self.df = (
             enrichment_analyzer.analyzer_manager.report_df[keys]

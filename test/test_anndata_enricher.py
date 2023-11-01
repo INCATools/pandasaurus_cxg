@@ -268,9 +268,9 @@ def test_filter_anndata_with_enriched_cell_type(sample_immune_data):
 
     exception = exc_info.value
     expected_message = (
-        "Any of the following enrichment methods from AnndataEnricher must be used before using "
-        "enriched_rdf_graph method: contextual_slim_enrichment, full_slim_enrichment, "
-        "minimal_slim_enrichment, simple_enrichment"
+        "Any of the following enrichment methods from AnndataEnricher must be used first; "
+        "contextual_slim_enrichment, full_slim_enrichment, minimal_slim_enrichment, "
+        "simple_enrichment"
     )
 
     assert isinstance(exception, MissingEnrichmentProcess)
@@ -307,9 +307,9 @@ def test_annotate_anndata_with_cell_type(sample_immune_data):
 
     exception = exc_info.value
     expected_message = (
-        "Any of the following enrichment methods from AnndataEnricher must be used before using "
-        "enriched_rdf_graph method: contextual_slim_enrichment, full_slim_enrichment, "
-        "minimal_slim_enrichment, simple_enrichment"
+        "Any of the following enrichment methods from AnndataEnricher must be used first; "
+        "contextual_slim_enrichment, full_slim_enrichment, minimal_slim_enrichment, "
+        "simple_enrichment"
     )
 
     assert isinstance(exception, MissingEnrichmentProcess)
@@ -369,10 +369,10 @@ def test_annotate_anndata_with_cell_type(sample_immune_data):
 def test_set_enricher_property_list(sample_immune_data):
     enricher = AnndataEnricher(sample_immune_data)
 
-    assert enricher.enricher._Query__enrichment_property_list == ["rdfs:subClassOf"]
+    assert enricher.enricher._enrichment_property_list == ["rdfs:subClassOf"]
 
     enricher.set_enricher_property_list(["rdfs:subClassOf", "BFO:0000050"])
-    assert enricher.enricher._Query__enrichment_property_list == ["rdfs:subClassOf", "BFO:0000050"]
+    assert enricher.enricher._enrichment_property_list == ["rdfs:subClassOf", "BFO:0000050"]
 
 
 def test_validate_slim_list(mocker, sample_immune_data, slim_data):
@@ -442,9 +442,9 @@ def test_check_subclass_relationships(sample_immune_data):
 
     exception = exc_info.value
     expected_message = (
-        "Any of the following enrichment methods from AnndataEnricher must be used before using "
-        "enriched_rdf_graph method: contextual_slim_enrichment, full_slim_enrichment, "
-        "minimal_slim_enrichment, simple_enrichment"
+        "Any of the following enrichment methods from AnndataEnricher must be used first; "
+        "contextual_slim_enrichment, full_slim_enrichment, minimal_slim_enrichment, "
+        "simple_enrichment"
     )
 
     assert isinstance(exception, MissingEnrichmentProcess)

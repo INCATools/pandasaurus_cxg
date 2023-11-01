@@ -174,7 +174,7 @@ class AnndataAnalyzer:
     def _enrich_co_annotation(enricher: AnndataEnricher):
         enriched_df = enricher.enricher.enriched_df
         if enriched_df.empty:
-            return pd.DataFrame()
+            return enriched_df
         return enriched_df[enriched_df["o"].isin(enricher.seed_list)][["s_label", "o_label"]]
 
     def _filter_data_and_drop_duplicates(self, field_name_1, field_name_2, disease):
