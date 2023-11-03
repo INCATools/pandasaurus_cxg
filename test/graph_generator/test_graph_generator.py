@@ -165,7 +165,7 @@ def test_enrich_rdf_graph(graph_generator_instance_for_kidney):
 
     graph_generator.enrich_rdf_graph()
 
-    assert len(graph_generator.graph) == 913
+    assert len(graph_generator.graph) == 1024
     assert (
         URIRef(CONSIST_OF.get("iri")),
         RDFS.label,
@@ -182,7 +182,7 @@ def test_enrich_rdf_graph(graph_generator_instance_for_kidney):
                 if str(s).startswith("http://purl.obolibrary.org/obo/CL_")
             ]
         )
-        == 419
+        == 530
     )
 
 
