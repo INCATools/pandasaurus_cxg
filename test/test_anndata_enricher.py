@@ -39,7 +39,15 @@ def slim_data():
     ]
 
 
-def test_init_defaults(sample_immune_data, slim_data):
+def test_init_defaults(mocker, sample_immune_data, slim_data):
+    iterable_slim_data = slim_data
+    mocker.patch.object(
+        SlimManager,
+        "get_slim_list",
+        side_effect=[
+            iter(iterable_slim_data),
+        ],
+    )
     # Test initialization with default values
     enricher = AnndataEnricher(sample_immune_data)
 
