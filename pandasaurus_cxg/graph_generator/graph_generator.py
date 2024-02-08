@@ -6,6 +6,7 @@ from typing import Dict, List, Optional, Union
 import matplotlib.pyplot as plt
 import networkx as nx
 import pandas as pd
+from pandasaurus.graph.graph_generator import GraphGenerator as graphgen
 from rdflib import OWL, RDF, RDFS, BNode, Graph, Literal, Namespace, URIRef
 from rdflib.plugins.sparql import prepareQuery
 
@@ -161,6 +162,9 @@ class GraphGenerator:
                 predicate = URIRef(self.ns + ik)
                 for s, _, _ in self.graph.triples((None, predicate, Literal(iv))):
                     self.graph.add((resource, subcluster, s))
+
+        # transitive reduction step
+        self.graph = graphgen.apply_transitive_reduction(self.graph, [subcluster.toPython()])
 
     def enrich_rdf_graph(self):
         """
