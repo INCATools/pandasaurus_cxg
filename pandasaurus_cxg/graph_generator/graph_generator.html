@@ -93,6 +93,112 @@
 <h1>Graph Generator<a class="headerlink" href="#graph-generator" title="Link to this heading"></a></h1>
 <section id="documentation">
 <h2>Documentation<a class="headerlink" href="#documentation" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="pandasaurus_cxg.graph_generator.graph_generator.GraphGenerator">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pandasaurus_cxg.graph_generator.graph_generator.</span></span><span class="sig-name descname"><span class="pre">GraphGenerator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">enrichment_analyzer</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../enrichment_analysis.html#pandasaurus_cxg.enrichment_analysis.AnndataEnrichmentAnalyzer" title="pandasaurus_cxg.enrichment_analysis.AnndataEnrichmentAnalyzer"><span class="pre">AnndataEnrichmentAnalyzer</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">keys</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/pandasaurus_cxg/graph_generator/graph_generator.html#GraphGenerator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pandasaurus_cxg.graph_generator.graph_generator.GraphGenerator" title="Link to this definition"></a></dt>
+<dd><dl class="py method">
+<dt class="sig sig-object py" id="pandasaurus_cxg.graph_generator.graph_generator.GraphGenerator.enrich_rdf_graph">
+<span class="sig-name descname"><span class="pre">enrich_rdf_graph</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/pandasaurus_cxg/graph_generator/graph_generator.html#GraphGenerator.enrich_rdf_graph"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pandasaurus_cxg.graph_generator.graph_generator.GraphGenerator.enrich_rdf_graph" title="Link to this definition"></a></dt>
+<dd><p>Enrich RDF graph with enriched DataFrame from AnndataEnricher</p>
+<p>Returns:</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pandasaurus_cxg.graph_generator.graph_generator.GraphGenerator.generate_rdf_graph">
+<span class="sig-name descname"><span class="pre">generate_rdf_graph</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/pandasaurus_cxg/graph_generator/graph_generator.html#GraphGenerator.generate_rdf_graph"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pandasaurus_cxg.graph_generator.graph_generator.GraphGenerator.generate_rdf_graph" title="Link to this definition"></a></dt>
+<dd><p>Generates rdf graph using co_annotation report</p>
+<p>Returns:</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pandasaurus_cxg.graph_generator.graph_generator.GraphGenerator.save_rdf_graph">
+<span class="sig-name descname"><span class="pre">save_rdf_graph</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Graph</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'mygraph'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">_format</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'xml'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/pandasaurus_cxg/graph_generator/graph_generator.html#GraphGenerator.save_rdf_graph"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pandasaurus_cxg.graph_generator.graph_generator.GraphGenerator.save_rdf_graph" title="Link to this definition"></a></dt>
+<dd><p>Serializes and saves the RDF graph to a file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>graph</strong> – An optional RDF graph that will be serialized.
+If provided, this graph will be used for serialization.
+If not provided, the graph inside the GraphGenerator instance will be used.</p></li>
+<li><p><strong>file_name</strong> – The name of the output file without the extension.
+Defaults to “mygraph”.</p></li>
+<li><p><strong>_format</strong> – The format of the RDF serialization. Defaults to “xml”.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="../utils/exception.html#pandasaurus_cxg.utils.exceptions.InvalidGraphFormat" title="pandasaurus_cxg.utils.exceptions.InvalidGraphFormat"><strong>InvalidGraphFormat</strong></a> – If the provided _format is not valid.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pandasaurus_cxg.graph_generator.graph_generator.GraphGenerator.set_label_adding_priority">
+<span class="sig-name descname"><span class="pre">set_label_adding_priority</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">label_priority</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/pandasaurus_cxg/graph_generator/graph_generator.html#GraphGenerator.set_label_adding_priority"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pandasaurus_cxg.graph_generator.graph_generator.GraphGenerator.set_label_adding_priority" title="Link to this definition"></a></dt>
+<dd><p>Set the priority order for adding labels.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>label_priority</strong> (<em>Union</em><em>[</em><em>List</em><em>[</em><em>str</em><em>]</em><em>, </em><em>Dict</em><em>[</em><em>str</em><em>, </em><em>int</em><em>]</em><em>]</em>) – Either a list of strings,
+a dictionary with string keys and int values, representing the priority
+order for adding labels.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pandasaurus_cxg.graph_generator.graph_generator.GraphGenerator.visualize_rdf_graph">
+<span class="sig-name descname"><span class="pre">visualize_rdf_graph</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">predicate</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_node</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node_selector</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bottom_up</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/pandasaurus_cxg/graph_generator/graph_generator.html#GraphGenerator.visualize_rdf_graph"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pandasaurus_cxg.graph_generator.graph_generator.GraphGenerator.visualize_rdf_graph" title="Link to this definition"></a></dt>
+<dd><p>Visualizes an RDF graph using NetworkX and Matplotlib, focusing on specified nodes and predicates.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>predicate</strong> – The predicate URI to visualize relationships. Defaults to None.
+If provided, the visualization will show relationships with this predicate.</p></li>
+<li><p><strong>start_node</strong> – A list of starting node URIs for visualization. Defaults to None.
+If provided, the visualization will focus on these nodes and their relationships.</p></li>
+<li><p><strong>node_selector</strong> – <p>A dictionary specifying how to select a node when node URIs are not used.
+Defaults to None. The dictionary should have the following format:</p>
+<ul>
+<li><dl class="simple">
+<dt>To select by label:</dt><dd><p>{‘property’: ‘label’, ‘value’: ‘x label’}</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>To select by annotation:</dt><dd><p>{‘property’: ‘x_annotation’, ‘value’: ‘xxxx’}</p>
+</dd>
+</dl>
+</li>
+<li><p>The ‘property’ key represents the property that will be queried.</p></li>
+<li><p>The ‘value’ key represents the desired property value to match.</p></li>
+</ul>
+</p></li>
+<li><p><strong>file_path</strong> – Path to an RDF file in TTL format to load the graph from. Defaults to None.
+If provided, the graph will be loaded from this file. If empty, the method
+will use the instance’s ‘graph’ attribute.</p></li>
+<li><p><strong>bottom_up</strong> – Determines the graph visualization approach. The default approach is
+bottom-up (default=True). Set it to False for a top-down approach.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>ValueError</strong> – If the ‘predicate’ does not exist in the graph or if none of the ‘start_node’
+    URIs exist in the RDF graph.</p>
+</dd>
+</dl>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<ul class="simple">
+<li><p>The method uses NetworkX to create a hierarchical tree visualization of the RDF graph.</p></li>
+<li><p>The visualization is focused on specific nodes and their relationships using the ‘start_node’
+and ‘predicate’ parameters.</p></li>
+<li><p>If the ‘start_node’ and ‘predicate’ parameter are not provided all graph will be visualized.
+Since it is not optimized to visualize all graph, it is not suggested to use without
+setting these parameters.</p></li>
+</ul>
+</div>
+</dd></dl>
+
+</dd></dl>
+
 </section>
 </section>
 

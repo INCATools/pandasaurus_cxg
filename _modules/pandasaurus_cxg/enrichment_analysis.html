@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>pandasaurus_cxg.enrichment_analysis &mdash; pandasaurus-cxg 0.1.3 documentation</title>
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../_static/documentation_options.js?v=360bc84d"></script>
+        <script src="../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            pandasaurus-cxg
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../introduction.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../pandasaurus_cxg/index.html">Library documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../pandasaurus_cxg/index.html#indices-and-tables">Indices and tables</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">pandasaurus-cxg</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">pandasaurus_cxg.enrichment_analysis</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for pandasaurus_cxg.enrichment_analysis</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span>
+
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+
+<span class="kn">from</span> <span class="nn">pandasaurus_cxg.anndata_analyzer</span> <span class="kn">import</span> <span class="n">AnndataAnalyzer</span>
+<span class="kn">from</span> <span class="nn">pandasaurus_cxg.anndata_enricher</span> <span class="kn">import</span> <span class="n">AnndataEnricher</span>
+<span class="kn">from</span> <span class="nn">pandasaurus_cxg.utils.anndata_loader</span> <span class="kn">import</span> <span class="n">AnndataLoader</span>
+
+
+<div class="viewcode-block" id="AnndataEnrichmentAnalyzer">
+<a class="viewcode-back" href="../../pandasaurus_cxg/enrichment_analysis.html#pandasaurus_cxg.enrichment_analysis.AnndataEnrichmentAnalyzer">[docs]</a>
+<span class="k">class</span> <span class="nc">AnndataEnrichmentAnalyzer</span><span class="p">:</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">author_cell_type_list</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initializes the AnndataEnrichmentAnalyzer, a wrapper for AnndataEnricher and AnndataAnalyzer.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            file_path (str): The path to the file containing the anndata object.</span>
+<span class="sd">            author_cell_type_list (Optional[str]): Names of optional free text cell type fields.</span>
+<span class="sd">                If the &#39;obs_meta&#39; field is missing in &#39;anndata.uns&#39;, this parameter should be set.</span>
+<span class="sd">                This is used to define free text cell type fields.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">anndata</span> <span class="o">=</span> <span class="n">AnndataLoader</span><span class="o">.</span><span class="n">load_from_file</span><span class="p">(</span><span class="n">file_path</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">enricher_manager</span> <span class="o">=</span> <span class="n">AnndataEnricher</span><span class="p">(</span><span class="n">anndata</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">analyzer_manager</span> <span class="o">=</span> <span class="n">AnndataAnalyzer</span><span class="p">(</span><span class="n">anndata</span><span class="p">,</span> <span class="n">author_cell_type_list</span><span class="p">)</span>
+
+<div class="viewcode-block" id="AnndataEnrichmentAnalyzer.simple_enrichment">
+<a class="viewcode-back" href="../../pandasaurus_cxg/enrichment_analysis.html#pandasaurus_cxg.enrichment_analysis.AnndataEnrichmentAnalyzer.simple_enrichment">[docs]</a>
+    <span class="k">def</span> <span class="nf">simple_enrichment</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Perform simple enrichment analysis.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            The enriched results as a pandas DataFrame.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">enricher_manager</span><span class="o">.</span><span class="n">simple_enrichment</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="AnndataEnrichmentAnalyzer.minimal_slim_enrichment">
+<a class="viewcode-back" href="../../pandasaurus_cxg/enrichment_analysis.html#pandasaurus_cxg.enrichment_analysis.AnndataEnrichmentAnalyzer.minimal_slim_enrichment">[docs]</a>
+    <span class="k">def</span> <span class="nf">minimal_slim_enrichment</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">slim_list</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Perform minimal slim enrichment analysis.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            slim_list (List[str]): The list of slim terms to use for enrichment analysis.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">           The enriched results as a pandas DataFrame.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">enricher_manager</span><span class="o">.</span><span class="n">minimal_slim_enrichment</span><span class="p">(</span><span class="n">slim_list</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="AnndataEnrichmentAnalyzer.full_slim_enrichment">
+<a class="viewcode-back" href="../../pandasaurus_cxg/enrichment_analysis.html#pandasaurus_cxg.enrichment_analysis.AnndataEnrichmentAnalyzer.full_slim_enrichment">[docs]</a>
+    <span class="k">def</span> <span class="nf">full_slim_enrichment</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">slim_list</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Perform full slim enrichment analysis.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            slim_list (List[str]): The list of slim terms to use for enrichment analysis.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            The enriched results as a pandas DataFrame.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">enricher_manager</span><span class="o">.</span><span class="n">full_slim_enrichment</span><span class="p">(</span><span class="n">slim_list</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="AnndataEnrichmentAnalyzer.contextual_slim_enrichment">
+<a class="viewcode-back" href="../../pandasaurus_cxg/enrichment_analysis.html#pandasaurus_cxg.enrichment_analysis.AnndataEnrichmentAnalyzer.contextual_slim_enrichment">[docs]</a>
+    <span class="k">def</span> <span class="nf">contextual_slim_enrichment</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Perform contextual slim enrichment analysis.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            The enriched results as a pandas DataFrame if the context list is available,</span>
+<span class="sd">                otherwise None.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># TODO Better handle datasets without tissue field</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">enricher_manager</span><span class="o">.</span><span class="n">contextual_slim_enrichment</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="AnndataEnrichmentAnalyzer.filter_anndata_with_enriched_cell_type">
+<a class="viewcode-back" href="../../pandasaurus_cxg/enrichment_analysis.html#pandasaurus_cxg.enrichment_analysis.AnndataEnrichmentAnalyzer.filter_anndata_with_enriched_cell_type">[docs]</a>
+    <span class="k">def</span> <span class="nf">filter_anndata_with_enriched_cell_type</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cell_type</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Filter the original anndata object based on enriched cell types.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            cell_type: CURIE of the cell type for filtering.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            pd.DataFrame: A DataFrame containing the filtered observations from the original</span>
+<span class="sd">                anndata object.</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            CellTypeNotFoundError: If the provided cell_type is not found in the enriched cell types.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">enricher_manager</span><span class="o">.</span><span class="n">filter_anndata_with_enriched_cell_type</span><span class="p">(</span><span class="n">cell_type</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="AnndataEnrichmentAnalyzer.annotate_anndata_with_cell_type">
+<a class="viewcode-back" href="../../pandasaurus_cxg/enrichment_analysis.html#pandasaurus_cxg.enrichment_analysis.AnndataEnrichmentAnalyzer.annotate_anndata_with_cell_type">[docs]</a>
+    <span class="k">def</span> <span class="nf">annotate_anndata_with_cell_type</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">cell_type_list</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">field_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">field_value</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Annotates the AnnData object with cell type information.</span>
+
+<span class="sd">        This method annotates the cells in the AnnData object with specific cell type</span>
+<span class="sd">        information based on the provided `cell_type_list`. It sets the value of the specified</span>
+<span class="sd">        `field_name` to the given `field_value` for the cells whose &#39;cell_type_ontology_term_id&#39;</span>
+<span class="sd">        matches any of the values in `cell_type_list`.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            cell_type_list (List[str]): A list of cell type ontology term IDs to be used for</span>
+<span class="sd">                cell type annotation.</span>
+<span class="sd">            field_name (str): The name of the field/column in the AnnData object where the</span>
+<span class="sd">                cell type information will be stored.</span>
+<span class="sd">            field_value (str): The value to be assigned to cells with matching cell type</span>
+<span class="sd">                ontology term IDs in the specified `field_name`.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            pd.DataFrame: A DataFrame containing the updated observations from the original anndata</span>
+<span class="sd">                object.</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            CellTypeNotFoundError: If any cell type in `cell_type_list` is not found in the</span>
+<span class="sd">                available cell types in the dataset.</span>
+<span class="sd">            SubclassWarning: If the provided `cell_type_list` contains any relationships where</span>
+<span class="sd">                one cell type is a subclass of another, indicating a potential issue with the</span>
+<span class="sd">                provided annotations.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">enricher_manager</span><span class="o">.</span><span class="n">annotate_anndata_with_cell_type</span><span class="p">(</span>
+            <span class="n">cell_type_list</span><span class="p">,</span> <span class="n">field_name</span><span class="p">,</span> <span class="n">field_value</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="AnndataEnrichmentAnalyzer.co_annotation_report">
+<a class="viewcode-back" href="../../pandasaurus_cxg/enrichment_analysis.html#pandasaurus_cxg.enrichment_analysis.AnndataEnrichmentAnalyzer.co_annotation_report">[docs]</a>
+    <span class="k">def</span> <span class="nf">co_annotation_report</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">disease</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">enrich</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Generates a co-annotation report based on the provided schema.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            disease (Optional[str]): A valid disease CURIE used to filter the rows based on the</span>
+<span class="sd">                given disease. If provided, only the rows matching the specified disease will be</span>
+<span class="sd">                included in the filtering process. Defaults to None if no disease filtering is</span>
+<span class="sd">                desired.</span>
+<span class="sd">            enrich (bool): Flag to either enable or disable enrichment in co_annotation report.</span>
+<span class="sd">                Defaults to False.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            pd.DataFrame: The co-annotation report.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">analyzer_manager</span><span class="o">.</span><span class="n">co_annotation_report</span><span class="p">(</span><span class="n">disease</span><span class="p">,</span> <span class="n">enrich</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="AnndataEnrichmentAnalyzer.enriched_co_annotation_report">
+<a class="viewcode-back" href="../../pandasaurus_cxg/enrichment_analysis.html#pandasaurus_cxg.enrichment_analysis.AnndataEnrichmentAnalyzer.enriched_co_annotation_report">[docs]</a>
+    <span class="k">def</span> <span class="nf">enriched_co_annotation_report</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">disease</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Generates an enriched co-annotation report based on the provided schema. The enrichment</span>
+<span class="sd">        process will be performed by checking if any of the CL terms in the initial seed</span>
+<span class="sd">        (the set of CL terms used to initialize the Pandasaurus object) are also present in the</span>
+<span class="sd">        object column of the enrichment table. If a match is found, the co-annotation analysis</span>
+<span class="sd">        will be repeated, including everything that maps to this term, either directly or via</span>
+<span class="sd">        the enrichment table.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            disease (Optional[str]): A valid disease CURIE used to filter the rows based on the</span>
+<span class="sd">                given disease. If provided, only the rows matching the specified disease will be</span>
+<span class="sd">                included in the filtering process. Defaults to None if no disease filtering is</span>
+<span class="sd">                desired.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            pd.DataFrame: The co-annotation report.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">analyzer_manager</span><span class="o">.</span><span class="n">enriched_co_annotation_report</span><span class="p">(</span><span class="n">disease</span><span class="p">)</span></div>
+</div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Ugur Bayindir.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
