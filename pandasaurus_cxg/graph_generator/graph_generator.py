@@ -68,26 +68,6 @@ class GraphGenerator:
             if keys
             else enrichment_analyzer.analyzer_manager.report_df
         )
-        if self.ea.enricher_manager.enricher.enriched_df.empty:
-            # TODO or we can just call simple_enrichment method
-            enrichment_methods = [i for i in dir(AnndataEnricher) if "_enrichment" in i]
-            enrichment_methods.sort()
-            raise MissingEnrichmentProcess(enrichment_methods)
-        self.cell_type_dict = (
-            pd.concat(
-                [
-                    self.ea.enricher_manager.enricher.enriched_df[["s", "s_label"]],
-                    self.ea.enricher_manager.enricher.enriched_df[["o", "o_label"]].rename(
-                        columns={"o": "s", "o_label": "s_label"}
-                    ),
-                ],
-                axis=0,
-                ignore_index=True,
-            )
-            .drop_duplicates()
-            .set_index("s")["s_label"]
-            .to_dict()
-        )
         self.ns = Namespace("http://example.org/")
         self.graph = Graph()
         self.label_priority = None
@@ -173,11 +153,31 @@ class GraphGenerator:
         Returns:
 
         """
+        if self.ea.enricher_manager.enricher.enriched_df.empty:
+            # TODO or we can just call simple_enrichment method
+            enrichment_methods = [i for i in dir(AnndataEnricher) if "_enrichment" in i]
+            enrichment_methods.sort()
+            raise MissingEnrichmentProcess(enrichment_methods)
+        cell_type_dict = (
+            pd.concat(
+                [
+                    self.ea.enricher_manager.enricher.enriched_df[["s", "s_label"]],
+                    self.ea.enricher_manager.enricher.enriched_df[["o", "o_label"]].rename(
+                        columns={"o": "s", "o_label": "s_label"}
+                    ),
+                ],
+                axis=0,
+                ignore_index=True,
+            )
+            .drop_duplicates()
+            .set_index("s")["s_label"]
+            .to_dict()
+        )
         # add cell_type nodes and consists_of relations
         cl_namespace = Namespace("http://purl.obolibrary.org/obo/CL_")
         consist_of = URIRef(CONSIST_OF.get("iri"))
         self.graph.add((consist_of, RDFS.label, Literal(CONSIST_OF.get("label"))))
-        for curie, label in self.cell_type_dict.items():
+        for curie, label in cell_type_dict.items():
             resource = cl_namespace[curie.split(":")[-1]]
             self.graph.add((resource, RDFS.label, Literal(label)))
             self.graph.add((resource, RDF.type, OWL.Class))
