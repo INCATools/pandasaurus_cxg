@@ -54,26 +54,6 @@ def graph_generator_instance_for_kidney(enrichment_analyzer_instance_for_kidney_
     return GraphGenerator(ea)
 
 
-def test_graph_generator_init_missing_enrichment_process(
-    enrichment_analyzer_instance_for_immune_data,
-):
-    ea = enrichment_analyzer_instance_for_immune_data
-    ea.co_annotation_report()
-
-    with pytest.raises(MissingEnrichmentProcess) as exc_info:
-        GraphGenerator(ea)
-
-    exception = exc_info.value
-    expected_message = (
-        "Any of the following enrichment methods from AnndataEnricher must be used first; "
-        "contextual_slim_enrichment, full_slim_enrichment, minimal_slim_enrichment, "
-        "simple_enrichment"
-    )
-
-    assert isinstance(exception, MissingEnrichmentProcess)
-    assert exception.args[0] == expected_message
-
-
 def test_graph_generator_init_missing_analysis_process(
     enrichment_analyzer_instance_for_immune_data,
 ):
@@ -102,19 +82,6 @@ def test_graph_generator_init_with_valid_input(enrichment_analyzer_instance_for_
 
     assert graph_generator.ea == ea
     assert graph_generator.df.equals(ea.analyzer_manager.report_df)
-    assert graph_generator.cell_type_dict == {
-        "CL:0000798": "gamma-delta T cell",
-        "CL:0000809": "double-positive, alpha-beta thymocyte",
-        "CL:0000813": "memory T cell",
-        "CL:0000815": "regulatory T cell",
-        "CL:0000895": "naive thymus-derived CD4-positive, alpha-beta T cell",
-        "CL:0000897": "CD4-positive, alpha-beta memory T cell",
-        "CL:0000900": "naive thymus-derived CD8-positive, alpha-beta T cell",
-        "CL:0000909": "CD8-positive, alpha-beta memory T cell",
-        "CL:0000940": "mucosal invariant T cell",
-        "CL:0002489": "double negative thymocyte",
-        "CL:0000084": "T cell",
-    }
     assert graph_generator.ns == Namespace("http://example.org/")
     assert graph_generator.graph is not None
     assert graph_generator.label_priority is None
@@ -161,6 +128,25 @@ def test_generate_rdf_graph(graph_generator_instance_for_kidney):
     assert len(graph_generator.graph) == 1
 
 
+def test_enrich_graph_missing_enrichment_process(enrichment_analyzer_instance_for_kidney_data):
+    ea = enrichment_analyzer_instance_for_kidney_data
+    ea.co_annotation_report()
+    gg = GraphGenerator(ea)
+
+    with pytest.raises(MissingEnrichmentProcess) as exc_info:
+        gg.enrich_rdf_graph()
+
+    exception = exc_info.value
+    expected_message = (
+        "Any of the following enrichment methods from AnndataEnricher must be used first; "
+        "contextual_slim_enrichment, full_slim_enrichment, minimal_slim_enrichment, "
+        "simple_enrichment"
+    )
+
+    assert isinstance(exception, MissingEnrichmentProcess)
+    assert exception.args[0] == expected_message
+
+
 def test_enrich_rdf_graph(graph_generator_instance_for_kidney):
     graph_generator = graph_generator_instance_for_kidney
     graph_generator.generate_rdf_graph()
@@ -169,7 +155,7 @@ def test_enrich_rdf_graph(graph_generator_instance_for_kidney):
 
     graph_generator.enrich_rdf_graph()
 
-    assert len(graph_generator.graph) == 903
+    assert len(graph_generator.graph) == 1013
     assert (
         URIRef(CONSIST_OF.get("iri")),
         RDFS.label,
@@ -186,7 +172,7 @@ def test_enrich_rdf_graph(graph_generator_instance_for_kidney):
                 if str(s).startswith("http://purl.obolibrary.org/obo/CL_")
             ]
         )
-        == 417
+        == 527
     )
 
 
