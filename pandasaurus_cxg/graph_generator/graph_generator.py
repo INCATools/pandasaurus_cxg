@@ -22,6 +22,7 @@ from pandasaurus_cxg.graph_generator.graph_generator_utils import (
     colour_mapping,
     find_and_rotate_center_layout,
     generate_subgraph,
+    remove_special_characters,
     select_node_with_property,
 )
 from pandasaurus_cxg.graph_generator.graph_predicates import (
@@ -129,7 +130,7 @@ class GraphGenerator:
             for k, v in inner_dict.items():
                 if k == "subcluster_of":
                     continue
-                self.graph.add((resource, self.ns[k], Literal(v)))
+                self.graph.add((resource, self.ns[remove_special_characters(k)], Literal(v)))
 
         # add relationship between each resource based on their predicate in the co_annotation_report
         # subcluster = self.ns["subcluster_of"]
@@ -139,7 +140,7 @@ class GraphGenerator:
         for _uuid, inner_dict in grouped_dict_uuid.items():
             resource = self.ns[_uuid]
             for ik, iv in inner_dict.get("subcluster_of", {}).items():
-                predicate = URIRef(self.ns + ik)
+                predicate = self.ns[remove_special_characters(ik)]
                 for s, _, _ in self.graph.triples((None, predicate, Literal(iv))):
                     self.graph.add((resource, subcluster, s))
 

@@ -1,4 +1,5 @@
 import networkx as nx
+import pytest
 from rdflib import OWL, RDF, RDFS, BNode, Graph, Literal, Namespace, URIRef
 
 from pandasaurus_cxg.graph_generator.graph_generator_utils import (
@@ -7,6 +8,7 @@ from pandasaurus_cxg.graph_generator.graph_generator_utils import (
     add_outgoing_edges_to_subgraph,
     find_and_rotate_center_layout,
     generate_subgraph,
+    remove_special_characters,
     select_node_with_property,
 )
 from pandasaurus_cxg.graph_generator.graph_predicates import (
@@ -183,3 +185,17 @@ def test_select_node_with_property_predicate():
 
     assert len(result) == 1
     assert "http://example.org/subject2" in result
+
+
+@pytest.mark.parametrize(
+    "input_string, expected_output",
+    [
+        ("Hello World!", "Hello_World"),
+        ("123abc$%^", "123abc"),
+        ("!@#$%^&*()_", "_"),
+        ("_This_is_a_test_", "_This_is_a_test_"),
+        ("", ""),
+    ],
+)
+def test_remove_special_characters(input_string, expected_output):
+    assert remove_special_characters(input_string) == expected_output

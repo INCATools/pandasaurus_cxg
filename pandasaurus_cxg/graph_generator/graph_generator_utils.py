@@ -1,3 +1,5 @@
+import re
+
 import networkx as nx
 from rdflib import OWL, RDF, RDFS, BNode, Graph, Literal, Namespace, URIRef
 
@@ -120,3 +122,7 @@ def select_node_with_property(graph: Graph, _property: str, value: str):
         return [str(s) for s in graph.subjects(predicate=RDFS.label, object=Literal(value))]
     else:
         return [str(s) for s in graph.subjects(predicate=ns[_property], object=Literal(value))]
+
+
+def remove_special_characters(input_string: str) -> str:
+    return re.sub(r"[^a-zA-Z0-9_]", "", input_string.replace(" ", "_"))
