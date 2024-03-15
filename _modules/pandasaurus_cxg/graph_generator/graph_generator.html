@@ -95,6 +95,7 @@
     <span class="n">colour_mapping</span><span class="p">,</span>
     <span class="n">find_and_rotate_center_layout</span><span class="p">,</span>
     <span class="n">generate_subgraph</span><span class="p">,</span>
+    <span class="n">remove_special_characters</span><span class="p">,</span>
     <span class="n">select_node_with_property</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="kn">from</span> <span class="nn">pandasaurus_cxg.graph_generator.graph_predicates</span> <span class="kn">import</span> <span class="p">(</span>
@@ -206,7 +207,7 @@
             <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">inner_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
                 <span class="k">if</span> <span class="n">k</span> <span class="o">==</span> <span class="s2">&quot;subcluster_of&quot;</span><span class="p">:</span>
                     <span class="k">continue</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">add</span><span class="p">((</span><span class="n">resource</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ns</span><span class="p">[</span><span class="n">k</span><span class="p">],</span> <span class="n">Literal</span><span class="p">(</span><span class="n">v</span><span class="p">)))</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">add</span><span class="p">((</span><span class="n">resource</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ns</span><span class="p">[</span><span class="n">remove_special_characters</span><span class="p">(</span><span class="n">k</span><span class="p">)],</span> <span class="n">Literal</span><span class="p">(</span><span class="n">v</span><span class="p">)))</span>
 
         <span class="c1"># add relationship between each resource based on their predicate in the co_annotation_report</span>
         <span class="c1"># subcluster = self.ns[&quot;subcluster_of&quot;]</span>
@@ -216,7 +217,7 @@
         <span class="k">for</span> <span class="n">_uuid</span><span class="p">,</span> <span class="n">inner_dict</span> <span class="ow">in</span> <span class="n">grouped_dict_uuid</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
             <span class="n">resource</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ns</span><span class="p">[</span><span class="n">_uuid</span><span class="p">]</span>
             <span class="k">for</span> <span class="n">ik</span><span class="p">,</span> <span class="n">iv</span> <span class="ow">in</span> <span class="n">inner_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;subcluster_of&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-                <span class="n">predicate</span> <span class="o">=</span> <span class="n">URIRef</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ns</span> <span class="o">+</span> <span class="n">ik</span><span class="p">)</span>
+                <span class="n">predicate</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ns</span><span class="p">[</span><span class="n">remove_special_characters</span><span class="p">(</span><span class="n">ik</span><span class="p">)]</span>
                 <span class="k">for</span> <span class="n">s</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">triples</span><span class="p">((</span><span class="kc">None</span><span class="p">,</span> <span class="n">predicate</span><span class="p">,</span> <span class="n">Literal</span><span class="p">(</span><span class="n">iv</span><span class="p">))):</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">add</span><span class="p">((</span><span class="n">resource</span><span class="p">,</span> <span class="n">subcluster</span><span class="p">,</span> <span class="n">s</span><span class="p">))</span>
 
