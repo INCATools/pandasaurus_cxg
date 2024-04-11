@@ -56,7 +56,7 @@ def test_init_defaults(mocker, sample_immune_data, slim_data):
     assert enricher.anndata.obs["cell_type_ontology_term_id"].equals(
         sample_immune_data.obs["cell_type_ontology_term_id"]
     )
-    assert enricher.seed_list == [
+    assert list(enricher.seed_dict.keys()) == [
         "CL:0000788",
         "CL:0000787",
         "CL:0000798",
@@ -85,7 +85,7 @@ def test_init_custom_fields(sample_immune_data):
         context_field_label="cell_type",
     )
 
-    assert enricher.seed_list == ["UBERON:0000178"]
+    assert list(enricher.seed_dict) == ["UBERON:0000178"]
     assert enricher._context_list == {
         "CL:0000788": "naive B cell",
         "CL:0000787": "memory B cell",
