@@ -175,7 +175,9 @@ class AnndataAnalyzer:
         enriched_df = enricher.enricher.enriched_df
         if enriched_df.empty:
             return enriched_df
-        return enriched_df[enriched_df["o"].isin(enricher.seed_list)][["s_label", "o_label"]]
+        return enriched_df[enriched_df["o"].isin(list(enricher.seed_dict.keys()))][
+            ["s_label", "o_label"]
+        ]
 
     def _filter_data_and_drop_duplicates(self, field_name_1, field_name_2, disease):
         # Filter the data based on the disease condition

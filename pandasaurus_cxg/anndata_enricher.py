@@ -46,8 +46,12 @@ class AnndataEnricher:
             ontology_list_for_slims = ["Cell Ontology"]
         # TODO Do we need to keep whole anndata? Would it be enough to keep the obs only?
         self.anndata = anndata
-        self.seed_list = self.anndata.obs[cell_type_field].unique().tolist()
-        self.enricher = Query(self.seed_list)
+        self.seed_dict = dict(
+            self.anndata.obs.drop_duplicates(subset=[cell_type_field, "cell_type"])[
+                [cell_type_field, "cell_type"]
+            ].values
+        )
+        self.enricher = Query(list(self.seed_dict.keys()))
         try:
             unique_context = self.anndata.obs[
                 [context_field, context_field_label]
@@ -226,7 +230,7 @@ class AnndataEnricher:
         Args:
             property_list (List[str]): The list of properties to include in the enrichment analysis.
         """
-        self.enricher = Query(self.seed_list, property_list)
+        self.enricher = Query(list(self.seed_dict.keys()), property_list)
 
     def validate_slim_list(self, slim_list):
         """Check if any slim term in the given list is invalid.
