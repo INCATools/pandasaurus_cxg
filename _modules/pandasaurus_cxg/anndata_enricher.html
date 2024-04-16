@@ -121,8 +121,12 @@
             <span class="n">ontology_list_for_slims</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;Cell Ontology&quot;</span><span class="p">]</span>
         <span class="c1"># TODO Do we need to keep whole anndata? Would it be enough to keep the obs only?</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">anndata</span> <span class="o">=</span> <span class="n">anndata</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">seed_list</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">anndata</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="n">cell_type_field</span><span class="p">]</span><span class="o">.</span><span class="n">unique</span><span class="p">()</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">enricher</span> <span class="o">=</span> <span class="n">Query</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">seed_list</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">seed_dict</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">anndata</span><span class="o">.</span><span class="n">obs</span><span class="o">.</span><span class="n">drop_duplicates</span><span class="p">(</span><span class="n">subset</span><span class="o">=</span><span class="p">[</span><span class="n">cell_type_field</span><span class="p">,</span> <span class="s2">&quot;cell_type&quot;</span><span class="p">])[</span>
+                <span class="p">[</span><span class="n">cell_type_field</span><span class="p">,</span> <span class="s2">&quot;cell_type&quot;</span><span class="p">]</span>
+            <span class="p">]</span><span class="o">.</span><span class="n">values</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">enricher</span> <span class="o">=</span> <span class="n">Query</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">seed_dict</span><span class="o">.</span><span class="n">keys</span><span class="p">()))</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="n">unique_context</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">anndata</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span>
                 <span class="p">[</span><span class="n">context_field</span><span class="p">,</span> <span class="n">context_field_label</span><span class="p">]</span>
@@ -324,7 +328,7 @@
 <span class="sd">        Args:</span>
 <span class="sd">            property_list (List[str]): The list of properties to include in the enrichment analysis.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">enricher</span> <span class="o">=</span> <span class="n">Query</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">seed_list</span><span class="p">,</span> <span class="n">property_list</span><span class="p">)</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">enricher</span> <span class="o">=</span> <span class="n">Query</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">seed_dict</span><span class="o">.</span><span class="n">keys</span><span class="p">()),</span> <span class="n">property_list</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="AnndataEnricher.validate_slim_list">

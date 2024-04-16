@@ -259,7 +259,9 @@
         <span class="n">enriched_df</span> <span class="o">=</span> <span class="n">enricher</span><span class="o">.</span><span class="n">enricher</span><span class="o">.</span><span class="n">enriched_df</span>
         <span class="k">if</span> <span class="n">enriched_df</span><span class="o">.</span><span class="n">empty</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">enriched_df</span>
-        <span class="k">return</span> <span class="n">enriched_df</span><span class="p">[</span><span class="n">enriched_df</span><span class="p">[</span><span class="s2">&quot;o&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">enricher</span><span class="o">.</span><span class="n">seed_list</span><span class="p">)][[</span><span class="s2">&quot;s_label&quot;</span><span class="p">,</span> <span class="s2">&quot;o_label&quot;</span><span class="p">]]</span>
+        <span class="k">return</span> <span class="n">enriched_df</span><span class="p">[</span><span class="n">enriched_df</span><span class="p">[</span><span class="s2">&quot;o&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">enricher</span><span class="o">.</span><span class="n">seed_dict</span><span class="o">.</span><span class="n">keys</span><span class="p">()))][</span>
+            <span class="p">[</span><span class="s2">&quot;s_label&quot;</span><span class="p">,</span> <span class="s2">&quot;o_label&quot;</span><span class="p">]</span>
+        <span class="p">]</span>
 
     <span class="k">def</span> <span class="nf">_filter_data_and_drop_duplicates</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">field_name_1</span><span class="p">,</span> <span class="n">field_name_2</span><span class="p">,</span> <span class="n">disease</span><span class="p">):</span>
         <span class="c1"># Filter the data based on the disease condition</span>
