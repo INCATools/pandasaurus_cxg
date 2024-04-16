@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pandasaurus-cxg"
-version = "0.1.11"
+version = "0.1.12"
 description = "Ontology enrichment tool for CxG standard AnnData files."
 authors = ["Ugur Bayindir <ugur@ebi.ac.uk>"]
 license = "http://www.apache.org/licenses/LICENSE-2.0"
