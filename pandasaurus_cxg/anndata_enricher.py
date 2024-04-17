@@ -253,8 +253,8 @@ class AnndataEnricher:
         Create a dictionary from enriched_df for mapping cell type ontology term IDs to their labels.
 
         Returns:
-            Dict[str, str]: A dictionary where keys are cell type ontology term IDs (e.g., "CL:000001") and
-                  values are corresponding cell type labels (e.g., "Neuron").
+            Dict[str, str]: A dictionary where keys are cell type ontology term IDs (e.g., "CL:000001") and values
+            are corresponding cell type labels (e.g., "Neuron").
 
         Raises:
             MissingEnrichmentProcess: If the enrichment process has not been performed, and the
