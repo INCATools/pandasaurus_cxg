@@ -176,11 +176,14 @@ for cell type annotation.</p>
 <dd><p>Create a dictionary from enriched_df for mapping cell type ontology term IDs to their labels.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>000001”) and values are
-corresponding cell type labels (e.g., “Neuron”).</p>
+<dd class="field-odd"><p><dl class="simple">
+<dt>A dictionary where keys are cell type ontology term IDs (e.g., “CL:000001”) and</dt><dd><p>values are corresponding cell type labels (e.g., “Neuron”).</p>
+</dd>
+</dl>
+</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>A dictionary where keys are cell type ontology term IDs (e.g., “CL</p>
+<dd class="field-even"><p>Dict[str, str]</p>
 </dd>
 <dt class="field-odd">Raises<span class="colon">:</span></dt>
 <dd class="field-odd"><p><a class="reference internal" href="utils/exception.html#pandasaurus_cxg.utils.exceptions.MissingEnrichmentProcess" title="pandasaurus_cxg.utils.exceptions.MissingEnrichmentProcess"><strong>MissingEnrichmentProcess</strong></a> – If the enrichment process has not been performed, and the
