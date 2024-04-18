@@ -28,6 +28,8 @@ from pandasaurus_cxg.graph_generator.graph_generator_utils import (
 from pandasaurus_cxg.graph_generator.graph_predicates import (
     CLUSTER,
     CONSIST_OF,
+    DATASET,
+    HAS_SOURCE,
     SUBCLUSTER_OF,
 )
 from pandasaurus_cxg.utils.exceptions import (
@@ -119,21 +121,32 @@ class GraphGenerator:
             if temp_dict not in grouped_dict_uuid.values():
                 grouped_dict_uuid[str(uuid.uuid4())] = temp_dict
 
+        # generate dataset entity and has_source property
+        dataset_class = URIRef(self.ns[str(uuid.uuid4())])
+        self.graph.add((dataset_class, RDF.type, URIRef(DATASET.get("iri"))))
+        self.graph.add((dataset_class, RDFS.label, Literal(DATASET.get("label"))))
+        uns = self.ea.enricher_manager.anndata.uns
+        for key, value in uns.items():
+            if not isinstance(value, str):
+                continue
+            self.graph.add((dataset_class, URIRef(self.ns[key]), Literal(value)))
+        has_source = URIRef(HAS_SOURCE["iri"])
+        self.graph.add((has_source, RDFS.label, Literal(HAS_SOURCE["label"])))
+
         # generate a resource for each free-text cell_type annotation and cell_type_ontology_term annotation
-        # cell_set_class = self.ns["CellSet"]
         cell_set_class = URIRef(CLUSTER.get("iri"))
         self.graph.add((cell_set_class, RDF.type, OWL.Class))
         self.graph.add((cell_set_class, RDFS.label, Literal(CLUSTER.get("label"))))
         for _uuid, inner_dict in grouped_dict_uuid.items():
             resource = self.ns[_uuid]
             self.graph.add((resource, RDF.type, cell_set_class))
+            self.graph.add((resource, has_source, dataset_class))
             for k, v in inner_dict.items():
                 if k == "subcluster_of":
                     continue
                 self.graph.add((resource, self.ns[remove_special_characters(k)], Literal(v)))
 
         # add relationship between each resource based on their predicate in the co_annotation_report
-        # subcluster = self.ns["subcluster_of"]
         subcluster = URIRef(SUBCLUSTER_OF.get("iri"))
         self.graph.add((subcluster, RDFS.label, Literal(SUBCLUSTER_OF.get("label"))))
         self.graph.add((subcluster, RDF.type, OWL.ObjectProperty))

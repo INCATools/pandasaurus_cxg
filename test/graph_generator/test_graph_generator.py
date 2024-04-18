@@ -90,13 +90,13 @@ def test_graph_generator_init_with_valid_input(enrichment_analyzer_instance_for_
 def test_generate_rdf_graph(graph_generator_instance_for_kidney):
     graph_generator = graph_generator_instance_for_kidney
     graph_generator.generate_rdf_graph()
-    assert len(graph_generator.graph) == 530
+    assert len(graph_generator.graph) == 629
     assert (
-        len([[s, p, o] for s, p, o in graph_generator.graph.triples((None, RDF.type, None))]) == 143
+        len([[s, p, o] for s, p, o in graph_generator.graph.triples((None, RDF.type, None))]) == 144
     )
     assert (
         len([[s, p, o] for s, p, o in graph_generator.graph.triples((None, RDFS.label, None))])
-        == 19
+        == 21
     )
     assert (
         len(
@@ -152,11 +152,11 @@ def test_enrich_rdf_graph(graph_generator_instance_for_kidney):
     graph_generator = graph_generator_instance_for_kidney
     graph_generator.generate_rdf_graph()
 
-    assert len(graph_generator.graph) == 530
+    assert len(graph_generator.graph) == 629
 
     graph_generator.enrich_rdf_graph()
 
-    assert len(graph_generator.graph) == 1025
+    assert len(graph_generator.graph) == 1124
     assert (
         URIRef(CONSIST_OF.get("iri")),
         RDFS.label,
