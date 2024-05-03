@@ -47,7 +47,7 @@ class AnndataEnricher:
         # TODO Do we need to keep whole anndata? Would it be enough to keep the obs only?
         self.anndata = anndata
         self.seed_dict = dict(
-            self.anndata.obs.drop_duplicates(subset=[cell_type_field, "cell_type"])[
+            self.anndata.obs.drop_duplicates(subset=[cell_type_field, "cell_type"]).dropna()[
                 [cell_type_field, "cell_type"]
             ].values
         )
