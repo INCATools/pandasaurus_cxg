@@ -45,9 +45,9 @@ logger = configure_logger()
 
 class GraphGenerator:
     def __init__(
-        self,
-        enrichment_analyzer: AnndataEnrichmentAnalyzer,
-        keys: Optional[List[str]] = None,
+            self,
+            enrichment_analyzer: AnndataEnrichmentAnalyzer,
+            keys: Optional[List[str]] = None,
     ):
         """
         Initializes GraphGenerator instance.
@@ -193,11 +193,62 @@ class GraphGenerator:
         # add enrichment graph, subClassOf relations
         self.graph += self.ea.enricher_manager.enricher.graph
 
+    def add_metadata_nodes(self, metadata_fields: List[str]):
+        """
+        Add metadata nodes to an RDF graph based on the specified metadata fields. Each node represents a metadata
+        attribute, and edges connecting these metadata nodes to cell clusters indicate the percentage contribution
+        of each metadata to the cluster.
+
+        This function modifies the internal state of the RDF graph by adding new nodes and edges.
+
+        Args:
+            metadata_fields (List[str]): A list of metadata field names that exist in the schema and should be added
+                                         to the RDF graph as nodes.
+
+        Returns:
+
+        """
+        obs = self.ea.enricher_manager.anndata.obs
+        # metadata field validation
+        # TODO schema should be involved
+        missing_fields = [field for field in metadata_fields if field not in obs.keys()]
+        if missing_fields:
+            raise KeyError(f"Missing metadata fields: {', '.join(missing_fields)}")
+
+        # node addition phase
+        author_cell_types = self.ea.analyzer_manager.all_cell_type_identifiers
+        author_cell_types.pop(-1)
+        for metadata in metadata_fields:
+            # for value in obs[metadata].unique():
+            #     value_uri = URIRef(self.ns[str(uuid.uuid4())])
+            #     self.graph.add((value_uri, RDF.type, self.ns[metadata]))
+            #     self.graph.add((value_uri, RDFS.label, Literal(value)))
+            for s, _, _ in self.graph.triples((None, RDF.type, URIRef(CLUSTER.get("iri")))):
+                for cell_type in author_cell_types:
+                    literal = self.graph.value(subject=s, predicate=self.ns[cell_type])
+                    if literal is None:
+                        continue
+                    percentages = (obs[obs[cell_type] == str(literal)]['disease'].value_counts(
+                        normalize=True) * 100)
+                    for disease, percentage in percentages.items():
+                        disease_resource = self.graph.value(predicate=RDFS.label, object=Literal(disease))
+                        if disease_resource is None:
+                            disease_resource = URIRef(self.ns[str(uuid.uuid4())])
+                            self.graph.add((disease_resource, RDF.type, self.ns[metadata]))
+                            self.graph.add((disease_resource, RDFS.label, Literal(disease)))
+
+                        relationship_uri = URIRef(self.ns[str(uuid.uuid4())])
+                        self.graph.add((relationship_uri, RDF.type, self.ns["MetadataRelationship"]))
+                        # self.graph.add((relationship_uri, self.ns["source"], s))
+                        self.graph.add((relationship_uri, self.ns["target"], disease_resource))
+                        self.graph.add((relationship_uri, self.ns["percentage"], Literal(percentage)))
+                        self.graph.add((s, self.ns["has_" + metadata], relationship_uri))
+
     def save_rdf_graph(
-        self,
-        graph: Optional[Graph] = None,
-        file_name: Optional[str] = "mygraph",
-        _format: Optional[str] = "xml",
+            self,
+            graph: Optional[Graph] = None,
+            file_name: Optional[str] = "mygraph",
+            _format: Optional[str] = "xml",
     ):
         """
         Serializes and saves the RDF graph to a file.
@@ -229,12 +280,12 @@ class GraphGenerator:
             raise InvalidGraphFormat(_format, valid_formats)
 
     def visualize_rdf_graph(
-        self,
-        predicate: Optional[str] = None,
-        start_node: Optional[List[str]] = None,
-        node_selector: Optional[Dict[str, str]] = None,
-        file_path: Optional[str] = None,
-        bottom_up: Optional[bool] = True,
+            self,
+            predicate: Optional[str] = None,
+            start_node: Optional[List[str]] = None,
+            node_selector: Optional[Dict[str, str]] = None,
+            file_path: Optional[str] = None,
+            bottom_up: Optional[bool] = True,
     ):
         """
         Visualizes an RDF graph using NetworkX and Matplotlib, focusing on specified nodes and predicates.
@@ -383,7 +434,7 @@ class GraphGenerator:
             resource = result.subject
             label_field = (None, 0)
             for properties_result in graph.query(
-                properties_query, initBindings={"subject": result.subject}, initNs={"rdfs": RDFS}
+                    properties_query, initBindings={"subject": result.subject}, initNs={"rdfs": RDFS}
             ):
                 predicate = properties_result.predicate
                 object_ = properties_result.object
@@ -412,8 +463,8 @@ class GraphGenerator:
 
         elif isinstance(label_priority, dict):
             if all(
-                isinstance(key, str) and isinstance(value, int)
-                for key, value in label_priority.items()
+                    isinstance(key, str) and isinstance(value, int)
+                    for key, value in label_priority.items()
             ):
                 # TODO Do we need to append the 'cell_type'?
                 self.label_priority = label_priority
