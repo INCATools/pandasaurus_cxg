@@ -47,10 +47,14 @@ class AnndataEnricher:
         # TODO Do we need to keep whole anndata? Would it be enough to keep the obs only?
         self.anndata = anndata
         self.seed_dict = dict(
-            self.anndata.obs.drop_duplicates(subset=[cell_type_field, "cell_type"]).dropna()[
-                [cell_type_field, "cell_type"]
-            ].values
+            self.anndata.obs.drop_duplicates(subset=[cell_type_field, "cell_type"])
+            .dropna()[[cell_type_field, "cell_type"]]
+            .values
         )
+        # "unknown" patch
+        if "unknown" in self.seed_dict:
+            del self.seed_dict["unknown"]
+            self.seed_dict["CL:0000000"] = "cell"
         self.enricher = Query(list(self.seed_dict.keys()))
         try:
             unique_context = self.anndata.obs[
