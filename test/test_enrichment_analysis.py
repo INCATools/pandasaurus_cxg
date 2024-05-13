@@ -65,7 +65,7 @@ def test_annotate_anndata_with_cell_type(enrichment_analyzer_instance):
 
     assert isinstance(
         ae.annotate_anndata_with_cell_type(
-            cell_type_list=["CL:0000809", "CL:0000813"],
+            cell_type_list=["CL:0000798", "CL:0000815"],
             field_name="new_anno",
             field_value="X'd cells",
         ),

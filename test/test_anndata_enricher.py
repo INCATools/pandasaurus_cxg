@@ -56,22 +56,7 @@ def test_init_defaults(mocker, sample_immune_data, slim_data):
     assert enricher.anndata.obs["cell_type_ontology_term_id"].equals(
         sample_immune_data.obs["cell_type_ontology_term_id"]
     )
-    assert list(enricher.seed_dict.keys()) == [
-        "CL:0000788",
-        "CL:0000787",
-        "CL:0000798",
-        "CL:0000980",
-        "CL:0000815",
-        "CL:0000897",
-        "CL:0000909",
-        "CL:0000900",
-        "CL:0000895",
-        "CL:0000940",
-        "CL:0000813",
-        "CL:0000809",
-        "CL:0002489",
-        "CL:0000084",
-    ]
+    assert list(enricher.seed_dict.keys()) == ['CL:0000798', 'CL:0000980', 'CL:0000815', 'CL:0000897', 'CL:0000909', 'CL:0000900', 'CL:0000895', 'CL:0000084']
     assert enricher._context_list == {"UBERON:0000178": "blood"}
     assert enricher.slim_list == slim_data
 
@@ -290,9 +275,7 @@ def test_filter_anndata_with_enriched_cell_type(sample_immune_data):
 
     exception = exc_info.value
     expected_message = (
-        "Following cell types not found in the annotation: CL:XXX. Please use cell types from: "
-        "CL:0000798, CL:0000809, CL:0000813, CL:0000815, CL:0000895, CL:0000897, CL:0000900, "
-        "CL:0000909, CL:0000940, CL:0002489, CL:0000084."
+        "Following cell types not found in the annotation: CL:XXX. Please use cell types from: CL:0000798, CL:0000815, CL:0000895, CL:0000897, CL:0000900, CL:0000909, CL:0000084."
     )
 
     assert isinstance(exception, CellTypeNotFoundError)
@@ -331,9 +314,7 @@ def test_annotate_anndata_with_cell_type(sample_immune_data):
 
     exception = exc_info.value
     expected_message = (
-        "Following cell types not found in the annotation: CL:XXX. Please use cell types from: "
-        "CL:0000798, CL:0000809, CL:0000813, CL:0000815, CL:0000895, CL:0000897, CL:0000900, "
-        "CL:0000909, CL:0000940, CL:0002489, CL:0000084."
+        "Following cell types not found in the annotation: CL:XXX. Please use cell types from: CL:0000798, CL:0000815, CL:0000895, CL:0000897, CL:0000900, CL:0000909, CL:0000084."
     )
 
     assert isinstance(exception, CellTypeNotFoundError)
@@ -342,21 +323,19 @@ def test_annotate_anndata_with_cell_type(sample_immune_data):
     enricher.simple_enrichment()
     with pytest.raises(SubclassWarning) as exc_info:
         enricher.annotate_anndata_with_cell_type(
-            cell_type_list=["CL:0000809", "CL:0000813", "CL:0000084"],
+            cell_type_list=["CL:0000798", "CL:0000815", "CL:0000084"],
             field_name="new_anno",
             field_value="X'd cells",
         )
 
     exception = exc_info.value
     expected_message = (
-        "The following cell type terms are related with subClassOf relation. "
-        "CL:0000809-CL:0000084, CL:0000813-CL:0000084."
+        'The following cell type terms are related with subClassOf relation. CL:0000798-CL:0000084, CL:0000815-CL:0000084.'
     )
 
     assert isinstance(exception, SubclassWarning)
     assert exception.args[0] == expected_message
-
-    cell_type_list = ["CL:0000809", "CL:0000813"]
+    cell_type_list = ["CL:0000798", "CL:0000895"]
     field_name = "new_anno"
     field_value = "new label"
     enricher.annotate_anndata_with_cell_type(
@@ -460,9 +439,9 @@ def test_check_subclass_relationships(sample_immune_data):
 
     enricher.simple_enrichment()
     subclass_relation = enricher.check_subclass_relationships(
-        ["CL:0000897", "CL:0000813", "CL:0000909", "CL:0000809"]
+        ["CL:0000798", "CL:0000815", "CL:0000084"]
     )
 
-    expected_subclass_relation = [("CL:0000897", "CL:0000813"), ("CL:0000909", "CL:0000813")]
+    expected_subclass_relation = [('CL:0000798', 'CL:0000084'), ('CL:0000815', 'CL:0000084')]
 
     assert subclass_relation == expected_subclass_relation
