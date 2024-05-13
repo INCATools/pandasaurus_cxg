@@ -54,7 +54,7 @@ class AnndataEnricher:
         # "unknown" patch
         if "unknown" in self.seed_dict:
             del self.seed_dict["unknown"]
-            self.seed_dict["C::0000000"] = "cell"
+            self.seed_dict["CL:0000000"] = "cell"
         self.enricher = Query(list(self.seed_dict.keys()))
         try:
             unique_context = self.anndata.obs[
