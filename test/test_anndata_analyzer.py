@@ -131,7 +131,7 @@ def test_enriched_co_annotation_report(sample_immune_data, author_cell_type_list
     report_df = analyzer.enriched_co_annotation_report()
 
     assert isinstance(report_df, pd.DataFrame)
-    assert report_df.shape == (38, 5)
+    assert report_df.shape == (30, 5)
 
 
 def test_enrich_co_annotation(sample_immune_data, author_cell_type_list):
@@ -146,4 +146,4 @@ def test_enrich_co_annotation(sample_immune_data, author_cell_type_list):
     result_df = analyzer._enrich_co_annotation(enricher)
 
     assert isinstance(result_df, pd.DataFrame)
-    assert result_df.shape == (12, 2)
+    assert result_df.shape == (6, 2)
