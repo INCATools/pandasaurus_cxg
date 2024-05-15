@@ -229,7 +229,7 @@ class GraphGenerator:
                     if literal is None:
                         continue
                     percentages = (obs[obs[cell_type] == str(literal)]['disease'].value_counts(
-                        normalize=True) * 100)
+                        normalize=True) * 100).round(2)
                     for disease, percentage in percentages.items():
                         disease_resource = self.graph.value(predicate=RDFS.label, object=Literal(disease))
                         if disease_resource is None:
