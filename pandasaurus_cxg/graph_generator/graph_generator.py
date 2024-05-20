@@ -5,7 +5,6 @@ from typing import Dict, List, Optional, Union
 
 import matplotlib.pyplot as plt
 import networkx as nx
-import pandas as pd
 from pandasaurus.graph.graph_generator import GraphGenerator as graphgen
 from rdflib import OWL, RDF, RDFS, BNode, Graph, Literal, Namespace, URIRef
 from rdflib.plugins.sparql import prepareQuery
@@ -19,9 +18,11 @@ from pandasaurus_cxg.graph_generator.graph_generator_utils import (
     add_edge,
     add_node,
     add_outgoing_edges_to_subgraph,
+    citation_field_name,
     colour_mapping,
     find_and_rotate_center_layout,
     generate_subgraph,
+    parse_citation_field_into_dict,
     remove_special_characters,
     select_node_with_property,
 )
@@ -129,6 +130,17 @@ class GraphGenerator:
         for key, value in uns.items():
             if not isinstance(value, str):
                 continue
+            if key == citation_field_name:
+                citation_dict = parse_citation_field_into_dict(value)
+                for citation_key, citation_value in citation_dict.items():
+                    self.graph.add(
+                        (
+                            dataset_class,
+                            URIRef(self.ns[citation_key]),
+                            Literal(citation_value),
+                        )
+                    )
+
             self.graph.add((dataset_class, URIRef(self.ns[key]), Literal(value)))
         has_source = URIRef(HAS_SOURCE["iri"])
         self.graph.add((has_source, RDFS.label, Literal(HAS_SOURCE["label"])))
