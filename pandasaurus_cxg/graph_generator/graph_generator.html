@@ -97,6 +97,22 @@
 <dt class="sig sig-object py" id="pandasaurus_cxg.graph_generator.graph_generator.GraphGenerator">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pandasaurus_cxg.graph_generator.graph_generator.</span></span><span class="sig-name descname"><span class="pre">GraphGenerator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">enrichment_analyzer</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../enrichment_analysis.html#pandasaurus_cxg.enrichment_analysis.AnndataEnrichmentAnalyzer" title="pandasaurus_cxg.enrichment_analysis.AnndataEnrichmentAnalyzer"><span class="pre">AnndataEnrichmentAnalyzer</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">keys</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/pandasaurus_cxg/graph_generator/graph_generator.html#GraphGenerator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pandasaurus_cxg.graph_generator.graph_generator.GraphGenerator" title="Link to this definition"></a></dt>
 <dd><dl class="py method">
+<dt class="sig sig-object py" id="pandasaurus_cxg.graph_generator.graph_generator.GraphGenerator.add_metadata_nodes">
+<span class="sig-name descname"><span class="pre">add_metadata_nodes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">metadata_fields</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/pandasaurus_cxg/graph_generator/graph_generator.html#GraphGenerator.add_metadata_nodes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pandasaurus_cxg.graph_generator.graph_generator.GraphGenerator.add_metadata_nodes" title="Link to this definition"></a></dt>
+<dd><p>Add metadata nodes to an RDF graph based on the specified metadata fields. Each node represents a metadata
+attribute, and edges connecting these metadata nodes to cell clusters indicate the percentage contribution
+of each metadata to the cluster.</p>
+<p>This function modifies the internal state of the RDF graph by adding new nodes and edges.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>metadata_fields</strong> (<em>List</em><em>[</em><em>str</em><em>]</em>) – A list of metadata field names that exist in the schema and should be added
+to the RDF graph as nodes.</p>
+</dd>
+</dl>
+<p>Returns:</p>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="pandasaurus_cxg.graph_generator.graph_generator.GraphGenerator.enrich_rdf_graph">
 <span class="sig-name descname"><span class="pre">enrich_rdf_graph</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/pandasaurus_cxg/graph_generator/graph_generator.html#GraphGenerator.enrich_rdf_graph"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pandasaurus_cxg.graph_generator.graph_generator.GraphGenerator.enrich_rdf_graph" title="Link to this definition"></a></dt>
 <dd><p>Enrich RDF graph with enriched DataFrame from AnndataEnricher</p>

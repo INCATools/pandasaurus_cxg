@@ -274,6 +274,70 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">graph</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ea</span><span class="o">.</span><span class="n">enricher_manager</span><span class="o">.</span><span class="n">enricher</span><span class="o">.</span><span class="n">graph</span></div>
 
 
+<div class="viewcode-block" id="GraphGenerator.add_metadata_nodes">
+<a class="viewcode-back" href="../../../pandasaurus_cxg/graph_generator/graph_generator.html#pandasaurus_cxg.graph_generator.graph_generator.GraphGenerator.add_metadata_nodes">[docs]</a>
+    <span class="k">def</span> <span class="nf">add_metadata_nodes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">metadata_fields</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Add metadata nodes to an RDF graph based on the specified metadata fields. Each node represents a metadata</span>
+<span class="sd">        attribute, and edges connecting these metadata nodes to cell clusters indicate the percentage contribution</span>
+<span class="sd">        of each metadata to the cluster.</span>
+
+<span class="sd">        This function modifies the internal state of the RDF graph by adding new nodes and edges.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            metadata_fields (List[str]): A list of metadata field names that exist in the schema and should be added</span>
+<span class="sd">                                         to the RDF graph as nodes.</span>
+
+<span class="sd">        Returns:</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">obs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ea</span><span class="o">.</span><span class="n">enricher_manager</span><span class="o">.</span><span class="n">anndata</span><span class="o">.</span><span class="n">obs</span>
+        <span class="c1"># metadata field validation</span>
+        <span class="c1"># TODO schema should be involved</span>
+        <span class="n">missing_fields</span> <span class="o">=</span> <span class="p">[</span><span class="n">field</span> <span class="k">for</span> <span class="n">field</span> <span class="ow">in</span> <span class="n">metadata_fields</span> <span class="k">if</span> <span class="n">field</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">obs</span><span class="o">.</span><span class="n">keys</span><span class="p">()]</span>
+        <span class="k">if</span> <span class="n">missing_fields</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Missing metadata fields: </span><span class="si">{</span><span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">missing_fields</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="n">author_cell_types</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ea</span><span class="o">.</span><span class="n">analyzer_manager</span><span class="o">.</span><span class="n">all_cell_type_identifiers</span><span class="p">)</span>
+        <span class="c1"># remove &#39;cell_type&#39; from all_cell_type_identifiers</span>
+        <span class="n">author_cell_types</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="c1"># add an annotation property for percentage</span>
+        <span class="n">percentage_annotation_property</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ns</span><span class="p">[</span><span class="s2">&quot;percentage&quot;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">add</span><span class="p">((</span><span class="n">percentage_annotation_property</span><span class="p">,</span> <span class="n">RDF</span><span class="o">.</span><span class="n">type</span><span class="p">,</span> <span class="n">OWL</span><span class="o">.</span><span class="n">AnnotationProperty</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">metadata</span> <span class="ow">in</span> <span class="n">metadata_fields</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">s</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">triples</span><span class="p">((</span><span class="kc">None</span><span class="p">,</span> <span class="n">RDF</span><span class="o">.</span><span class="n">type</span><span class="p">,</span> <span class="n">URIRef</span><span class="p">(</span><span class="n">CLUSTER</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;iri&quot;</span><span class="p">)))):</span>
+                <span class="k">for</span> <span class="n">a_cell_type</span> <span class="ow">in</span> <span class="n">author_cell_types</span><span class="p">:</span>
+                    <span class="n">literal</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">value</span><span class="p">(</span><span class="n">subject</span><span class="o">=</span><span class="n">s</span><span class="p">,</span> <span class="n">predicate</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">ns</span><span class="p">[</span><span class="n">a_cell_type</span><span class="p">])</span>
+                    <span class="k">if</span> <span class="n">literal</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                        <span class="k">continue</span>
+                    <span class="n">percentages</span> <span class="o">=</span> <span class="p">(</span>
+                        <span class="n">obs</span><span class="p">[</span><span class="n">obs</span><span class="p">[</span><span class="n">a_cell_type</span><span class="p">]</span> <span class="o">==</span> <span class="nb">str</span><span class="p">(</span><span class="n">literal</span><span class="p">)][</span><span class="n">metadata</span><span class="p">]</span><span class="o">.</span><span class="n">value_counts</span><span class="p">(</span><span class="n">normalize</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                        <span class="o">*</span> <span class="mi">100</span>
+                    <span class="p">)</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span> <span class="o">!=</span> <span class="mf">0.0</span><span class="p">]</span>
+                    <span class="k">for</span> <span class="n">label</span><span class="p">,</span> <span class="n">percentage</span> <span class="ow">in</span> <span class="n">percentages</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                        <span class="n">annotated_target</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">value</span><span class="p">(</span>
+                            <span class="n">predicate</span><span class="o">=</span><span class="n">RDFS</span><span class="o">.</span><span class="n">label</span><span class="p">,</span> <span class="nb">object</span><span class="o">=</span><span class="n">Literal</span><span class="p">(</span><span class="n">label</span><span class="p">)</span>
+                        <span class="p">)</span>
+                        <span class="k">if</span> <span class="n">annotated_target</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                            <span class="n">annotated_target</span> <span class="o">=</span> <span class="n">URIRef</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ns</span><span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">uuid</span><span class="o">.</span><span class="n">uuid4</span><span class="p">())])</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">add</span><span class="p">((</span><span class="n">annotated_target</span><span class="p">,</span> <span class="n">RDF</span><span class="o">.</span><span class="n">type</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ns</span><span class="p">[</span><span class="n">metadata</span><span class="p">]))</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">add</span><span class="p">((</span><span class="n">annotated_target</span><span class="p">,</span> <span class="n">RDFS</span><span class="o">.</span><span class="n">label</span><span class="p">,</span> <span class="n">Literal</span><span class="p">(</span><span class="n">label</span><span class="p">)))</span>
+                        <span class="n">bnode_axiom</span> <span class="o">=</span> <span class="n">BNode</span><span class="p">()</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">add</span><span class="p">((</span><span class="n">bnode_axiom</span><span class="p">,</span> <span class="n">RDF</span><span class="o">.</span><span class="n">type</span><span class="p">,</span> <span class="n">OWL</span><span class="o">.</span><span class="n">Axiom</span><span class="p">))</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">add</span><span class="p">((</span><span class="n">bnode_axiom</span><span class="p">,</span> <span class="n">OWL</span><span class="o">.</span><span class="n">annotatedSource</span><span class="p">,</span> <span class="n">s</span><span class="p">))</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+                            <span class="p">(</span><span class="n">bnode_axiom</span><span class="p">,</span> <span class="n">OWL</span><span class="o">.</span><span class="n">annotatedProperty</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ns</span><span class="p">[</span><span class="s2">&quot;has_&quot;</span> <span class="o">+</span> <span class="n">metadata</span><span class="p">])</span>
+                        <span class="p">)</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">add</span><span class="p">((</span><span class="n">bnode_axiom</span><span class="p">,</span> <span class="n">OWL</span><span class="o">.</span><span class="n">annotatedTarget</span><span class="p">,</span> <span class="n">annotated_target</span><span class="p">))</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+                            <span class="p">(</span>
+                                <span class="n">bnode_axiom</span><span class="p">,</span>
+                                <span class="n">percentage_annotation_property</span><span class="p">,</span>
+                                <span class="n">Literal</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">{:.2f}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">percentage</span><span class="p">)),</span>
+                            <span class="p">)</span>
+                        <span class="p">)</span></div>
+
+
 <div class="viewcode-block" id="GraphGenerator.save_rdf_graph">
 <a class="viewcode-back" href="../../../pandasaurus_cxg/graph_generator/graph_generator.html#pandasaurus_cxg.graph_generator.graph_generator.GraphGenerator.save_rdf_graph">[docs]</a>
     <span class="k">def</span> <span class="nf">save_rdf_graph</span><span class="p">(</span>
