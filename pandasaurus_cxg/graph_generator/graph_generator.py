@@ -193,6 +193,67 @@ class GraphGenerator:
         # add enrichment graph, subClassOf relations
         self.graph += self.ea.enricher_manager.enricher.graph
 
+    def add_metadata_nodes(self, metadata_fields: List[str]):
+        """
+        Add metadata nodes to an RDF graph based on the specified metadata fields. Each node represents a metadata
+        attribute, and edges connecting these metadata nodes to cell clusters indicate the percentage contribution
+        of each metadata to the cluster.
+
+        This function modifies the internal state of the RDF graph by adding new nodes and edges.
+
+        Args:
+            metadata_fields (List[str]): A list of metadata field names that exist in the schema and should be added
+                                         to the RDF graph as nodes.
+
+        Returns:
+
+        """
+        obs = self.ea.enricher_manager.anndata.obs
+        # metadata field validation
+        # TODO schema should be involved
+        missing_fields = [field for field in metadata_fields if field not in obs.keys()]
+        if missing_fields:
+            raise KeyError(f"Missing metadata fields: {', '.join(missing_fields)}")
+
+        author_cell_types = list(self.ea.analyzer_manager.all_cell_type_identifiers)
+        # remove 'cell_type' from all_cell_type_identifiers
+        author_cell_types.pop(-1)
+        # add an annotation property for percentage
+        percentage_annotation_property = self.ns["percentage"]
+        self.graph.add((percentage_annotation_property, RDF.type, OWL.AnnotationProperty))
+        for metadata in metadata_fields:
+            for s, _, _ in self.graph.triples((None, RDF.type, URIRef(CLUSTER.get("iri")))):
+                for a_cell_type in author_cell_types:
+                    literal = self.graph.value(subject=s, predicate=self.ns[a_cell_type])
+                    if literal is None:
+                        continue
+                    percentages = (
+                        obs[obs[a_cell_type] == str(literal)][metadata].value_counts(normalize=True)
+                        * 100
+                    ).loc[lambda x: x != 0.0]
+                    for label, percentage in percentages.items():
+                        annotated_target = self.graph.value(
+                            predicate=RDFS.label, object=Literal(label)
+                        )
+                        if annotated_target is None:
+                            annotated_target = URIRef(self.ns[str(uuid.uuid4())])
+                            self.graph.add((annotated_target, RDF.type, self.ns[metadata]))
+                            self.graph.add((annotated_target, RDFS.label, Literal(label)))
+                        bnode_axiom = BNode()
+                        self.graph.add((bnode_axiom, RDF.type, OWL.Axiom))
+                        self.graph.add((bnode_axiom, OWL.annotatedSource, s))
+                        self.graph.add(
+                            (bnode_axiom, OWL.annotatedProperty, self.ns["has_" + metadata])
+                        )
+                        self.graph.add((bnode_axiom, OWL.annotatedTarget, annotated_target))
+                        self.graph.add(
+                            (
+                                bnode_axiom,
+                                percentage_annotation_property,
+                                Literal("{:.2f}".format(percentage)),
+                            )
+                        )
+
     def save_rdf_graph(
         self,
         graph: Optional[Graph] = None,

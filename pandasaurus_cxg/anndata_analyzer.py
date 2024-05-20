@@ -142,9 +142,9 @@ class AnndataAnalyzer:
             [item for sublist in [[k, v] for k, v in record.items()] for item in sublist]
             for record in temp_result
         ]
-        unique_result = AnndataAnalyzer._remove_duplicates(result)
+        # unique_result = AnndataAnalyzer._remove_duplicates(result)
         self.report_df = pd.DataFrame(
-            [inner_list[:2] + inner_list[5:6] + inner_list[2:4] for inner_list in unique_result],
+            [inner_list[:2] + inner_list[5:6] + inner_list[2:4] for inner_list in result],
             columns=["field_name1", "value1", "predicate", "field_name2", "value2"],
         )
         return self.report_df
