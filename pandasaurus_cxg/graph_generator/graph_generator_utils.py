@@ -1,4 +1,5 @@
 import re
+from typing import Dict
 
 import networkx as nx
 from rdflib import OWL, RDF, RDFS, BNode, Graph, Literal, Namespace, URIRef
@@ -13,6 +14,8 @@ colour_mapping = {
     "http://www.w3.org/2002/07/owl#Class": "deepskyblue",
     "http://purl.obolibrary.org/obo/PCL_0010001": "cyan",
 }
+
+citation_field_name = "citation"
 
 
 def add_edge(nx_graph: nx.Graph, subject, predicate, obj):
@@ -126,3 +129,32 @@ def select_node_with_property(graph: Graph, _property: str, value: str):
 
 def remove_special_characters(input_string: str) -> str:
     return re.sub(r"[^a-zA-Z0-9_]", "", input_string.replace(" ", "_"))
+
+
+def parse_citation_field_into_dict(value: str) -> Dict[str, str]:
+    """
+    Parses a citation string into a dictionary by extracting key citation fields.
+
+    Args:
+        value: The string containing citation fields and values.
+
+    Returns:
+        A dictionary with keys such as 'Publication', 'Dataset Version', and 'Collection',
+          and corresponding values extracted from the input string.
+    """
+    # Split the input string on the key terms
+    parts = value.split(" ")
+    keys = ["Publication:", "Version:", "Collection:"]
+    key_indices = [parts.index(key) for key in keys if key in parts]
+    # Break down into key-value pairs
+    key_value_pairs = {}
+    for i, index in enumerate(key_indices):
+        current_value = " ".join(parts[index + 1 : index + 2])
+        key_value_pairs.update(
+            {
+                "download_link"
+                if parts[index][:-1].lower() == "version"
+                else parts[index][:-1].lower(): current_value
+            }
+        )
+    return key_value_pairs
