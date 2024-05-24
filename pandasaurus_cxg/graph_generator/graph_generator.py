@@ -136,12 +136,12 @@ class GraphGenerator:
                     self.graph.add(
                         (
                             dataset_class,
-                            URIRef(self.ns[citation_key]),
+                            URIRef(self.ns[remove_special_characters(citation_key)]),
                             Literal(citation_value),
                         )
                     )
 
-            self.graph.add((dataset_class, URIRef(self.ns[key]), Literal(value)))
+            self.graph.add((dataset_class, URIRef(self.ns[remove_special_characters(key)]), Literal(value)))
         has_source = URIRef(HAS_SOURCE["iri"])
         self.graph.add((has_source, RDFS.label, Literal(HAS_SOURCE["label"])))
 

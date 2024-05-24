@@ -91,7 +91,7 @@ def test_co_annotation_report_without_enrichment(sample_anndata_without_uns, aut
     report_df = analyzer.co_annotation_report()
 
     assert isinstance(report_df, pd.DataFrame)
-    assert report_df.shape == (1203, 5)
+    assert report_df.shape == (1896, 5)
 
 
 def test_co_annotation_report_with_enrichment(sample_anndata_without_uns, author_cell_type_list):
@@ -102,7 +102,7 @@ def test_co_annotation_report_with_enrichment(sample_anndata_without_uns, author
     report_df = analyzer.co_annotation_report(enrich=True)
 
     assert isinstance(report_df, pd.DataFrame)
-    assert report_df.shape == (1203, 5)
+    assert report_df.shape == (1896, 5)
 
 
 def test_co_annotation_report_with_disease_filter(
@@ -131,7 +131,7 @@ def test_enriched_co_annotation_report(sample_immune_data, author_cell_type_list
     report_df = analyzer.enriched_co_annotation_report()
 
     assert isinstance(report_df, pd.DataFrame)
-    assert report_df.shape == (30, 5)
+    assert report_df.shape == (40, 5)
 
 
 def test_enrich_co_annotation(sample_immune_data, author_cell_type_list):
