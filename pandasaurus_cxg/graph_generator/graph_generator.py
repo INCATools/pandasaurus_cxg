@@ -33,6 +33,7 @@ from pandasaurus_cxg.graph_generator.graph_predicates import (
     HAS_SOURCE,
     SUBCLUSTER_OF,
 )
+from pandasaurus_cxg.graph_generator.graph_namespaces import prefixes
 from pandasaurus_cxg.utils.exceptions import (
     InvalidGraphFormat,
     MissingAnalysisProcess,
@@ -141,7 +142,9 @@ class GraphGenerator:
                         )
                     )
 
-            self.graph.add((dataset_class, URIRef(self.ns[remove_special_characters(key)]), Literal(value)))
+            self.graph.add(
+                (dataset_class, URIRef(self.ns[remove_special_characters(key)]), Literal(value))
+            )
         has_source = URIRef(HAS_SOURCE["iri"])
         self.graph.add((has_source, RDFS.label, Literal(HAS_SOURCE["label"])))
 
@@ -173,7 +176,7 @@ class GraphGenerator:
         self.graph = graphgen.apply_transitive_reduction(self.graph, [subcluster.toPython()])
 
         # add cell_type nodes and consists_of relations
-        cl_namespace = Namespace("http://purl.obolibrary.org/obo/CL_")
+        cl_namespace = Namespace(prefixes.get("CL"))
         consist_of = URIRef(CONSIST_OF.get("iri"))
         self.graph.add((consist_of, RDFS.label, Literal(CONSIST_OF.get("label"))))
         for curie, label in self.ea.enricher_manager.seed_dict.items():
@@ -243,14 +246,21 @@ class GraphGenerator:
                         obs[obs[a_cell_type] == str(literal)][metadata].value_counts(normalize=True)
                         * 100
                     ).loc[lambda x: x != 0.0]
+
+                    # Extract the ontology term ID mapping
+                    ontology_term_id_mapping = (
+                        obs[[metadata, f"{metadata}_ontology_term_id"]]
+                        .drop_duplicates()
+                        .set_index(metadata)
+                        .to_dict()[f"{metadata}_ontology_term_id"]
+                    )
+
                     for label, percentage in percentages.items():
-                        annotated_target = self.graph.value(
-                            predicate=RDFS.label, object=Literal(label)
-                        )
-                        if annotated_target is None:
-                            annotated_target = URIRef(self.ns[str(uuid.uuid4())])
-                            self.graph.add((annotated_target, RDF.type, self.ns[metadata]))
-                            self.graph.add((annotated_target, RDFS.label, Literal(label)))
+                        ontology_term_id = ontology_term_id_mapping.get(label).split(":")
+                        annotated_target = Namespace(prefixes.get(ontology_term_id[0]))[
+                            ontology_term_id[-1]
+                        ]
+                        self.graph.add((annotated_target, RDFS.label, Literal(label)))
                         bnode_axiom = BNode()
                         self.graph.add((bnode_axiom, RDF.type, OWL.Axiom))
                         self.graph.add((bnode_axiom, OWL.annotatedSource, s))
