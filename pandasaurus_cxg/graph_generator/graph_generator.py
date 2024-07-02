@@ -264,9 +264,7 @@ class GraphGenerator:
                         bnode_axiom = BNode()
                         self.graph.add((bnode_axiom, RDF.type, OWL.Axiom))
                         self.graph.add((bnode_axiom, OWL.annotatedSource, s))
-                        self.graph.add(
-                            (bnode_axiom, OWL.annotatedProperty, self.ns["has_" + metadata])
-                        )
+                        self.graph.add((bnode_axiom, OWL.annotatedProperty, self.ns[metadata]))
                         self.graph.add((bnode_axiom, OWL.annotatedTarget, annotated_target))
                         self.graph.add(
                             (
