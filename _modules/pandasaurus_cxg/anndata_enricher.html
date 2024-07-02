@@ -123,7 +123,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">anndata</span> <span class="o">=</span> <span class="n">anndata</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">seed_dict</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">anndata</span><span class="o">.</span><span class="n">obs</span><span class="o">.</span><span class="n">drop_duplicates</span><span class="p">(</span><span class="n">subset</span><span class="o">=</span><span class="p">[</span><span class="n">cell_type_field</span><span class="p">,</span> <span class="s2">&quot;cell_type&quot;</span><span class="p">])</span>
-            <span class="o">.</span><span class="n">dropna</span><span class="p">()[[</span><span class="n">cell_type_field</span><span class="p">,</span> <span class="s2">&quot;cell_type&quot;</span><span class="p">]]</span>
+            <span class="o">.</span><span class="n">dropna</span><span class="p">(</span><span class="n">subset</span><span class="o">=</span><span class="p">[</span><span class="n">cell_type_field</span><span class="p">,</span> <span class="s2">&quot;cell_type&quot;</span><span class="p">])[[</span><span class="n">cell_type_field</span><span class="p">,</span> <span class="s2">&quot;cell_type&quot;</span><span class="p">]]</span>
             <span class="o">.</span><span class="n">values</span>
         <span class="p">)</span>
         <span class="c1"># &quot;unknown&quot; patch</span>
