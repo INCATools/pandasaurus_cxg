@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pandasaurus-cxg"
-version = "0.1.20"
+version = "0.1.21"
 description = "Ontology enrichment tool for CxG standard AnnData files."
 authors = ["Ugur Bayindir <ugur@ebi.ac.uk>"]
 license = "http://www.apache.org/licenses/LICENSE-2.0"
@@ -10,7 +10,7 @@ packages = [{include = "pandasaurus_cxg"}]
 [tool.poetry.dependencies]
 python = "^3.9"
 pandas = "^2.0.2"
-anndata = "^0.9.1"
+anndata = "^0.10.5"
 rdflib = "^6.3.2"
 oaklib = "0.5.25"
 matplotlib = "^3.7.2"

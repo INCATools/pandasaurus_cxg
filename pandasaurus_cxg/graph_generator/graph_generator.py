@@ -237,6 +237,14 @@ class GraphGenerator:
         percentage_annotation_property = self.ns["percentage"]
         self.graph.add((percentage_annotation_property, RDF.type, OWL.AnnotationProperty))
         for metadata in metadata_fields:
+            # Extract the ontology term ID mapping
+            ontology_term_id_mapping = (
+                obs[[metadata, f"{metadata}_ontology_term_id"]]
+                .drop_duplicates()
+                .set_index(metadata)
+                .to_dict()[f"{metadata}_ontology_term_id"]
+            )
+
             for s, _, _ in self.graph.triples((None, RDF.type, URIRef(CLUSTER.get("iri")))):
                 for a_cell_type in author_cell_types:
                     literal = self.graph.value(subject=s, predicate=self.ns[a_cell_type])
@@ -247,19 +255,15 @@ class GraphGenerator:
                         * 100
                     ).loc[lambda x: x != 0.0]
 
-                    # Extract the ontology term ID mapping
-                    ontology_term_id_mapping = (
-                        obs[[metadata, f"{metadata}_ontology_term_id"]]
-                        .drop_duplicates()
-                        .set_index(metadata)
-                        .to_dict()[f"{metadata}_ontology_term_id"]
-                    )
-
                     for label, percentage in percentages.items():
-                        ontology_term_id = ontology_term_id_mapping.get(label).split(":")
-                        annotated_target = Namespace(prefixes.get(ontology_term_id[0]))[
-                            ontology_term_id[-1]
-                        ]
+                        ontology_term_id = ontology_term_id_mapping.get(label)
+                        if isinstance(ontology_term_id, str) and ":" in ontology_term_id:
+                            ontology_term_id = ontology_term_id_mapping.get(label).split(":")
+                            annotated_target = Namespace(prefixes.get(ontology_term_id[0]))[
+                                ontology_term_id[-1]
+                            ]
+                        else:
+                            annotated_target = URIRef(self.ns[str(uuid.uuid4())])
                         self.graph.add((annotated_target, RDFS.label, Literal(label)))
                         bnode_axiom = BNode()
                         self.graph.add((bnode_axiom, RDF.type, OWL.Axiom))
