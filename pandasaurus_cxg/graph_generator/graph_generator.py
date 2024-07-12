@@ -244,11 +244,6 @@ class GraphGenerator:
                 .set_index(metadata)
                 .to_dict()[f"{metadata}_ontology_term_id"]
             )
-            if not all(
-                isinstance(ontology_term_id, str) and ":" in ontology_term_id
-                for ontology_level, ontology_term_id in ontology_term_id_mapping.items()
-            ):
-                continue
 
             for s, _, _ in self.graph.triples((None, RDF.type, URIRef(CLUSTER.get("iri")))):
                 for a_cell_type in author_cell_types:
@@ -261,10 +256,14 @@ class GraphGenerator:
                     ).loc[lambda x: x != 0.0]
 
                     for label, percentage in percentages.items():
-                        ontology_term_id = ontology_term_id_mapping.get(label).split(":")
-                        annotated_target = Namespace(prefixes.get(ontology_term_id[0]))[
-                            ontology_term_id[-1]
-                        ]
+                        ontology_term_id = ontology_term_id_mapping.get(label)
+                        if isinstance(ontology_term_id, str) and ":" in ontology_term_id:
+                            ontology_term_id = ontology_term_id_mapping.get(label).split(":")
+                            annotated_target = Namespace(prefixes.get(ontology_term_id[0]))[
+                                ontology_term_id[-1]
+                            ]
+                        else:
+                            annotated_target = URIRef(self.ns[str(uuid.uuid4())])
                         self.graph.add((annotated_target, RDFS.label, Literal(label)))
                         bnode_axiom = BNode()
                         self.graph.add((bnode_axiom, RDF.type, OWL.Axiom))
