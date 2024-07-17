@@ -5,4 +5,5 @@ prefixes = {
     "MONDO": "http://purl.obolibrary.org/obo/MONDO_",
     "HsapDv": "http://purl.obolibrary.org/obo/HsapDv_",
     "NCBITaxon": "http://purl.obolibrary.org/obo/NCBITaxon_",
+    "EFO": "http://www.ebi.ac.uk/efo/EFO_",
 }
