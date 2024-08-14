@@ -158,3 +158,19 @@ def parse_citation_field_into_dict(value: str) -> Dict[str, str]:
             }
         )
     return key_value_pairs
+
+
+def get_cxg_dataset_url(matrix_id: str) -> str:
+    """
+    Constructs a URL for a CellxGene dataset.
+
+    Given a matrix ID, this function returns the corresponding URL for accessing
+    the dataset on the CellxGene platform.
+
+    Args:
+        matrix_id: The unique identifier for the dataset matrix.
+
+    Returns:
+        The full URL to access the dataset on CellxGene.
+    """
+    return f"https://cellxgene.cziscience.com/e/{matrix_id}.cxg/"
