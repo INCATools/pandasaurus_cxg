@@ -22,6 +22,7 @@ from pandasaurus_cxg.graph_generator.graph_generator_utils import (
     colour_mapping,
     find_and_rotate_center_layout,
     generate_subgraph,
+    get_cxg_dataset_url,
     parse_citation_field_into_dict,
     remove_special_characters,
     select_node_with_property,
@@ -124,15 +125,19 @@ class GraphGenerator:
                 grouped_dict_uuid[str(uuid.uuid4())] = temp_dict
 
         # generate dataset entity and has_source property
-        dataset_class = URIRef(self.ns[str(uuid.uuid4())])
+        uns = self.ea.enricher_manager.anndata.uns
+        citation_dict = {}
+        if citation_field_name in uns.keys():
+            citation_dict = parse_citation_field_into_dict(uns[citation_field_name])
+            dataset_class = URIRef(get_cxg_dataset_url(citation_dict.get("download_link").split("/")[-1].split(".")[0]))
+        else:
+            dataset_class = URIRef(self.ns[str(uuid.uuid4())])
         self.graph.add((dataset_class, RDF.type, URIRef(DATASET.get("iri"))))
         self.graph.add((dataset_class, RDFS.label, Literal(DATASET.get("label"))))
-        uns = self.ea.enricher_manager.anndata.uns
         for key, value in uns.items():
             if not isinstance(value, str):
                 continue
             if key == citation_field_name:
-                citation_dict = parse_citation_field_into_dict(value)
                 for citation_key, citation_value in citation_dict.items():
                     self.graph.add(
                         (
