@@ -240,6 +240,25 @@
         <span class="p">)</span>
     <span class="k">return</span> <span class="n">key_value_pairs</span></div>
 
+
+
+<div class="viewcode-block" id="get_cxg_dataset_url">
+<a class="viewcode-back" href="../../../pandasaurus_cxg/graph_generator/graph_generator_utils.html#pandasaurus_cxg.graph_generator.graph_generator_utils.get_cxg_dataset_url">[docs]</a>
+<span class="k">def</span> <span class="nf">get_cxg_dataset_url</span><span class="p">(</span><span class="n">matrix_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Constructs a URL for a CellxGene dataset.</span>
+
+<span class="sd">    Given a matrix ID, this function returns the corresponding URL for accessing</span>
+<span class="sd">    the dataset on the CellxGene platform.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        matrix_id: The unique identifier for the dataset matrix.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        The full URL to access the dataset on CellxGene.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;https://cellxgene.cziscience.com/e/</span><span class="si">{</span><span class="n">matrix_id</span><span class="si">}</span><span class="s2">.cxg/&quot;</span></div>
+
 </pre></div>
 
            </div>
