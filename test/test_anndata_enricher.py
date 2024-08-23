@@ -18,7 +18,7 @@ from pandasaurus_cxg.utils.exceptions import (
 def sample_immune_data():
     current_dir = os.path.dirname(os.path.abspath(__file__))
     file_path = os.path.join(current_dir, "data/immune_example.h5ad")
-    return anndata.read(file_path, backed="r")
+    return anndata.read_h5ad(file_path, backed="r")
 
 
 @pytest.fixture

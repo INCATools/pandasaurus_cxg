@@ -12,21 +12,21 @@ from pandasaurus_cxg.anndata_enricher import AnndataEnricher
 def sample_immune_data():
     current_dir = os.path.dirname(os.path.abspath(__file__))
     file_path = os.path.join(current_dir, "data/immune_example.h5ad")
-    return anndata.read(file_path, backed="r")
+    return anndata.read_h5ad(file_path, backed="r")
 
 
 @pytest.fixture
 def sample_anndata_with_uns():
     current_dir = os.path.dirname(os.path.abspath(__file__))
     file_path = os.path.join(current_dir, "data/modified_human_kidney.h5ad")
-    return anndata.read(file_path, backed="r")
+    return anndata.read_h5ad(file_path, backed="r")
 
 
 @pytest.fixture
 def sample_anndata_without_uns():
     current_dir = os.path.dirname(os.path.abspath(__file__))
     file_path = os.path.join(current_dir, "data/human_kidney.h5ad")
-    return anndata.read(file_path, backed="r")
+    return anndata.read_h5ad(file_path, backed="r")
 
 
 @pytest.fixture()

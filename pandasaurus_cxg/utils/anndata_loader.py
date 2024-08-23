@@ -22,7 +22,7 @@ class AnndataLoader:
         with warnings.catch_warnings():
             warnings.simplefilter("ignore", category=anndata.ImplicitModificationWarning)
             try:
-                anndata_obj = anndata.read(file_path, backed="r")
+                anndata_obj = anndata.read_h5ad(file_path, backed="r")
                 return anndata_obj
             except Exception as e:
                 print(f"An error occurred while loading the file: {e}")
