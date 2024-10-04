@@ -121,9 +121,14 @@ to the RDF graph as nodes.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pandasaurus_cxg.graph_generator.graph_generator.GraphGenerator.generate_rdf_graph">
-<span class="sig-name descname"><span class="pre">generate_rdf_graph</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/pandasaurus_cxg/graph_generator/graph_generator.html#GraphGenerator.generate_rdf_graph"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pandasaurus_cxg.graph_generator.graph_generator.GraphGenerator.generate_rdf_graph" title="Link to this definition"></a></dt>
-<dd><p>Generates rdf graph using co_annotation report</p>
-<p>Returns:</p>
+<span class="sig-name descname"><span class="pre">generate_rdf_graph</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">merge</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/pandasaurus_cxg/graph_generator/graph_generator.html#GraphGenerator.generate_rdf_graph"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pandasaurus_cxg.graph_generator.graph_generator.GraphGenerator.generate_rdf_graph" title="Link to this definition"></a></dt>
+<dd><p>Generates an RDF graph using the co-annotation report and updates the internal graph attribute.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>merge</strong> (<em>bool</em>) – If True, combines cell cluster nodes with identical cell set memberships
+to create a more concise graph representation. Defaults to False.</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py method">

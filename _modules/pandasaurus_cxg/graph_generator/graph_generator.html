@@ -100,6 +100,7 @@
     <span class="n">remove_special_characters</span><span class="p">,</span>
     <span class="n">select_node_with_property</span><span class="p">,</span>
 <span class="p">)</span>
+<span class="kn">from</span> <span class="nn">pandasaurus_cxg.graph_generator.graph_namespaces</span> <span class="kn">import</span> <span class="n">prefixes</span>
 <span class="kn">from</span> <span class="nn">pandasaurus_cxg.graph_generator.graph_predicates</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">CLUSTER</span><span class="p">,</span>
     <span class="n">CONSIST_OF</span><span class="p">,</span>
@@ -107,7 +108,6 @@
     <span class="n">HAS_SOURCE</span><span class="p">,</span>
     <span class="n">SUBCLUSTER_OF</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="kn">from</span> <span class="nn">pandasaurus_cxg.graph_generator.graph_namespaces</span> <span class="kn">import</span> <span class="n">prefixes</span>
 <span class="kn">from</span> <span class="nn">pandasaurus_cxg.utils.exceptions</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">InvalidGraphFormat</span><span class="p">,</span>
     <span class="n">MissingAnalysisProcess</span><span class="p">,</span>
@@ -158,12 +158,13 @@
 
 <div class="viewcode-block" id="GraphGenerator.generate_rdf_graph">
 <a class="viewcode-back" href="../../../pandasaurus_cxg/graph_generator/graph_generator.html#pandasaurus_cxg.graph_generator.graph_generator.GraphGenerator.generate_rdf_graph">[docs]</a>
-    <span class="k">def</span> <span class="nf">generate_rdf_graph</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">generate_rdf_graph</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">merge</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Generates rdf graph using co_annotation report</span>
+<span class="sd">        Generates an RDF graph using the co-annotation report and updates the internal graph attribute.</span>
 
-<span class="sd">        Returns:</span>
-
+<span class="sd">        Args:</span>
+<span class="sd">            merge (bool): If True, combines cell cluster nodes with identical cell set memberships</span>
+<span class="sd">                          to create a more concise graph representation. Defaults to False.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
             <span class="k">return</span>
@@ -175,28 +176,29 @@
         <span class="k">for</span> <span class="p">(</span><span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">),</span> <span class="n">inner_dict</span> <span class="ow">in</span> <span class="n">grouped_df</span><span class="p">:</span>
             <span class="n">temp_dict</span> <span class="o">=</span> <span class="p">{}</span>
             <span class="k">for</span> <span class="n">inner_list</span> <span class="ow">in</span> <span class="n">inner_dict</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">tolist</span><span class="p">():</span>
-                <span class="k">if</span> <span class="n">inner_list</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;cluster_matches&quot;</span><span class="p">:</span>
-                    <span class="n">inner_dict_uuid</span> <span class="o">=</span> <span class="p">{</span>
-                        <span class="n">inner_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span> <span class="n">inner_list</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
-                        <span class="n">inner_list</span><span class="p">[</span><span class="mi">3</span><span class="p">]:</span> <span class="n">inner_list</span><span class="p">[</span><span class="mi">4</span><span class="p">],</span>
-                    <span class="p">}</span>
-                <span class="k">elif</span> <span class="n">inner_list</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;subcluster_of&quot;</span><span class="p">:</span>
-                    <span class="n">inner_dict_uuid</span> <span class="o">=</span> <span class="p">{</span>
-                        <span class="n">inner_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span> <span class="n">inner_list</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
-                        <span class="s2">&quot;subcluster_of&quot;</span><span class="p">:</span> <span class="p">{</span>
-                            <span class="n">inner_list</span><span class="p">[</span><span class="mi">3</span><span class="p">]:</span> <span class="n">inner_list</span><span class="p">[</span><span class="mi">4</span><span class="p">],</span>
-                        <span class="p">},</span>
-                    <span class="p">}</span>
-                <span class="k">else</span><span class="p">:</span>
-                    <span class="n">inner_dict_uuid</span> <span class="o">=</span> <span class="p">{</span>
-                        <span class="n">inner_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span> <span class="n">inner_list</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
-                    <span class="p">}</span>
+                <span class="c1"># Initialize the base dictionary based on the current list</span>
+                <span class="n">inner_dict_uuid</span> <span class="o">=</span> <span class="p">{</span><span class="n">inner_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span> <span class="n">inner_list</span><span class="p">[</span><span class="mi">1</span><span class="p">]}</span>
 
+                <span class="c1"># Update dictionary based on specific conditions</span>
+                <span class="k">if</span> <span class="n">inner_list</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;subcluster_of&quot;</span><span class="p">:</span>
+                    <span class="n">inner_dict_uuid</span><span class="p">[</span><span class="s2">&quot;subcluster_of&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="n">inner_list</span><span class="p">[</span><span class="mi">3</span><span class="p">]:</span> <span class="n">inner_list</span><span class="p">[</span><span class="mi">4</span><span class="p">]}</span>
+                <span class="k">elif</span> <span class="n">inner_list</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;cluster_matches&quot;</span><span class="p">:</span>
+                    <span class="c1"># Use different structures depending on the &#39;merge&#39; flag</span>
+                    <span class="n">update_value</span> <span class="o">=</span> <span class="p">(</span>
+                        <span class="p">{</span><span class="n">inner_list</span><span class="p">[</span><span class="mi">3</span><span class="p">]:</span> <span class="n">inner_list</span><span class="p">[</span><span class="mi">4</span><span class="p">]}</span>
+                        <span class="k">if</span> <span class="n">merge</span>
+                        <span class="k">else</span> <span class="p">{</span><span class="s2">&quot;cluster_matches&quot;</span><span class="p">:</span> <span class="p">{</span><span class="n">inner_list</span><span class="p">[</span><span class="mi">3</span><span class="p">]:</span> <span class="n">inner_list</span><span class="p">[</span><span class="mi">4</span><span class="p">]}}</span>
+                    <span class="p">)</span>
+                    <span class="n">inner_dict_uuid</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">update_value</span><span class="p">)</span>
+
+                <span class="c1"># Update temp_dict with inner_dict_uuid values</span>
                 <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">inner_dict_uuid</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-                    <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">temp_dict</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
-                        <span class="n">temp_dict</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="n">key</span><span class="p">:</span> <span class="n">value</span><span class="p">})</span>
-                    <span class="k">elif</span> <span class="n">key</span> <span class="o">==</span> <span class="s2">&quot;subcluster_of&quot;</span><span class="p">:</span>
-                        <span class="n">temp_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;subcluster_of&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">temp_dict</span><span class="p">:</span>
+                        <span class="n">temp_dict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">temp_dict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span>
+                            <span class="n">temp_dict</span><span class="p">[</span><span class="n">key</span><span class="p">],</span> <span class="nb">dict</span>
+                        <span class="p">)</span> <span class="k">else</span> <span class="n">temp_dict</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="n">key</span><span class="p">:</span> <span class="n">value</span><span class="p">})</span>
 
             <span class="k">if</span> <span class="n">temp_dict</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">grouped_dict_uuid</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
                 <span class="n">grouped_dict_uuid</span><span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">uuid</span><span class="o">.</span><span class="n">uuid4</span><span class="p">())]</span> <span class="o">=</span> <span class="n">temp_dict</span>
@@ -206,7 +208,9 @@
         <span class="n">citation_dict</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="k">if</span> <span class="n">citation_field_name</span> <span class="ow">in</span> <span class="n">uns</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
             <span class="n">citation_dict</span> <span class="o">=</span> <span class="n">parse_citation_field_into_dict</span><span class="p">(</span><span class="n">uns</span><span class="p">[</span><span class="n">citation_field_name</span><span class="p">])</span>
-            <span class="n">dataset_class</span> <span class="o">=</span> <span class="n">URIRef</span><span class="p">(</span><span class="n">get_cxg_dataset_url</span><span class="p">(</span><span class="n">citation_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;download_link&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]))</span>
+            <span class="n">dataset_class</span> <span class="o">=</span> <span class="n">URIRef</span><span class="p">(</span>
+                <span class="n">get_cxg_dataset_url</span><span class="p">(</span><span class="n">citation_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;download_link&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span>
+            <span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">dataset_class</span> <span class="o">=</span> <span class="n">URIRef</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ns</span><span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">uuid</span><span class="o">.</span><span class="n">uuid4</span><span class="p">())])</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">add</span><span class="p">((</span><span class="n">dataset_class</span><span class="p">,</span> <span class="n">RDF</span><span class="o">.</span><span class="n">type</span><span class="p">,</span> <span class="n">URIRef</span><span class="p">(</span><span class="n">DATASET</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;iri&quot;</span><span class="p">))))</span>
@@ -239,7 +243,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">add</span><span class="p">((</span><span class="n">resource</span><span class="p">,</span> <span class="n">RDF</span><span class="o">.</span><span class="n">type</span><span class="p">,</span> <span class="n">cell_set_class</span><span class="p">))</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">add</span><span class="p">((</span><span class="n">resource</span><span class="p">,</span> <span class="n">has_source</span><span class="p">,</span> <span class="n">dataset_class</span><span class="p">))</span>
             <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">inner_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-                <span class="k">if</span> <span class="n">k</span> <span class="o">==</span> <span class="s2">&quot;subcluster_of&quot;</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;subcluster_of&quot;</span><span class="p">,</span> <span class="s2">&quot;cluster_matches&quot;</span><span class="p">}:</span>
                     <span class="k">continue</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">add</span><span class="p">((</span><span class="n">resource</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ns</span><span class="p">[</span><span class="n">remove_special_characters</span><span class="p">(</span><span class="n">k</span><span class="p">)],</span> <span class="n">Literal</span><span class="p">(</span><span class="n">v</span><span class="p">)))</span>
 
@@ -249,10 +253,14 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">add</span><span class="p">((</span><span class="n">subcluster</span><span class="p">,</span> <span class="n">RDF</span><span class="o">.</span><span class="n">type</span><span class="p">,</span> <span class="n">OWL</span><span class="o">.</span><span class="n">ObjectProperty</span><span class="p">))</span>
         <span class="k">for</span> <span class="n">_uuid</span><span class="p">,</span> <span class="n">inner_dict</span> <span class="ow">in</span> <span class="n">grouped_dict_uuid</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
             <span class="n">resource</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ns</span><span class="p">[</span><span class="n">_uuid</span><span class="p">]</span>
-            <span class="k">for</span> <span class="n">ik</span><span class="p">,</span> <span class="n">iv</span> <span class="ow">in</span> <span class="n">inner_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;subcluster_of&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-                <span class="n">predicate</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ns</span><span class="p">[</span><span class="n">remove_special_characters</span><span class="p">(</span><span class="n">ik</span><span class="p">)]</span>
-                <span class="k">for</span> <span class="n">s</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">triples</span><span class="p">((</span><span class="kc">None</span><span class="p">,</span> <span class="n">predicate</span><span class="p">,</span> <span class="n">Literal</span><span class="p">(</span><span class="n">iv</span><span class="p">))):</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">add</span><span class="p">((</span><span class="n">resource</span><span class="p">,</span> <span class="n">subcluster</span><span class="p">,</span> <span class="n">s</span><span class="p">))</span>
+            <span class="c1"># Define a mapping of inner keys to predicates and objects</span>
+            <span class="n">key_predicate_map</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;subcluster_of&quot;</span><span class="p">:</span> <span class="n">subcluster</span><span class="p">,</span> <span class="s2">&quot;cluster_matches&quot;</span><span class="p">:</span> <span class="n">OWL</span><span class="o">.</span><span class="n">sameAs</span><span class="p">}</span>
+            <span class="c1"># Iterate through the key-predicate map and apply the same logic for both keys</span>
+            <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">predicate_object</span> <span class="ow">in</span> <span class="n">key_predicate_map</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="k">for</span> <span class="n">ik</span><span class="p">,</span> <span class="n">iv</span> <span class="ow">in</span> <span class="n">inner_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                    <span class="n">predicate</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ns</span><span class="p">[</span><span class="n">remove_special_characters</span><span class="p">(</span><span class="n">ik</span><span class="p">)]</span>
+                    <span class="k">for</span> <span class="n">s</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">triples</span><span class="p">((</span><span class="kc">None</span><span class="p">,</span> <span class="n">predicate</span><span class="p">,</span> <span class="n">Literal</span><span class="p">(</span><span class="n">iv</span><span class="p">))):</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">add</span><span class="p">((</span><span class="n">resource</span><span class="p">,</span> <span class="n">predicate_object</span><span class="p">,</span> <span class="n">s</span><span class="p">))</span>
 
         <span class="c1"># transitive reduction step</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">graph</span> <span class="o">=</span> <span class="n">graphgen</span><span class="o">.</span><span class="n">apply_transitive_reduction</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="p">,</span> <span class="p">[</span><span class="n">subcluster</span><span class="o">.</span><span class="n">toPython</span><span class="p">()])</span>
@@ -491,7 +499,7 @@
                 <span class="n">add_node</span><span class="p">(</span><span class="n">nx_graph</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">o</span><span class="p">)})</span>
 
         <span class="c1"># Identify and remove nodes without any edge</span>
-        <span class="c1"># cell cluster type generate a node independent of the whole graph. this fix it</span>
+        <span class="c1"># cell cluster type generate a node independent of the whole graph. this fixes it</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">nx_graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">())</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
             <span class="n">nodes_to_remove</span> <span class="o">=</span> <span class="p">[</span>
                 <span class="n">node</span> <span class="k">for</span> <span class="n">node</span><span class="p">,</span> <span class="n">degree</span> <span class="ow">in</span> <span class="nb">dict</span><span class="p">(</span><span class="n">nx_graph</span><span class="o">.</span><span class="n">degree</span><span class="p">())</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">degree</span> <span class="o">==</span> <span class="mi">0</span>
