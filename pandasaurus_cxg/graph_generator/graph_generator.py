@@ -99,22 +99,29 @@ class GraphGenerator:
         for (_, _), inner_dict in grouped_df:
             temp_dict = {}
             for inner_list in inner_dict.values.tolist():
+                # Initialize the base dictionary based on the current list
+                inner_dict_uuid = {inner_list[0]: inner_list[1]}
+
+                # Update dictionary based on specific conditions
                 if inner_list[2] == "subcluster_of":
-                    inner_dict_uuid = {
-                        inner_list[0]: inner_list[1],
-                        "subcluster_of": {
-                            inner_list[3]: inner_list[4],
-                        },
-                    }
-                else:
-                    inner_dict_uuid = {inner_list[0]: inner_list[1]}
-                    if merge and inner_list[2] == "cluster_matches":
-                        inner_dict_uuid.update({inner_list[3]: inner_list[4]})
+                    inner_dict_uuid["subcluster_of"] = {inner_list[3]: inner_list[4]}
+                elif inner_list[2] == "cluster_matches":
+                    # Use different structures depending on the 'merge' flag
+                    update_value = (
+                        {inner_list[3]: inner_list[4]}
+                        if merge
+                        else {"cluster_matches": {inner_list[3]: inner_list[4]}}
+                    )
+                    inner_dict_uuid.update(update_value)
+
+                # Update temp_dict with inner_dict_uuid values
                 for key, value in inner_dict_uuid.items():
-                    if key not in temp_dict.keys():
+                    if key not in temp_dict:
                         temp_dict[key] = value
-                    elif key == "subcluster_of":
-                        temp_dict["subcluster_of"].update(value)
+                    else:
+                        temp_dict[key].update(value) if isinstance(
+                            temp_dict[key], dict
+                        ) else temp_dict.update({key: value})
 
             if temp_dict not in grouped_dict_uuid.values():
                 grouped_dict_uuid[str(uuid.uuid4())] = temp_dict
@@ -159,7 +166,7 @@ class GraphGenerator:
             self.graph.add((resource, RDF.type, cell_set_class))
             self.graph.add((resource, has_source, dataset_class))
             for k, v in inner_dict.items():
-                if k == "subcluster_of":
+                if k in {"subcluster_of", "cluster_matches"}:
                     continue
                 self.graph.add((resource, self.ns[remove_special_characters(k)], Literal(v)))
 
@@ -169,10 +176,14 @@ class GraphGenerator:
         self.graph.add((subcluster, RDF.type, OWL.ObjectProperty))
         for _uuid, inner_dict in grouped_dict_uuid.items():
             resource = self.ns[_uuid]
-            for ik, iv in inner_dict.get("subcluster_of", {}).items():
-                predicate = self.ns[remove_special_characters(ik)]
-                for s, _, _ in self.graph.triples((None, predicate, Literal(iv))):
-                    self.graph.add((resource, subcluster, s))
+            # Define a mapping of inner keys to predicates and objects
+            key_predicate_map = {"subcluster_of": subcluster, "cluster_matches": OWL.sameAs}
+            # Iterate through the key-predicate map and apply the same logic for both keys
+            for key, predicate_object in key_predicate_map.items():
+                for ik, iv in inner_dict.get(key, {}).items():
+                    predicate = self.ns[remove_special_characters(ik)]
+                    for s, _, _ in self.graph.triples((None, predicate, Literal(iv))):
+                        self.graph.add((resource, predicate_object, s))
 
         # transitive reduction step
         self.graph = graphgen.apply_transitive_reduction(self.graph, [subcluster.toPython()])

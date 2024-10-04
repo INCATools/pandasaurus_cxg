@@ -132,7 +132,7 @@ def test_generate_rdf_graph_with_merge(graph_generator_instance_for_kidney):
 def test_generate_rdf_graph_without_merge(graph_generator_instance_for_kidney):
     graph_generator = graph_generator_instance_for_kidney
     graph_generator.generate_rdf_graph()
-    assert len(graph_generator.graph) == 1402
+    assert len(graph_generator.graph) == 1912
     assert (
         len([[s, p, o] for s, p, o in graph_generator.graph.triples((None, RDF.type, None))]) == 312
     )
@@ -190,11 +190,11 @@ def test_enrich_rdf_graph_without_merge(graph_generator_instance_for_kidney):
     graph_generator = graph_generator_instance_for_kidney
     graph_generator.generate_rdf_graph()
 
-    assert len(graph_generator.graph) == 1402
+    assert len(graph_generator.graph) == 1912
 
     graph_generator.enrich_rdf_graph()
 
-    assert len(graph_generator.graph) == 1901
+    assert len(graph_generator.graph) == 2411
 
 
 def test_save_rdf_graph(graph_generator_instance_for_kidney):
