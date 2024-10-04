@@ -27,6 +27,7 @@ from pandasaurus_cxg.graph_generator.graph_generator_utils import (
     remove_special_characters,
     select_node_with_property,
 )
+from pandasaurus_cxg.graph_generator.graph_namespaces import prefixes
 from pandasaurus_cxg.graph_generator.graph_predicates import (
     CLUSTER,
     CONSIST_OF,
@@ -34,7 +35,6 @@ from pandasaurus_cxg.graph_generator.graph_predicates import (
     HAS_SOURCE,
     SUBCLUSTER_OF,
 )
-from pandasaurus_cxg.graph_generator.graph_namespaces import prefixes
 from pandasaurus_cxg.utils.exceptions import (
     InvalidGraphFormat,
     MissingAnalysisProcess,
@@ -81,12 +81,13 @@ class GraphGenerator:
         self.graph.bind("ns", self.ns)
         self.graph.bind("obo", Namespace("http://purl.obolibrary.org/obo/"))
 
-    def generate_rdf_graph(self):
+    def generate_rdf_graph(self, merge: bool = False):
         """
-        Generates rdf graph using co_annotation report
+        Generates an RDF graph using the co-annotation report and updates the internal graph attribute.
 
-        Returns:
-
+        Args:
+            merge (bool): If True, combines cell cluster nodes with identical cell set memberships
+                          to create a more concise graph representation. Defaults to False.
         """
         if len(self.graph) != 0:
             return
@@ -98,12 +99,7 @@ class GraphGenerator:
         for (_, _), inner_dict in grouped_df:
             temp_dict = {}
             for inner_list in inner_dict.values.tolist():
-                if inner_list[2] == "cluster_matches":
-                    inner_dict_uuid = {
-                        inner_list[0]: inner_list[1],
-                        inner_list[3]: inner_list[4],
-                    }
-                elif inner_list[2] == "subcluster_of":
+                if inner_list[2] == "subcluster_of":
                     inner_dict_uuid = {
                         inner_list[0]: inner_list[1],
                         "subcluster_of": {
@@ -111,15 +107,14 @@ class GraphGenerator:
                         },
                     }
                 else:
-                    inner_dict_uuid = {
-                        inner_list[0]: inner_list[1],
-                    }
-
+                    inner_dict_uuid = {inner_list[0]: inner_list[1]}
+                    if merge and inner_list[2] == "cluster_matches":
+                        inner_dict_uuid.update({inner_list[3]: inner_list[4]})
                 for key, value in inner_dict_uuid.items():
                     if key not in temp_dict.keys():
-                        temp_dict.update({key: value})
+                        temp_dict[key] = value
                     elif key == "subcluster_of":
-                        temp_dict.get("subcluster_of").update(value)
+                        temp_dict["subcluster_of"].update(value)
 
             if temp_dict not in grouped_dict_uuid.values():
                 grouped_dict_uuid[str(uuid.uuid4())] = temp_dict
@@ -129,7 +124,9 @@ class GraphGenerator:
         citation_dict = {}
         if citation_field_name in uns.keys():
             citation_dict = parse_citation_field_into_dict(uns[citation_field_name])
-            dataset_class = URIRef(get_cxg_dataset_url(citation_dict.get("download_link").split("/")[-1].split(".")[0]))
+            dataset_class = URIRef(
+                get_cxg_dataset_url(citation_dict.get("download_link").split("/")[-1].split(".")[0])
+            )
         else:
             dataset_class = URIRef(self.ns[str(uuid.uuid4())])
         self.graph.add((dataset_class, RDF.type, URIRef(DATASET.get("iri"))))
@@ -402,7 +399,7 @@ class GraphGenerator:
                 add_node(nx_graph, s, {"type": str(o)})
 
         # Identify and remove nodes without any edge
-        # cell cluster type generate a node independent of the whole graph. this fix it
+        # cell cluster type generate a node independent of the whole graph. this fixes it
         if len(nx_graph.nodes()) != 1:
             nodes_to_remove = [
                 node for node, degree in dict(nx_graph.degree()).items() if degree == 0
