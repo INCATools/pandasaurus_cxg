@@ -87,9 +87,9 @@ def test_graph_generator_init_with_valid_input(enrichment_analyzer_instance_for_
     assert graph_generator.label_priority is None
 
 
-def test_generate_rdf_graph(graph_generator_instance_for_kidney):
+def test_generate_rdf_graph_with_merge(graph_generator_instance_for_kidney):
     graph_generator = graph_generator_instance_for_kidney
-    graph_generator.generate_rdf_graph()
+    graph_generator.generate_rdf_graph(merge=True)
     assert len(graph_generator.graph) == 648
     assert (
         len([[s, p, o] for s, p, o in graph_generator.graph.triples((None, RDF.type, None))]) == 146
@@ -129,6 +129,15 @@ def test_generate_rdf_graph(graph_generator_instance_for_kidney):
     assert len(graph_generator.graph) == 1
 
 
+def test_generate_rdf_graph_without_merge(graph_generator_instance_for_kidney):
+    graph_generator = graph_generator_instance_for_kidney
+    graph_generator.generate_rdf_graph()
+    assert len(graph_generator.graph) == 1402
+    assert (
+        len([[s, p, o] for s, p, o in graph_generator.graph.triples((None, RDF.type, None))]) == 312
+    )
+
+
 def test_enrich_graph_missing_enrichment_process(enrichment_analyzer_instance_for_kidney_data):
     ea = enrichment_analyzer_instance_for_kidney_data
     ea.co_annotation_report()
@@ -148,9 +157,9 @@ def test_enrich_graph_missing_enrichment_process(enrichment_analyzer_instance_fo
     assert exception.args[0] == expected_message
 
 
-def test_enrich_rdf_graph(graph_generator_instance_for_kidney):
+def test_enrich_rdf_graph_with_merge(graph_generator_instance_for_kidney):
     graph_generator = graph_generator_instance_for_kidney
-    graph_generator.generate_rdf_graph()
+    graph_generator.generate_rdf_graph(merge=True)
 
     assert len(graph_generator.graph) == 648
 
@@ -175,6 +184,17 @@ def test_enrich_rdf_graph(graph_generator_instance_for_kidney):
         )
         == 531
     )
+
+
+def test_enrich_rdf_graph_without_merge(graph_generator_instance_for_kidney):
+    graph_generator = graph_generator_instance_for_kidney
+    graph_generator.generate_rdf_graph()
+
+    assert len(graph_generator.graph) == 1402
+
+    graph_generator.enrich_rdf_graph()
+
+    assert len(graph_generator.graph) == 1901
 
 
 def test_save_rdf_graph(graph_generator_instance_for_kidney):
