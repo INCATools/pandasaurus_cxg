@@ -278,6 +278,7 @@ class GraphGenerator:
                         else:
                             annotated_target = URIRef(self.ns[str(uuid.uuid4())])
                         self.graph.add((annotated_target, RDFS.label, Literal(label)))
+                        self.graph.add((annotated_target, RDF.type, OWL.Class))
                         bnode_axiom = BNode()
                         self.graph.add((bnode_axiom, RDF.type, OWL.Axiom))
                         self.graph.add((bnode_axiom, OWL.annotatedSource, s))
