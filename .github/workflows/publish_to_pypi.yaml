@@ -7,8 +7,7 @@ on:
 
 jobs:
   build-and-publish:
-    name: Publish Python distributions to PyPI
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
 
     steps:
     - uses: actions/checkout@v2
