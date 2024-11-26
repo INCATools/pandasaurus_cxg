@@ -100,7 +100,7 @@ class GraphGenerator:
             temp_dict = {}
             for inner_list in inner_dict.values.tolist():
                 # Initialize the base dictionary based on the current list
-                inner_dict_uuid = {inner_list[0]: inner_list[1]}
+                inner_dict_uuid = {inner_list[0]: inner_list[1], "cell_count": inner_list[5]}
 
                 # Update dictionary based on specific conditions
                 if inner_list[2] == "subcluster_of":
