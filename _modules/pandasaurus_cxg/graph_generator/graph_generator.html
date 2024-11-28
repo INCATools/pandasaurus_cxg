@@ -177,7 +177,7 @@
             <span class="n">temp_dict</span> <span class="o">=</span> <span class="p">{}</span>
             <span class="k">for</span> <span class="n">inner_list</span> <span class="ow">in</span> <span class="n">inner_dict</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">tolist</span><span class="p">():</span>
                 <span class="c1"># Initialize the base dictionary based on the current list</span>
-                <span class="n">inner_dict_uuid</span> <span class="o">=</span> <span class="p">{</span><span class="n">inner_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span> <span class="n">inner_list</span><span class="p">[</span><span class="mi">1</span><span class="p">]}</span>
+                <span class="n">inner_dict_uuid</span> <span class="o">=</span> <span class="p">{</span><span class="n">inner_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span> <span class="n">inner_list</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="s2">&quot;cell_count&quot;</span><span class="p">:</span> <span class="n">inner_list</span><span class="p">[</span><span class="mi">5</span><span class="p">]}</span>
 
                 <span class="c1"># Update dictionary based on specific conditions</span>
                 <span class="k">if</span> <span class="n">inner_list</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;subcluster_of&quot;</span><span class="p">:</span>

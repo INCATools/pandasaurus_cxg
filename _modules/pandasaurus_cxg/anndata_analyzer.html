@@ -169,7 +169,9 @@
 
 <div class="viewcode-block" id="AnndataAnalyzer.co_annotation_report">
 <a class="viewcode-back" href="../../pandasaurus_cxg/anndata_analyzer.html#pandasaurus_cxg.anndata_analyzer.AnndataAnalyzer.co_annotation_report">[docs]</a>
-    <span class="k">def</span> <span class="nf">co_annotation_report</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">disease</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">enrich</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">co_annotation_report</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">disease</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">enrich</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Generates a co-annotation report based on the provided schema.</span>
 
@@ -183,7 +185,24 @@
 
 <span class="sd">        Returns:</span>
 <span class="sd">            pd.DataFrame: The co-annotation report.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Call the core method to generate the full DataFrame</span>
+        <span class="n">full_df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_generate_co_annotation_dataframe</span><span class="p">(</span><span class="n">disease</span><span class="p">,</span> <span class="n">enrich</span><span class="p">)</span>
 
+        <span class="c1"># Return only the first 5 columns</span>
+        <span class="k">return</span> <span class="n">full_df</span><span class="o">.</span><span class="n">iloc</span><span class="p">[:,</span> <span class="p">:</span><span class="mi">5</span><span class="p">]</span></div>
+
+
+    <span class="k">def</span> <span class="nf">_generate_co_annotation_dataframe</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">disease</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">enrich</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Core method to generate a full co-annotation dataframe.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            disease (Optional[str]): A valid disease CURIE used to filter the rows.</span>
+<span class="sd">            enrich (bool): Whether to enable enrichment in the co-annotation report.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            pd.DataFrame: The complete co-annotation dataframe with all columns.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># TODO needs a refactoring about what enrichment method to use. Or would it better to accept</span>
         <span class="c1">#  enriched_df as parameter, so users get to decide?</span>
@@ -216,6 +235,16 @@
                         <span class="p">)</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">drop</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
                     <span class="n">AnndataAnalyzer</span><span class="o">.</span><span class="n">_assign_predicate_column</span><span class="p">(</span><span class="n">co_oc</span><span class="p">,</span> <span class="n">field_name_1</span><span class="p">,</span> <span class="n">field_name_2</span><span class="p">)</span>
+                    <span class="c1"># Calculate cell counts for `field_name_1`</span>
+                    <span class="n">field_1_counts</span> <span class="o">=</span> <span class="p">(</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">_anndata</span><span class="o">.</span><span class="n">obs</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="n">field_name_1</span><span class="p">,</span> <span class="n">observed</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">size</span><span class="p">()</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span>
+                    <span class="p">)</span>
+                    <span class="n">co_oc</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">field_name_1</span><span class="si">}</span><span class="s2">_cell_count&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">co_oc</span><span class="p">[</span><span class="n">field_name_1</span><span class="p">]</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">field_1_counts</span><span class="p">)</span>
+                    <span class="c1"># Calculate cell counts for `field_name_2`</span>
+                    <span class="n">field_2_counts</span> <span class="o">=</span> <span class="p">(</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">_anndata</span><span class="o">.</span><span class="n">obs</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="n">field_name_2</span><span class="p">,</span> <span class="n">observed</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">size</span><span class="p">()</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span>
+                    <span class="p">)</span>
+                    <span class="n">co_oc</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">field_name_2</span><span class="si">}</span><span class="s2">_cell_count&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">co_oc</span><span class="p">[</span><span class="n">field_name_2</span><span class="p">]</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">field_2_counts</span><span class="p">)</span>
                     <span class="n">temp_result</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">co_oc</span><span class="o">.</span><span class="n">to_dict</span><span class="p">(</span><span class="n">orient</span><span class="o">=</span><span class="s2">&quot;records&quot;</span><span class="p">))</span>
 
         <span class="n">result</span> <span class="o">=</span> <span class="p">[</span>
@@ -224,11 +253,25 @@
         <span class="p">]</span>
         <span class="c1"># unique_result = AnndataAnalyzer._remove_duplicates(result)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">report_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span>
-            <span class="p">[</span><span class="n">inner_list</span><span class="p">[:</span><span class="mi">2</span><span class="p">]</span> <span class="o">+</span> <span class="n">inner_list</span><span class="p">[</span><span class="mi">5</span><span class="p">:</span><span class="mi">6</span><span class="p">]</span> <span class="o">+</span> <span class="n">inner_list</span><span class="p">[</span><span class="mi">2</span><span class="p">:</span><span class="mi">4</span><span class="p">]</span> <span class="k">for</span> <span class="n">inner_list</span> <span class="ow">in</span> <span class="n">result</span><span class="p">],</span>
-            <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;field_name1&quot;</span><span class="p">,</span> <span class="s2">&quot;value1&quot;</span><span class="p">,</span> <span class="s2">&quot;predicate&quot;</span><span class="p">,</span> <span class="s2">&quot;field_name2&quot;</span><span class="p">,</span> <span class="s2">&quot;value2&quot;</span><span class="p">],</span>
+            <span class="p">[</span>
+                <span class="n">inner_list</span><span class="p">[:</span><span class="mi">2</span><span class="p">]</span>
+                <span class="o">+</span> <span class="n">inner_list</span><span class="p">[</span><span class="mi">5</span><span class="p">:</span><span class="mi">6</span><span class="p">]</span>
+                <span class="o">+</span> <span class="n">inner_list</span><span class="p">[</span><span class="mi">2</span><span class="p">:</span><span class="mi">4</span><span class="p">]</span>
+                <span class="o">+</span> <span class="n">inner_list</span><span class="p">[</span><span class="mi">7</span><span class="p">:</span><span class="mi">8</span><span class="p">]</span>
+                <span class="o">+</span> <span class="n">inner_list</span><span class="p">[</span><span class="mi">9</span><span class="p">:</span><span class="mi">10</span><span class="p">]</span>
+                <span class="k">for</span> <span class="n">inner_list</span> <span class="ow">in</span> <span class="n">result</span>
+            <span class="p">],</span>
+            <span class="n">columns</span><span class="o">=</span><span class="p">[</span>
+                <span class="s2">&quot;field_name1&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;value1&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;predicate&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;field_name2&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;value2&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;field_name1_cell_count&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;field_name2_cell_count&quot;</span><span class="p">,</span>
+            <span class="p">],</span>
         <span class="p">)</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">report_df</span></div>
-
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">report_df</span>
 
 <div class="viewcode-block" id="AnndataAnalyzer.enriched_co_annotation_report">
 <a class="viewcode-back" href="../../pandasaurus_cxg/anndata_analyzer.html#pandasaurus_cxg.anndata_analyzer.AnndataAnalyzer.enriched_co_annotation_report">[docs]</a>
