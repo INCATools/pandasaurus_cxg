@@ -89,7 +89,9 @@ class AnndataAnalyzer:
         """
         return AnndataAnalyzer(AnndataLoader.load_from_file(file_path), author_cell_type_list)
 
-    def co_annotation_report(self, disease: Optional[str] = None, enrich: bool = False):
+    def co_annotation_report(
+        self, disease: Optional[str] = None, enrich: bool = False
+    ) -> pd.DataFrame:
         """
         Generates a co-annotation report based on the provided schema.
 
@@ -103,7 +105,23 @@ class AnndataAnalyzer:
 
         Returns:
             pd.DataFrame: The co-annotation report.
+        """
+        # Call the core method to generate the full DataFrame
+        full_df = self._generate_co_annotation_dataframe(disease, enrich)
 
+        # Return only the first 5 columns
+        return full_df.iloc[:, :5]
+
+    def _generate_co_annotation_dataframe(self, disease: Optional[str] = None, enrich: bool = False):
+        """
+        Core method to generate a full co-annotation dataframe.
+
+        Args:
+            disease (Optional[str]): A valid disease CURIE used to filter the rows.
+            enrich (bool): Whether to enable enrichment in the co-annotation report.
+
+        Returns:
+            pd.DataFrame: The complete co-annotation dataframe with all columns.
         """
         # TODO needs a refactoring about what enrichment method to use. Or would it better to accept
         #  enriched_df as parameter, so users get to decide?
@@ -136,6 +154,16 @@ class AnndataAnalyzer:
                         ).reset_index(drop=True)
 
                     AnndataAnalyzer._assign_predicate_column(co_oc, field_name_1, field_name_2)
+                    # Calculate cell counts for `field_name_1`
+                    field_1_counts = (
+                        self._anndata.obs.groupby(field_name_1, observed=False).size().to_dict()
+                    )
+                    co_oc[f"{field_name_1}_cell_count"] = co_oc[field_name_1].map(field_1_counts)
+                    # Calculate cell counts for `field_name_2`
+                    field_2_counts = (
+                        self._anndata.obs.groupby(field_name_2, observed=False).size().to_dict()
+                    )
+                    co_oc[f"{field_name_2}_cell_count"] = co_oc[field_name_2].map(field_2_counts)
                     temp_result.extend(co_oc.to_dict(orient="records"))
 
         result = [
@@ -144,8 +172,23 @@ class AnndataAnalyzer:
         ]
         # unique_result = AnndataAnalyzer._remove_duplicates(result)
         self.report_df = pd.DataFrame(
-            [inner_list[:2] + inner_list[5:6] + inner_list[2:4] for inner_list in result],
-            columns=["field_name1", "value1", "predicate", "field_name2", "value2"],
+            [
+                inner_list[:2]
+                + inner_list[5:6]
+                + inner_list[2:4]
+                + inner_list[7:8]
+                + inner_list[9:10]
+                for inner_list in result
+            ],
+            columns=[
+                "field_name1",
+                "value1",
+                "predicate",
+                "field_name2",
+                "value2",
+                "field_name1_cell_count",
+                "field_name2_cell_count",
+            ],
         )
         return self.report_df
 

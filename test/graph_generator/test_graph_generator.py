@@ -90,7 +90,7 @@ def test_graph_generator_init_with_valid_input(enrichment_analyzer_instance_for_
 def test_generate_rdf_graph_with_merge(graph_generator_instance_for_kidney):
     graph_generator = graph_generator_instance_for_kidney
     graph_generator.generate_rdf_graph(merge=True)
-    assert len(graph_generator.graph) == 648
+    assert len(graph_generator.graph) == 743
     assert (
         len([[s, p, o] for s, p, o in graph_generator.graph.triples((None, RDF.type, None))]) == 146
     )
@@ -132,7 +132,7 @@ def test_generate_rdf_graph_with_merge(graph_generator_instance_for_kidney):
 def test_generate_rdf_graph_without_merge(graph_generator_instance_for_kidney):
     graph_generator = graph_generator_instance_for_kidney
     graph_generator.generate_rdf_graph()
-    assert len(graph_generator.graph) == 1912
+    assert len(graph_generator.graph) == 2173
     assert (
         len([[s, p, o] for s, p, o in graph_generator.graph.triples((None, RDF.type, None))]) == 312
     )
@@ -161,11 +161,11 @@ def test_enrich_rdf_graph_with_merge(graph_generator_instance_for_kidney):
     graph_generator = graph_generator_instance_for_kidney
     graph_generator.generate_rdf_graph(merge=True)
 
-    assert len(graph_generator.graph) == 648
+    assert len(graph_generator.graph) == 743
 
     graph_generator.enrich_rdf_graph()
 
-    assert len(graph_generator.graph) == 1147
+    assert len(graph_generator.graph) == 1242
     assert (
         URIRef(CONSIST_OF.get("iri")),
         RDFS.label,
@@ -190,11 +190,11 @@ def test_enrich_rdf_graph_without_merge(graph_generator_instance_for_kidney):
     graph_generator = graph_generator_instance_for_kidney
     graph_generator.generate_rdf_graph()
 
-    assert len(graph_generator.graph) == 1912
+    assert len(graph_generator.graph) == 2173
 
     graph_generator.enrich_rdf_graph()
 
-    assert len(graph_generator.graph) == 2411
+    assert len(graph_generator.graph) == 2672
 
 
 def test_save_rdf_graph(graph_generator_instance_for_kidney):
