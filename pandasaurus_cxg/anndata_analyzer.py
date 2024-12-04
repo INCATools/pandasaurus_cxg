@@ -108,11 +108,12 @@ class AnndataAnalyzer:
         """
         # Call the core method to generate the full DataFrame
         full_df = self._generate_co_annotation_dataframe(disease, enrich)
-
         # Return only the first 5 columns
         return full_df.iloc[:, :5]
 
-    def _generate_co_annotation_dataframe(self, disease: Optional[str] = None, enrich: bool = False):
+    def _generate_co_annotation_dataframe(
+        self, disease: Optional[str] = None, enrich: bool = False
+    ):
         """
         Core method to generate a full co-annotation dataframe.
 
@@ -171,7 +172,7 @@ class AnndataAnalyzer:
             for record in temp_result
         ]
         # unique_result = AnndataAnalyzer._remove_duplicates(result)
-        self.report_df = pd.DataFrame(
+        report_df = pd.DataFrame(
             [
                 inner_list[:2]
                 + inner_list[5:6]
@@ -190,6 +191,9 @@ class AnndataAnalyzer:
                 "field_name2_cell_count",
             ],
         )
+        self.report_df = report_df.sort_values(
+            ["field_name1", "value1", "predicate", "field_name2", "value2"]
+        ).reset_index(drop=True)
         return self.report_df
 
     def enriched_co_annotation_report(self, disease: Optional[str] = None):
