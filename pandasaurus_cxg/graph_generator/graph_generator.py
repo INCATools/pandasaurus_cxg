@@ -91,7 +91,42 @@ class GraphGenerator:
         """
         if len(self.graph) != 0:
             return
-        # preprocess
+
+        # generate dataset entity and has_source property
+        citation_dict = {}
+        uns = self.ea.enricher_manager.anndata.uns
+        if citation_field_name in uns.keys():
+            citation_dict = parse_citation_field_into_dict(uns[citation_field_name])
+            cxg_versioned_dataset_id = (
+                citation_dict.get("download_link").split("/")[-1].split(".")[0]
+            )
+            dataset_class = URIRef(get_cxg_dataset_url(cxg_versioned_dataset_id))
+        else:
+            # if citation_field_name doesn't exist we use random uuid as cxg_versioned_dataset_id
+            cxg_versioned_dataset_id = str(uuid.uuid4())
+            dataset_class = URIRef(self.ns[cxg_versioned_dataset_id])
+        self.graph.add((dataset_class, RDF.type, URIRef(DATASET.get("iri"))))
+        self.graph.add((dataset_class, RDFS.label, Literal(DATASET.get("label"))))
+        for key, value in uns.items():
+            if not isinstance(value, str):
+                continue
+            if key == citation_field_name:
+                for citation_key, citation_value in citation_dict.items():
+                    self.graph.add(
+                        (
+                            dataset_class,
+                            URIRef(self.ns[remove_special_characters(citation_key)]),
+                            Literal(citation_value),
+                        )
+                    )
+
+            self.graph.add(
+                (dataset_class, URIRef(self.ns[remove_special_characters(key)]), Literal(value))
+            )
+        has_source = URIRef(HAS_SOURCE["iri"])
+        self.graph.add((has_source, RDFS.label, Literal(HAS_SOURCE["label"])))
+
+        # preprocess for cell clusters
         column_group = ["field_name1", "value1"]
         df = self.df.sort_values(by=column_group).reset_index(drop=True)
         grouped_df = df.groupby(column_group)
@@ -124,38 +159,9 @@ class GraphGenerator:
                         ) else temp_dict.update({key: value})
 
             if temp_dict not in grouped_dict_uuid.values():
-                grouped_dict_uuid[str(uuid.uuid4())] = temp_dict
-
-        # generate dataset entity and has_source property
-        uns = self.ea.enricher_manager.anndata.uns
-        citation_dict = {}
-        if citation_field_name in uns.keys():
-            citation_dict = parse_citation_field_into_dict(uns[citation_field_name])
-            dataset_class = URIRef(
-                get_cxg_dataset_url(citation_dict.get("download_link").split("/")[-1].split(".")[0])
-            )
-        else:
-            dataset_class = URIRef(self.ns[str(uuid.uuid4())])
-        self.graph.add((dataset_class, RDF.type, URIRef(DATASET.get("iri"))))
-        self.graph.add((dataset_class, RDFS.label, Literal(DATASET.get("label"))))
-        for key, value in uns.items():
-            if not isinstance(value, str):
-                continue
-            if key == citation_field_name:
-                for citation_key, citation_value in citation_dict.items():
-                    self.graph.add(
-                        (
-                            dataset_class,
-                            URIRef(self.ns[remove_special_characters(citation_key)]),
-                            Literal(citation_value),
-                        )
-                    )
-
-            self.graph.add(
-                (dataset_class, URIRef(self.ns[remove_special_characters(key)]), Literal(value))
-            )
-        has_source = URIRef(HAS_SOURCE["iri"])
-        self.graph.add((has_source, RDFS.label, Literal(HAS_SOURCE["label"])))
+                grouped_dict_uuid[
+                    str(uuid.uuid5(uuid.UUID(cxg_versioned_dataset_id), str(temp_dict)))
+                ] = temp_dict
 
         # generate a resource for each free-text cell_type annotation and cell_type_ontology_term annotation
         cell_set_class = URIRef(CLUSTER.get("iri"))
