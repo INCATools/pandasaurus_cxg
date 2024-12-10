@@ -168,7 +168,42 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
             <span class="k">return</span>
-        <span class="c1"># preprocess</span>
+
+        <span class="c1"># generate dataset entity and has_source property</span>
+        <span class="n">citation_dict</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">uns</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ea</span><span class="o">.</span><span class="n">enricher_manager</span><span class="o">.</span><span class="n">anndata</span><span class="o">.</span><span class="n">uns</span>
+        <span class="k">if</span> <span class="n">citation_field_name</span> <span class="ow">in</span> <span class="n">uns</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="n">citation_dict</span> <span class="o">=</span> <span class="n">parse_citation_field_into_dict</span><span class="p">(</span><span class="n">uns</span><span class="p">[</span><span class="n">citation_field_name</span><span class="p">])</span>
+            <span class="n">cxg_versioned_dataset_id</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">citation_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;download_link&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="p">)</span>
+            <span class="n">dataset_class</span> <span class="o">=</span> <span class="n">URIRef</span><span class="p">(</span><span class="n">get_cxg_dataset_url</span><span class="p">(</span><span class="n">cxg_versioned_dataset_id</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># if citation_field_name doesn&#39;t exist we use random uuid as cxg_versioned_dataset_id</span>
+            <span class="n">cxg_versioned_dataset_id</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">uuid</span><span class="o">.</span><span class="n">uuid4</span><span class="p">())</span>
+            <span class="n">dataset_class</span> <span class="o">=</span> <span class="n">URIRef</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ns</span><span class="p">[</span><span class="n">cxg_versioned_dataset_id</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">add</span><span class="p">((</span><span class="n">dataset_class</span><span class="p">,</span> <span class="n">RDF</span><span class="o">.</span><span class="n">type</span><span class="p">,</span> <span class="n">URIRef</span><span class="p">(</span><span class="n">DATASET</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;iri&quot;</span><span class="p">))))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">add</span><span class="p">((</span><span class="n">dataset_class</span><span class="p">,</span> <span class="n">RDFS</span><span class="o">.</span><span class="n">label</span><span class="p">,</span> <span class="n">Literal</span><span class="p">(</span><span class="n">DATASET</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;label&quot;</span><span class="p">))))</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">uns</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+                <span class="k">continue</span>
+            <span class="k">if</span> <span class="n">key</span> <span class="o">==</span> <span class="n">citation_field_name</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">citation_key</span><span class="p">,</span> <span class="n">citation_value</span> <span class="ow">in</span> <span class="n">citation_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+                        <span class="p">(</span>
+                            <span class="n">dataset_class</span><span class="p">,</span>
+                            <span class="n">URIRef</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ns</span><span class="p">[</span><span class="n">remove_special_characters</span><span class="p">(</span><span class="n">citation_key</span><span class="p">)]),</span>
+                            <span class="n">Literal</span><span class="p">(</span><span class="n">citation_value</span><span class="p">),</span>
+                        <span class="p">)</span>
+                    <span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+                <span class="p">(</span><span class="n">dataset_class</span><span class="p">,</span> <span class="n">URIRef</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ns</span><span class="p">[</span><span class="n">remove_special_characters</span><span class="p">(</span><span class="n">key</span><span class="p">)]),</span> <span class="n">Literal</span><span class="p">(</span><span class="n">value</span><span class="p">))</span>
+            <span class="p">)</span>
+        <span class="n">has_source</span> <span class="o">=</span> <span class="n">URIRef</span><span class="p">(</span><span class="n">HAS_SOURCE</span><span class="p">[</span><span class="s2">&quot;iri&quot;</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">add</span><span class="p">((</span><span class="n">has_source</span><span class="p">,</span> <span class="n">RDFS</span><span class="o">.</span><span class="n">label</span><span class="p">,</span> <span class="n">Literal</span><span class="p">(</span><span class="n">HAS_SOURCE</span><span class="p">[</span><span class="s2">&quot;label&quot;</span><span class="p">])))</span>
+
+        <span class="c1"># preprocess for cell clusters</span>
         <span class="n">column_group</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;field_name1&quot;</span><span class="p">,</span> <span class="s2">&quot;value1&quot;</span><span class="p">]</span>
         <span class="n">df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">df</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="n">by</span><span class="o">=</span><span class="n">column_group</span><span class="p">)</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">drop</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="n">grouped_df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="n">column_group</span><span class="p">)</span>
@@ -201,38 +236,9 @@
                         <span class="p">)</span> <span class="k">else</span> <span class="n">temp_dict</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="n">key</span><span class="p">:</span> <span class="n">value</span><span class="p">})</span>
 
             <span class="k">if</span> <span class="n">temp_dict</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">grouped_dict_uuid</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
-                <span class="n">grouped_dict_uuid</span><span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">uuid</span><span class="o">.</span><span class="n">uuid4</span><span class="p">())]</span> <span class="o">=</span> <span class="n">temp_dict</span>
-
-        <span class="c1"># generate dataset entity and has_source property</span>
-        <span class="n">uns</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ea</span><span class="o">.</span><span class="n">enricher_manager</span><span class="o">.</span><span class="n">anndata</span><span class="o">.</span><span class="n">uns</span>
-        <span class="n">citation_dict</span> <span class="o">=</span> <span class="p">{}</span>
-        <span class="k">if</span> <span class="n">citation_field_name</span> <span class="ow">in</span> <span class="n">uns</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
-            <span class="n">citation_dict</span> <span class="o">=</span> <span class="n">parse_citation_field_into_dict</span><span class="p">(</span><span class="n">uns</span><span class="p">[</span><span class="n">citation_field_name</span><span class="p">])</span>
-            <span class="n">dataset_class</span> <span class="o">=</span> <span class="n">URIRef</span><span class="p">(</span>
-                <span class="n">get_cxg_dataset_url</span><span class="p">(</span><span class="n">citation_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;download_link&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span>
-            <span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">dataset_class</span> <span class="o">=</span> <span class="n">URIRef</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ns</span><span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">uuid</span><span class="o">.</span><span class="n">uuid4</span><span class="p">())])</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">add</span><span class="p">((</span><span class="n">dataset_class</span><span class="p">,</span> <span class="n">RDF</span><span class="o">.</span><span class="n">type</span><span class="p">,</span> <span class="n">URIRef</span><span class="p">(</span><span class="n">DATASET</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;iri&quot;</span><span class="p">))))</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">add</span><span class="p">((</span><span class="n">dataset_class</span><span class="p">,</span> <span class="n">RDFS</span><span class="o">.</span><span class="n">label</span><span class="p">,</span> <span class="n">Literal</span><span class="p">(</span><span class="n">DATASET</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;label&quot;</span><span class="p">))))</span>
-        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">uns</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
-                <span class="k">continue</span>
-            <span class="k">if</span> <span class="n">key</span> <span class="o">==</span> <span class="n">citation_field_name</span><span class="p">:</span>
-                <span class="k">for</span> <span class="n">citation_key</span><span class="p">,</span> <span class="n">citation_value</span> <span class="ow">in</span> <span class="n">citation_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
-                        <span class="p">(</span>
-                            <span class="n">dataset_class</span><span class="p">,</span>
-                            <span class="n">URIRef</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ns</span><span class="p">[</span><span class="n">remove_special_characters</span><span class="p">(</span><span class="n">citation_key</span><span class="p">)]),</span>
-                            <span class="n">Literal</span><span class="p">(</span><span class="n">citation_value</span><span class="p">),</span>
-                        <span class="p">)</span>
-                    <span class="p">)</span>
-
-            <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
-                <span class="p">(</span><span class="n">dataset_class</span><span class="p">,</span> <span class="n">URIRef</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ns</span><span class="p">[</span><span class="n">remove_special_characters</span><span class="p">(</span><span class="n">key</span><span class="p">)]),</span> <span class="n">Literal</span><span class="p">(</span><span class="n">value</span><span class="p">))</span>
-            <span class="p">)</span>
-        <span class="n">has_source</span> <span class="o">=</span> <span class="n">URIRef</span><span class="p">(</span><span class="n">HAS_SOURCE</span><span class="p">[</span><span class="s2">&quot;iri&quot;</span><span class="p">])</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">add</span><span class="p">((</span><span class="n">has_source</span><span class="p">,</span> <span class="n">RDFS</span><span class="o">.</span><span class="n">label</span><span class="p">,</span> <span class="n">Literal</span><span class="p">(</span><span class="n">HAS_SOURCE</span><span class="p">[</span><span class="s2">&quot;label&quot;</span><span class="p">])))</span>
+                <span class="n">grouped_dict_uuid</span><span class="p">[</span>
+                    <span class="nb">str</span><span class="p">(</span><span class="n">uuid</span><span class="o">.</span><span class="n">uuid5</span><span class="p">(</span><span class="n">uuid</span><span class="o">.</span><span class="n">UUID</span><span class="p">(</span><span class="n">cxg_versioned_dataset_id</span><span class="p">),</span> <span class="nb">str</span><span class="p">(</span><span class="n">temp_dict</span><span class="p">)))</span>
+                <span class="p">]</span> <span class="o">=</span> <span class="n">temp_dict</span>
 
         <span class="c1"># generate a resource for each free-text cell_type annotation and cell_type_ontology_term annotation</span>
         <span class="n">cell_set_class</span> <span class="o">=</span> <span class="n">URIRef</span><span class="p">(</span><span class="n">CLUSTER</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;iri&quot;</span><span class="p">))</span>
