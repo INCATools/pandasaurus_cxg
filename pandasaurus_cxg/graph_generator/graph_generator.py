@@ -24,7 +24,7 @@ from pandasaurus_cxg.graph_generator.graph_generator_utils import (
     generate_subgraph,
     get_cxg_dataset_url,
     parse_citation_field_into_dict,
-    remove_special_characters,
+    ncname_safe,
     select_node_with_property,
 )
 from pandasaurus_cxg.graph_generator.graph_namespaces import prefixes
@@ -115,13 +115,13 @@ class GraphGenerator:
                     self.graph.add(
                         (
                             dataset_class,
-                            URIRef(self.ns[remove_special_characters(citation_key)]),
+                            URIRef(self.ns[ncname_safe(citation_key)]),
                             Literal(citation_value),
                         )
                     )
 
             self.graph.add(
-                (dataset_class, URIRef(self.ns[remove_special_characters(key)]), Literal(value))
+                (dataset_class, URIRef(self.ns[ncname_safe(key)]), Literal(value))
             )
         has_source = URIRef(HAS_SOURCE["iri"])
         self.graph.add((has_source, RDFS.label, Literal(HAS_SOURCE["label"])))
@@ -174,7 +174,7 @@ class GraphGenerator:
             for k, v in inner_dict.items():
                 if k in {"subcluster_of", "cluster_matches"}:
                     continue
-                self.graph.add((resource, self.ns[remove_special_characters(k)], Literal(v)))
+                self.graph.add((resource, self.ns[ncname_safe(k)], Literal(v)))
 
         # add relationship between each resource based on their predicate in the co_annotation_report
         subcluster = URIRef(SUBCLUSTER_OF.get("iri"))
@@ -187,7 +187,7 @@ class GraphGenerator:
             # Iterate through the key-predicate map and apply the same logic for both keys
             for key, predicate_object in key_predicate_map.items():
                 for ik, iv in inner_dict.get(key, {}).items():
-                    predicate = self.ns[remove_special_characters(ik)]
+                    predicate = self.ns[ncname_safe(ik)]
                     for s, _, _ in self.graph.triples((None, predicate, Literal(iv))):
                         self.graph.add((resource, predicate_object, s))
 

@@ -127,8 +127,29 @@ def select_node_with_property(graph: Graph, _property: str, value: str):
         return [str(s) for s in graph.subjects(predicate=ns[_property], object=Literal(value))]
 
 
-def remove_special_characters(input_string: str) -> str:
-    return re.sub(r"[^a-zA-Z0-9_]", "", input_string.replace(" ", "_"))
+def ncname_safe(term: str) -> str:
+    """Sanitize a string to be a valid XML NCName local name.
+
+    This function ensures that the input term conforms to the XML NCName
+    specification for use as the local part of a QName:
+      1. Spaces are replaced with underscores.
+      2. Leading characters not allowed by NCName (anything other than a letter or underscore)
+         are stripped.
+      3. All remaining characters that are not letters, digits, underscores, hyphens,
+         or periods are replaced with underscores.
+
+    Args:
+        term: The original string to sanitize.
+
+    Returns:
+        A string that is a valid NCName local name, safe for use as
+        the local part of an XML QName.
+
+    """
+    term = term.replace(" ", "_")
+    term = re.sub(r'^[^A-Za-z_]+', '', term)
+    return re.sub(r'[^A-Za-z0-9_\-\.]', '_', term)
+
 
 
 def parse_citation_field_into_dict(value: str) -> Dict[str, str]:
