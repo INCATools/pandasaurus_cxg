@@ -190,13 +190,13 @@ def test_select_node_with_property_predicate():
 @pytest.mark.parametrize(
     "input_string, expected_output",
     [
-        ("Hello World!",         "Hello_World_"),
-        ("123abc$%^",            "abc___"),
-        ("!@#$%^&*()_",          "_"),
-        ("_This_is_a_test_",     "_This_is_a_test_"),
-        ("",                     ""),
-        ("author.cell_type",     "author.cell_type"),
-        ("-._bad:key",           "bad_key"),
+        ("Hello World!", "Hello_World_"),
+        ("123abc$%^", "abc___"),
+        ("!@#$%^&*()_", "_"),
+        ("_This_is_a_test_", "_This_is_a_test_"),
+        ("", ""),
+        ("author.cell_type", "author.cell_type"),
+        ("-._bad:key", "_bad_key"),
     ],
 )
 def test_ncname_safe(input_string, expected_output):
