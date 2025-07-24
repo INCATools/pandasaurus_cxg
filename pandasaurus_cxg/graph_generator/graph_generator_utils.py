@@ -151,7 +151,6 @@ def ncname_safe(term: str) -> str:
     return re.sub(r'[^A-Za-z0-9_\-\.]', '_', term)
 
 
-
 def parse_citation_field_into_dict(value: str) -> Dict[str, str]:
     """
     Parses a citation string into a dictionary by extracting key citation fields.
