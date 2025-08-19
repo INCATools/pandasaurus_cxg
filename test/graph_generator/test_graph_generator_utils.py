@@ -8,7 +8,7 @@ from pandasaurus_cxg.graph_generator.graph_generator_utils import (
     add_outgoing_edges_to_subgraph,
     find_and_rotate_center_layout,
     generate_subgraph,
-    remove_special_characters,
+    ncname_safe,
     select_node_with_property,
 )
 from pandasaurus_cxg.graph_generator.graph_predicates import (
@@ -190,12 +190,14 @@ def test_select_node_with_property_predicate():
 @pytest.mark.parametrize(
     "input_string, expected_output",
     [
-        ("Hello World!", "Hello_World"),
-        ("123abc$%^", "123abc"),
+        ("Hello World!", "Hello_World_"),
+        ("123abc$%^", "abc___"),
         ("!@#$%^&*()_", "_"),
         ("_This_is_a_test_", "_This_is_a_test_"),
         ("", ""),
+        ("author.cell_type", "author.cell_type"),
+        ("-._bad:key", "_bad_key"),
     ],
 )
-def test_remove_special_characters(input_string, expected_output):
-    assert remove_special_characters(input_string) == expected_output
+def test_ncname_safe(input_string, expected_output):
+    assert ncname_safe(input_string) == expected_output

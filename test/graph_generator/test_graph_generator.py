@@ -274,7 +274,7 @@ def test_enrich_rdf_graph_with_merge(graph_generator_instance_for_kidney):
 
     graph_generator.enrich_rdf_graph()
 
-    assert len(graph_generator.graph) == 1246
+    assert len(graph_generator.graph) == 1242
     assert (
         URIRef(CONSIST_OF.get("iri")),
         RDFS.label,
@@ -303,7 +303,7 @@ def test_enrich_rdf_graph_without_merge(graph_generator_instance_for_kidney):
 
     graph_generator.enrich_rdf_graph()
 
-    assert len(graph_generator.graph) == 2676
+    assert len(graph_generator.graph) == 2674
 
 
 def test_save_rdf_graph(graph_generator_instance_for_kidney):
