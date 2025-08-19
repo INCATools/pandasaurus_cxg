@@ -206,8 +206,31 @@
         <span class="k">return</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">graph</span><span class="o">.</span><span class="n">subjects</span><span class="p">(</span><span class="n">predicate</span><span class="o">=</span><span class="n">ns</span><span class="p">[</span><span class="n">_property</span><span class="p">],</span> <span class="nb">object</span><span class="o">=</span><span class="n">Literal</span><span class="p">(</span><span class="n">value</span><span class="p">))]</span>
 
 
-<span class="k">def</span> <span class="nf">remove_special_characters</span><span class="p">(</span><span class="n">input_string</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-    <span class="k">return</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;[^a-zA-Z0-9_]&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">input_string</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot; &quot;</span><span class="p">,</span> <span class="s2">&quot;_&quot;</span><span class="p">))</span>
+<div class="viewcode-block" id="ncname_safe">
+<a class="viewcode-back" href="../../../pandasaurus_cxg/graph_generator/graph_generator_utils.html#pandasaurus_cxg.graph_generator.graph_generator_utils.ncname_safe">[docs]</a>
+<span class="k">def</span> <span class="nf">ncname_safe</span><span class="p">(</span><span class="n">term</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Sanitize a string to be a valid XML NCName local name.</span>
+
+<span class="sd">    This function ensures that the input term conforms to the XML NCName</span>
+<span class="sd">    specification for use as the local part of a QName:</span>
+<span class="sd">      1. Spaces are replaced with underscores.</span>
+<span class="sd">      2. Leading characters not allowed by NCName (anything other than a letter or underscore)</span>
+<span class="sd">         are stripped.</span>
+<span class="sd">      3. All remaining characters that are not letters, digits, underscores, hyphens,</span>
+<span class="sd">         or periods are replaced with underscores.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        term: The original string to sanitize.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        A string that is a valid NCName local name, safe for use as</span>
+<span class="sd">        the local part of an XML QName.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">term</span> <span class="o">=</span> <span class="n">term</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot; &quot;</span><span class="p">,</span> <span class="s2">&quot;_&quot;</span><span class="p">)</span>
+    <span class="n">term</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;^[^A-Za-z_]+&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">term</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;[^A-Za-z0-9_\-\.]&#39;</span><span class="p">,</span> <span class="s1">&#39;_&#39;</span><span class="p">,</span> <span class="n">term</span><span class="p">)</span></div>
+
 
 
 <div class="viewcode-block" id="parse_citation_field_into_dict">

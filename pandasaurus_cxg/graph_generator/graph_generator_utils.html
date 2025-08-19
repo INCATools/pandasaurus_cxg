@@ -151,6 +151,32 @@ the dataset on the CellxGene platform.</p>
 </dd></dl>
 
 <dl class="py function">
+<dt class="sig sig-object py" id="pandasaurus_cxg.graph_generator.graph_generator_utils.ncname_safe">
+<span class="sig-prename descclassname"><span class="pre">pandasaurus_cxg.graph_generator.graph_generator_utils.</span></span><span class="sig-name descname"><span class="pre">ncname_safe</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">term</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../../_modules/pandasaurus_cxg/graph_generator/graph_generator_utils.html#ncname_safe"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pandasaurus_cxg.graph_generator.graph_generator_utils.ncname_safe" title="Link to this definition"></a></dt>
+<dd><p>Sanitize a string to be a valid XML NCName local name.</p>
+<p>This function ensures that the input term conforms to the XML NCName
+specification for use as the local part of a QName:</p>
+<blockquote>
+<div><ol class="arabic simple">
+<li><p>Spaces are replaced with underscores.</p></li>
+<li><p>Leading characters not allowed by NCName (anything other than a letter or underscore)
+are stripped.</p></li>
+<li><p>All remaining characters that are not letters, digits, underscores, hyphens,
+or periods are replaced with underscores.</p></li>
+</ol>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>term</strong> – The original string to sanitize.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A string that is a valid NCName local name, safe for use as
+the local part of an XML QName.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="pandasaurus_cxg.graph_generator.graph_generator_utils.parse_citation_field_into_dict">
 <span class="sig-prename descclassname"><span class="pre">pandasaurus_cxg.graph_generator.graph_generator_utils.</span></span><span class="sig-name descname"><span class="pre">parse_citation_field_into_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../_modules/pandasaurus_cxg/graph_generator/graph_generator_utils.html#parse_citation_field_into_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pandasaurus_cxg.graph_generator.graph_generator_utils.parse_citation_field_into_dict" title="Link to this definition"></a></dt>
 <dd><p>Parses a citation string into a dictionary by extracting key citation fields.</p>
