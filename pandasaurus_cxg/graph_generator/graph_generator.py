@@ -1,3 +1,4 @@
+import json
 import textwrap
 import uuid
 from enum import Enum
@@ -120,9 +121,7 @@ class GraphGenerator:
                         )
                     )
 
-            self.graph.add(
-                (dataset_class, URIRef(self.ns[ncname_safe(key)]), Literal(value))
-            )
+            self.graph.add((dataset_class, URIRef(self.ns[ncname_safe(key)]), Literal(value)))
         has_source = URIRef(HAS_SOURCE["iri"])
         self.graph.add((has_source, RDFS.label, Literal(HAS_SOURCE["label"])))
 
@@ -171,10 +170,25 @@ class GraphGenerator:
             resource = self.ns[_uuid]
             self.graph.add((resource, RDF.type, cell_set_class))
             self.graph.add((resource, has_source, dataset_class))
+            # Collect author_cell_type keys here
+            payload = {}
             for k, v in inner_dict.items():
                 if k in {"subcluster_of", "cluster_matches"}:
                     continue
-                self.graph.add((resource, self.ns[ncname_safe(k)], Literal(v)))
+                elif k in {"cell_count", "cell_type"}:
+                    self.graph.add((resource, self.ns[k], Literal(v)))
+                else:
+                    # Author annotations go into the JSON payload
+                    payload[k] = v
+            # Add one JSON literal for all author annotations
+            if payload:
+                self.graph.add(
+                    (
+                        resource,
+                        self.ns.author_cell_type_json,
+                        Literal(json.dumps(payload, ensure_ascii=False)),
+                    )
+                )
 
         # add relationship between each resource based on their predicate in the co_annotation_report
         subcluster = URIRef(SUBCLUSTER_OF.get("iri"))
