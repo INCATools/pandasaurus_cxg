@@ -147,8 +147,8 @@ def ncname_safe(term: str) -> str:
 
     """
     term = term.replace(" ", "_")
-    term = re.sub(r'^[^A-Za-z_]+', '', term)
-    return re.sub(r'[^A-Za-z0-9_\-\.]', '_', term)
+    term = re.sub(r"^[^A-Za-z_]+", "", term)
+    return re.sub(r"[^A-Za-z0-9_\-\.]", "_", term)
 
 
 def parse_citation_field_into_dict(value: str) -> Dict[str, str]:
