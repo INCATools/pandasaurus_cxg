@@ -141,6 +141,7 @@ dmypy.json
 /*.png
 /*.obo
 /*.ipynb
+/outputs/
 
 # Ignore loose Python scripts; keep package and tests tracked
 *.py
