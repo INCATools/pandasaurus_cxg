@@ -11,17 +11,18 @@ jobs:
 
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v2
 
       - name: Setup Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v2
         with:
           python-version: 3.9
 
       - name: Install Poetry
-        uses: Gr1N/setup-poetry@v8
-        with:
-          poetry-version: 1.7.1
+        run: |
+          curl -sSL https://install.python-poetry.org | python -
+          export PATH="$HOME/.poetry/bin:$PATH"
+          poetry --version
 
       - name: Install Dependencies and Build Documentation
         run: |
@@ -29,8 +30,10 @@ jobs:
           poetry install -E docs
           cd docs
           poetry run make html
+        env:
+          POETRY_VIRTUALENVS_IN_PROJECT: true
 
-      - name: Deploy documentation
+      - name: Deploy documentation.
         if: ${{ github.event_name == 'push' }}
         uses: JamesIves/github-pages-deploy-action@v4.3.0
         with:
