@@ -133,6 +133,16 @@ dmypy.json
 *.ttl
 *.nt
 
+# AnnData exports
+*.h5ad
+
+# Ignore loose Python scripts; keep package and tests tracked
+*.py
+!pandasaurus_cxg/*.py
+!pandasaurus_cxg/**/*.py
+!test/*.py
+!test/**/*.py
+
 # pycharm/mac
 .DS_Store
 .idea/
