@@ -136,6 +136,12 @@ dmypy.json
 # AnnData exports
 *.h5ad
 
+# Root-level generated/data files
+/*.bak
+/*.png
+/*.obo
+/*.ipynb
+
 # Ignore loose Python scripts; keep package and tests tracked
 *.py
 !pandasaurus_cxg/*.py
