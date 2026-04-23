@@ -1,5 +1,5 @@
 import re
-from typing import Dict
+from typing import Dict, Optional
 
 import networkx as nx
 from rdflib import OWL, RDF, RDFS, BNode, Graph, Literal, Namespace, URIRef
@@ -194,3 +194,19 @@ def get_cxg_dataset_url(matrix_id: str) -> str:
         The full URL to access the dataset on CellxGene.
     """
     return f"https://cellxgene.cziscience.com/e/{matrix_id}.cxg/"
+
+
+def extract_dataset_version_id(download_link: Optional[str]) -> Optional[str]:
+    """Extract the dataset UUID from a CellxGene download link."""
+    if not download_link:
+        return None
+    match = re.search(r"/([0-9a-f-]{36})\.h5ad$", download_link)
+    return match.group(1) if match else None
+
+
+def get_census_version_cached(requested_version: str = "stable") -> str:
+    """Resolve a Census version alias to its concrete release build."""
+    import cellxgene_census
+
+    version_info = cellxgene_census.get_census_version_description(requested_version)
+    return version_info["release_build"]
