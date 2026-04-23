@@ -1,4 +1,5 @@
 import os
+from types import SimpleNamespace
 
 import pandas as pd
 import pytest
@@ -12,6 +13,14 @@ from pandasaurus_cxg.utils.exceptions import (
     MissingAnalysisProcess,
     MissingEnrichmentProcess,
 )
+
+
+@pytest.fixture(autouse=True)
+def mock_census_version(monkeypatch):
+    monkeypatch.setattr(
+        "pandasaurus_cxg.graph_generator.graph_generator.get_census_version_cached",
+        lambda: "2025-11-08",
+    )
 
 
 @pytest.fixture()
@@ -51,6 +60,67 @@ def graph_generator_instance_for_kidney(enrichment_analyzer_instance_for_kidney_
     ea = enrichment_analyzer_instance_for_kidney_data
     ea.enricher_manager.contextual_slim_enrichment()
     ea.co_annotation_report()
+    return GraphGenerator(ea)
+
+
+@pytest.fixture()
+def graph_generator_instance_for_schema_unit_test():
+    dataset_uuid = "75c059c8-8fb7-4e6e-a618-a3e01ac42060"
+    citation = (
+        "Publication: https://doi.org/10.1038/s41586-021-03569-1 "
+        f"Version: https://datasets.cellxgene.cziscience.com/{dataset_uuid}.h5ad "
+        "Collection: lung_atlas"
+    )
+    report_df = pd.DataFrame(
+        [
+            [
+                "subclass.full",
+                "Monocyte-derived macrophages",
+                "cluster_matches",
+                "author_cell_type",
+                "Monocyte-derived macrophages",
+                5,
+                5,
+            ],
+            [
+                "subclass.full",
+                "Monocyte-derived macrophages",
+                "cluster_matches",
+                "subclass.l1",
+                "macrophage",
+                5,
+                5,
+            ],
+            [
+                "subclass.full",
+                "Monocyte-derived macrophages",
+                "cluster_matches",
+                "cell_type",
+                "macrophage",
+                5,
+                5,
+            ],
+        ],
+        columns=[
+            "field_name1",
+            "value1",
+            "predicate",
+            "field_name2",
+            "value2",
+            "field_name1_cell_count",
+            "field_name2_cell_count",
+        ],
+    )
+    ea = SimpleNamespace(
+        analyzer_manager=SimpleNamespace(
+            report_df=report_df,
+            all_cell_type_identifiers=["subclass.full", "subclass.l1", "author_cell_type", "cell_type"],
+        ),
+        enricher_manager=SimpleNamespace(
+            anndata=SimpleNamespace(uns={"citation": citation}),
+            seed_dict={},
+        ),
+    )
     return GraphGenerator(ea)
 
 
@@ -199,7 +269,7 @@ def test_generate_rdf_graph_with_merge(graph_generator_instance_for_kidney, expe
         )
         == expected_stable_ids
     )
-    assert len(graph_generator.graph) == 747
+    assert len(graph_generator.graph) == 994
     assert (
         len([[s, p, o] for s, p, o in graph_generator.graph.triples((None, RDF.type, None))]) == 146
     )
@@ -241,7 +311,7 @@ def test_generate_rdf_graph_with_merge(graph_generator_instance_for_kidney, expe
 def test_generate_rdf_graph_without_merge(graph_generator_instance_for_kidney):
     graph_generator = graph_generator_instance_for_kidney
     graph_generator.generate_rdf_graph()
-    assert len(graph_generator.graph) == 2177
+    assert len(graph_generator.graph) == 3632
     assert (
         len([[s, p, o] for s, p, o in graph_generator.graph.triples((None, RDF.type, None))]) == 312
     )
@@ -270,11 +340,11 @@ def test_enrich_rdf_graph_with_merge(graph_generator_instance_for_kidney):
     graph_generator = graph_generator_instance_for_kidney
     graph_generator.generate_rdf_graph(merge=True)
 
-    assert len(graph_generator.graph) == 747
+    assert len(graph_generator.graph) == 994
 
     graph_generator.enrich_rdf_graph()
 
-    assert len(graph_generator.graph) == 1242
+    assert len(graph_generator.graph) == 1498
     assert (
         URIRef(CONSIST_OF.get("iri")),
         RDFS.label,
@@ -291,7 +361,7 @@ def test_enrich_rdf_graph_with_merge(graph_generator_instance_for_kidney):
                 if str(s).startswith("http://purl.obolibrary.org/obo/CL_")
             ]
         )
-        == 531
+        == 536
     )
 
 
@@ -299,11 +369,11 @@ def test_enrich_rdf_graph_without_merge(graph_generator_instance_for_kidney):
     graph_generator = graph_generator_instance_for_kidney
     graph_generator.generate_rdf_graph()
 
-    assert len(graph_generator.graph) == 2177
+    assert len(graph_generator.graph) == 3632
 
     graph_generator.enrich_rdf_graph()
 
-    assert len(graph_generator.graph) == 2674
+    assert len(graph_generator.graph) == 4136
 
 
 def test_save_rdf_graph(graph_generator_instance_for_kidney):
@@ -442,3 +512,70 @@ def test_set_label_adding_priority_invalid(graph_generator_instance_for_kidney):
 
     assert isinstance(exception, ValueError)
     assert exception.args[0] == expected_message
+
+
+def test_generate_rdf_graph_adds_cluster_schema_provenance(
+    graph_generator_instance_for_schema_unit_test,
+):
+    graph_generator = graph_generator_instance_for_schema_unit_test
+    graph_generator.generate_rdf_graph(merge=True)
+
+    cluster_nodes = list(
+        graph_generator.graph.subjects(predicate=RDF.type, object=URIRef("http://purl.obolibrary.org/obo/PCL_0010001"))
+    )
+    assert len(cluster_nodes) == 1
+
+    cluster_node = cluster_nodes[0]
+    assert (
+        cluster_node,
+        graph_generator.ns.author_label_column,
+        Literal("subclass.full"),
+    ) in graph_generator.graph
+    assert (
+        cluster_node,
+        graph_generator.ns.author_synonym_columns,
+        Literal("subclass.l1"),
+    ) in graph_generator.graph
+    assert (
+        cluster_node,
+        graph_generator.ns.author_synonym_columns,
+        Literal("author_cell_type"),
+    ) in graph_generator.graph
+    assert (
+        cluster_node,
+        graph_generator.ns["subclass.full"],
+        Literal("Monocyte-derived macrophages"),
+    ) in graph_generator.graph
+    assert (
+        cluster_node,
+        graph_generator.ns["subclass.l1"],
+        Literal("macrophage"),
+    ) in graph_generator.graph
+    assert (
+        cluster_node,
+        graph_generator.ns.author_cell_type,
+        Literal("Monocyte-derived macrophages"),
+    ) in graph_generator.graph
+
+
+def test_generate_rdf_graph_adds_dataset_census_properties(
+    graph_generator_instance_for_schema_unit_test,
+):
+    graph_generator = graph_generator_instance_for_schema_unit_test
+    graph_generator.generate_rdf_graph(merge=True)
+
+    dataset_node = next(
+        graph_generator.graph.subjects(
+            predicate=RDF.type, object=URIRef("https://schema.org/Dataset")
+        )
+    )
+    assert (
+        dataset_node,
+        graph_generator.ns.census_dataset_id,
+        Literal("75c059c8-8fb7-4e6e-a618-a3e01ac42060"),
+    ) in graph_generator.graph
+    assert (
+        dataset_node,
+        graph_generator.ns.census_version_cached,
+        Literal("2025-11-08"),
+    ) in graph_generator.graph
