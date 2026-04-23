@@ -1,7 +1,7 @@
 import textwrap
 import uuid
 from enum import Enum
-from typing import Dict, List, Optional, Union
+from typing import Dict, List, Optional, Tuple, Union
 
 import matplotlib.pyplot as plt
 import networkx as nx
@@ -20,8 +20,10 @@ from pandasaurus_cxg.graph_generator.graph_generator_utils import (
     add_outgoing_edges_to_subgraph,
     citation_field_name,
     colour_mapping,
+    extract_dataset_version_id,
     find_and_rotate_center_layout,
     generate_subgraph,
+    get_census_version_cached,
     get_cxg_dataset_url,
     parse_citation_field_into_dict,
     ncname_safe,
@@ -47,6 +49,15 @@ logger = configure_logger()
 
 
 class GraphGenerator:
+    cluster_reserved_keys = {
+        "author_label_column",
+        "author_synonym_columns",
+        "cell_count",
+        "cell_type",
+        "cluster_matches",
+        "subcluster_of",
+    }
+
     def __init__(
         self,
         enrichment_analyzer: AnndataEnrichmentAnalyzer,
@@ -95,11 +106,11 @@ class GraphGenerator:
         # generate dataset entity and has_source property
         citation_dict = {}
         uns = self.ea.enricher_manager.anndata.uns
+        census_dataset_id = None
         if citation_field_name in uns.keys():
             citation_dict = parse_citation_field_into_dict(uns[citation_field_name])
-            cxg_versioned_dataset_id = (
-                citation_dict.get("download_link").split("/")[-1].split(".")[0]
-            )
+            census_dataset_id = extract_dataset_version_id(citation_dict.get("download_link"))
+            cxg_versioned_dataset_id = census_dataset_id or str(uuid.uuid4())
             dataset_class = URIRef(get_cxg_dataset_url(cxg_versioned_dataset_id))
         else:
             # if citation_field_name doesn't exist we use random uuid as cxg_versioned_dataset_id
@@ -123,6 +134,15 @@ class GraphGenerator:
             self.graph.add(
                 (dataset_class, URIRef(self.ns[ncname_safe(key)]), Literal(value))
             )
+        if census_dataset_id:
+            self.graph.add((dataset_class, self.ns.census_dataset_id, Literal(census_dataset_id)))
+        self.graph.add(
+            (
+                dataset_class,
+                self.ns.census_version_cached,
+                Literal(get_census_version_cached()),
+            )
+        )
         has_source = URIRef(HAS_SOURCE["iri"])
         self.graph.add((has_source, RDFS.label, Literal(HAS_SOURCE["label"])))
 
@@ -168,11 +188,35 @@ class GraphGenerator:
         self.graph.add((cell_set_class, RDF.type, OWL.Class))
         self.graph.add((cell_set_class, RDFS.label, Literal(CLUSTER.get("label"))))
         for _uuid, inner_dict in grouped_dict_uuid.items():
+            author_label_column, author_synonym_columns = self._get_cluster_author_provenance(
+                inner_dict
+            )
             resource = self.ns[_uuid]
             self.graph.add((resource, RDF.type, cell_set_class))
             self.graph.add((resource, has_source, dataset_class))
+            self.graph.add((resource, self.ns.author_label_column, Literal(author_label_column)))
+            for author_synonym_column in author_synonym_columns:
+                self.graph.add(
+                    (
+                        resource,
+                        self.ns.author_synonym_columns,
+                        Literal(author_synonym_column),
+                    )
+                )
             for k, v in inner_dict.items():
-                if k in {"subcluster_of", "cluster_matches"}:
+                if k == "subcluster_of":
+                    continue
+                if k == "cluster_matches":
+                    for matched_key, matched_value in v.items():
+                        if matched_key == "cell_type":
+                            continue
+                        self.graph.add(
+                            (
+                                resource,
+                                self.ns[ncname_safe(matched_key)],
+                                Literal(matched_value),
+                            )
+                        )
                     continue
                 self.graph.add((resource, self.ns[ncname_safe(k)], Literal(v)))
 
@@ -497,6 +541,43 @@ class GraphGenerator:
                     label_field = [str(object_), priority_value]
             if label_field[0]:
                 graph.add((resource, RDFS.label, Literal(label_field[0])))
+
+    def _get_cluster_author_fields(self, cluster_dict: Dict[str, Union[str, Dict[str, str]]]) -> List[str]:
+        author_fields = [
+            key
+            for key in cluster_dict
+            if key not in self.cluster_reserved_keys and not isinstance(cluster_dict[key], dict)
+        ]
+        cluster_matches = cluster_dict.get("cluster_matches", {})
+        if isinstance(cluster_matches, dict):
+            author_fields.extend(
+                [
+                    key
+                    for key in cluster_matches
+                    if key not in self.cluster_reserved_keys and key != "cell_type"
+                ]
+            )
+        return sorted(set(author_fields))
+
+    def _get_label_priority_mapping(self) -> Dict[str, int]:
+        if self.label_priority:
+            return self.label_priority
+        priority_fields = list(self.ea.analyzer_manager.all_cell_type_identifiers)
+        if "cell_type" not in priority_fields:
+            priority_fields.append("cell_type")
+        return {label: len(priority_fields) - i for i, label in enumerate(priority_fields)}
+
+    def _get_cluster_author_provenance(
+        self, cluster_dict: Dict[str, Union[str, Dict[str, str]]]
+    ) -> Tuple[str, List[str]]:
+        author_fields = self._get_cluster_author_fields(cluster_dict)
+        priority = self._get_label_priority_mapping()
+        author_label_column = max(author_fields, key=lambda field: priority.get(field, 0))
+        author_synonym_columns = sorted(
+            [field for field in author_fields if field != author_label_column],
+            key=lambda field: (-priority.get(field, 0), field),
+        )
+        return author_label_column, author_synonym_columns
 
     def set_label_adding_priority(self, label_priority: Union[List[str], Dict[str, int]]):
         """
