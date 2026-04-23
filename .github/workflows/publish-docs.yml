@@ -19,12 +19,12 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v2
         with:
-          python-version: 3.9
+          python-version: "3.11"
 
       - name: Install Poetry
         run: |
           curl -sSL https://install.python-poetry.org | python -
-          export PATH="$HOME/.poetry/bin:$PATH"
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
           poetry --version
 
       - name: Install Dependencies and Build Documentation
