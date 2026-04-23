@@ -71,10 +71,11 @@
            <div itemprop="articleBody">
              
   <h1>Source code for pandasaurus_cxg.graph_generator.graph_generator</h1><div class="highlight"><pre>
-<span></span><span class="kn">import</span> <span class="nn">textwrap</span>
+<span></span><span class="kn">import</span> <span class="nn">json</span>
+<span class="kn">import</span> <span class="nn">textwrap</span>
 <span class="kn">import</span> <span class="nn">uuid</span>
 <span class="kn">from</span> <span class="nn">enum</span> <span class="kn">import</span> <span class="n">Enum</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Union</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span>
 
 <span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
 <span class="kn">import</span> <span class="nn">networkx</span> <span class="k">as</span> <span class="nn">nx</span>
@@ -93,8 +94,10 @@
     <span class="n">add_outgoing_edges_to_subgraph</span><span class="p">,</span>
     <span class="n">citation_field_name</span><span class="p">,</span>
     <span class="n">colour_mapping</span><span class="p">,</span>
+    <span class="n">extract_dataset_version_id</span><span class="p">,</span>
     <span class="n">find_and_rotate_center_layout</span><span class="p">,</span>
     <span class="n">generate_subgraph</span><span class="p">,</span>
+    <span class="n">get_census_version_cached</span><span class="p">,</span>
     <span class="n">get_cxg_dataset_url</span><span class="p">,</span>
     <span class="n">parse_citation_field_into_dict</span><span class="p">,</span>
     <span class="n">ncname_safe</span><span class="p">,</span>
@@ -122,6 +125,15 @@
 <div class="viewcode-block" id="GraphGenerator">
 <a class="viewcode-back" href="../../../pandasaurus_cxg/graph_generator/graph_generator.html#pandasaurus_cxg.graph_generator.graph_generator.GraphGenerator">[docs]</a>
 <span class="k">class</span> <span class="nc">GraphGenerator</span><span class="p">:</span>
+    <span class="n">cluster_reserved_keys</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;author_label_column&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;author_synonym_columns&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;cell_count&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;cell_type&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;cluster_matches&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;subcluster_of&quot;</span><span class="p">,</span>
+    <span class="p">}</span>
+
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">enrichment_analyzer</span><span class="p">:</span> <span class="n">AnndataEnrichmentAnalyzer</span><span class="p">,</span>
@@ -172,11 +184,11 @@
         <span class="c1"># generate dataset entity and has_source property</span>
         <span class="n">citation_dict</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="n">uns</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ea</span><span class="o">.</span><span class="n">enricher_manager</span><span class="o">.</span><span class="n">anndata</span><span class="o">.</span><span class="n">uns</span>
+        <span class="n">census_dataset_id</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="k">if</span> <span class="n">citation_field_name</span> <span class="ow">in</span> <span class="n">uns</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
             <span class="n">citation_dict</span> <span class="o">=</span> <span class="n">parse_citation_field_into_dict</span><span class="p">(</span><span class="n">uns</span><span class="p">[</span><span class="n">citation_field_name</span><span class="p">])</span>
-            <span class="n">cxg_versioned_dataset_id</span> <span class="o">=</span> <span class="p">(</span>
-                <span class="n">citation_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;download_link&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
-            <span class="p">)</span>
+            <span class="n">census_dataset_id</span> <span class="o">=</span> <span class="n">extract_dataset_version_id</span><span class="p">(</span><span class="n">citation_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;download_link&quot;</span><span class="p">))</span>
+            <span class="n">cxg_versioned_dataset_id</span> <span class="o">=</span> <span class="n">census_dataset_id</span> <span class="ow">or</span> <span class="nb">str</span><span class="p">(</span><span class="n">uuid</span><span class="o">.</span><span class="n">uuid4</span><span class="p">())</span>
             <span class="n">dataset_class</span> <span class="o">=</span> <span class="n">URIRef</span><span class="p">(</span><span class="n">get_cxg_dataset_url</span><span class="p">(</span><span class="n">cxg_versioned_dataset_id</span><span class="p">))</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="c1"># if citation_field_name doesn&#39;t exist we use random uuid as cxg_versioned_dataset_id</span>
@@ -200,6 +212,15 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
                 <span class="p">(</span><span class="n">dataset_class</span><span class="p">,</span> <span class="n">URIRef</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ns</span><span class="p">[</span><span class="n">ncname_safe</span><span class="p">(</span><span class="n">key</span><span class="p">)]),</span> <span class="n">Literal</span><span class="p">(</span><span class="n">value</span><span class="p">))</span>
             <span class="p">)</span>
+        <span class="k">if</span> <span class="n">census_dataset_id</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">add</span><span class="p">((</span><span class="n">dataset_class</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ns</span><span class="o">.</span><span class="n">census_dataset_id</span><span class="p">,</span> <span class="n">Literal</span><span class="p">(</span><span class="n">census_dataset_id</span><span class="p">)))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+            <span class="p">(</span>
+                <span class="n">dataset_class</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">ns</span><span class="o">.</span><span class="n">census_version_cached</span><span class="p">,</span>
+                <span class="n">Literal</span><span class="p">(</span><span class="n">get_census_version_cached</span><span class="p">()),</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
         <span class="n">has_source</span> <span class="o">=</span> <span class="n">URIRef</span><span class="p">(</span><span class="n">HAS_SOURCE</span><span class="p">[</span><span class="s2">&quot;iri&quot;</span><span class="p">])</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">add</span><span class="p">((</span><span class="n">has_source</span><span class="p">,</span> <span class="n">RDFS</span><span class="o">.</span><span class="n">label</span><span class="p">,</span> <span class="n">Literal</span><span class="p">(</span><span class="n">HAS_SOURCE</span><span class="p">[</span><span class="s2">&quot;label&quot;</span><span class="p">])))</span>
 
@@ -245,11 +266,35 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">add</span><span class="p">((</span><span class="n">cell_set_class</span><span class="p">,</span> <span class="n">RDF</span><span class="o">.</span><span class="n">type</span><span class="p">,</span> <span class="n">OWL</span><span class="o">.</span><span class="n">Class</span><span class="p">))</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">add</span><span class="p">((</span><span class="n">cell_set_class</span><span class="p">,</span> <span class="n">RDFS</span><span class="o">.</span><span class="n">label</span><span class="p">,</span> <span class="n">Literal</span><span class="p">(</span><span class="n">CLUSTER</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;label&quot;</span><span class="p">))))</span>
         <span class="k">for</span> <span class="n">_uuid</span><span class="p">,</span> <span class="n">inner_dict</span> <span class="ow">in</span> <span class="n">grouped_dict_uuid</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">author_label_column</span><span class="p">,</span> <span class="n">author_synonym_columns</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_cluster_author_provenance</span><span class="p">(</span>
+                <span class="n">inner_dict</span>
+            <span class="p">)</span>
             <span class="n">resource</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ns</span><span class="p">[</span><span class="n">_uuid</span><span class="p">]</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">add</span><span class="p">((</span><span class="n">resource</span><span class="p">,</span> <span class="n">RDF</span><span class="o">.</span><span class="n">type</span><span class="p">,</span> <span class="n">cell_set_class</span><span class="p">))</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">add</span><span class="p">((</span><span class="n">resource</span><span class="p">,</span> <span class="n">has_source</span><span class="p">,</span> <span class="n">dataset_class</span><span class="p">))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">add</span><span class="p">((</span><span class="n">resource</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ns</span><span class="o">.</span><span class="n">author_label_column</span><span class="p">,</span> <span class="n">Literal</span><span class="p">(</span><span class="n">author_label_column</span><span class="p">)))</span>
+            <span class="k">if</span> <span class="n">author_synonym_columns</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+                    <span class="p">(</span>
+                        <span class="n">resource</span><span class="p">,</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">ns</span><span class="o">.</span><span class="n">author_synonym_columns</span><span class="p">,</span>
+                        <span class="n">Literal</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">author_synonym_columns</span><span class="p">)),</span>
+                    <span class="p">)</span>
+                <span class="p">)</span>
             <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">inner_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-                <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;subcluster_of&quot;</span><span class="p">,</span> <span class="s2">&quot;cluster_matches&quot;</span><span class="p">}:</span>
+                <span class="k">if</span> <span class="n">k</span> <span class="o">==</span> <span class="s2">&quot;subcluster_of&quot;</span><span class="p">:</span>
+                    <span class="k">continue</span>
+                <span class="k">if</span> <span class="n">k</span> <span class="o">==</span> <span class="s2">&quot;cluster_matches&quot;</span><span class="p">:</span>
+                    <span class="k">for</span> <span class="n">matched_key</span><span class="p">,</span> <span class="n">matched_value</span> <span class="ow">in</span> <span class="n">v</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                        <span class="k">if</span> <span class="n">matched_key</span> <span class="o">==</span> <span class="s2">&quot;cell_type&quot;</span><span class="p">:</span>
+                            <span class="k">continue</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+                            <span class="p">(</span>
+                                <span class="n">resource</span><span class="p">,</span>
+                                <span class="bp">self</span><span class="o">.</span><span class="n">ns</span><span class="p">[</span><span class="n">ncname_safe</span><span class="p">(</span><span class="n">matched_key</span><span class="p">)],</span>
+                                <span class="n">Literal</span><span class="p">(</span><span class="n">matched_value</span><span class="p">),</span>
+                            <span class="p">)</span>
+                        <span class="p">)</span>
                     <span class="k">continue</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">add</span><span class="p">((</span><span class="n">resource</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ns</span><span class="p">[</span><span class="n">ncname_safe</span><span class="p">(</span><span class="n">k</span><span class="p">)],</span> <span class="n">Literal</span><span class="p">(</span><span class="n">v</span><span class="p">)))</span>
 
@@ -587,6 +632,43 @@
                     <span class="n">label_field</span> <span class="o">=</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">object_</span><span class="p">),</span> <span class="n">priority_value</span><span class="p">]</span>
             <span class="k">if</span> <span class="n">label_field</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
                 <span class="n">graph</span><span class="o">.</span><span class="n">add</span><span class="p">((</span><span class="n">resource</span><span class="p">,</span> <span class="n">RDFS</span><span class="o">.</span><span class="n">label</span><span class="p">,</span> <span class="n">Literal</span><span class="p">(</span><span class="n">label_field</span><span class="p">[</span><span class="mi">0</span><span class="p">])))</span>
+
+    <span class="k">def</span> <span class="nf">_get_cluster_author_fields</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cluster_dict</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]])</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+        <span class="n">author_fields</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">key</span>
+            <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">cluster_dict</span>
+            <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">cluster_reserved_keys</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">cluster_dict</span><span class="p">[</span><span class="n">key</span><span class="p">],</span> <span class="nb">dict</span><span class="p">)</span>
+        <span class="p">]</span>
+        <span class="n">cluster_matches</span> <span class="o">=</span> <span class="n">cluster_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;cluster_matches&quot;</span><span class="p">,</span> <span class="p">{})</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">cluster_matches</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="n">author_fields</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span>
+                <span class="p">[</span>
+                    <span class="n">key</span>
+                    <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">cluster_matches</span>
+                    <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">cluster_reserved_keys</span> <span class="ow">and</span> <span class="n">key</span> <span class="o">!=</span> <span class="s2">&quot;cell_type&quot;</span>
+                <span class="p">]</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">author_fields</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">_get_label_priority_mapping</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">label_priority</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">label_priority</span>
+        <span class="n">priority_fields</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ea</span><span class="o">.</span><span class="n">analyzer_manager</span><span class="o">.</span><span class="n">all_cell_type_identifiers</span><span class="p">)</span>
+        <span class="k">if</span> <span class="s2">&quot;cell_type&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">priority_fields</span><span class="p">:</span>
+            <span class="n">priority_fields</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;cell_type&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">{</span><span class="n">label</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">priority_fields</span><span class="p">)</span> <span class="o">-</span> <span class="n">i</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">label</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">priority_fields</span><span class="p">)}</span>
+
+    <span class="k">def</span> <span class="nf">_get_cluster_author_provenance</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">cluster_dict</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]]</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]:</span>
+        <span class="n">author_fields</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_cluster_author_fields</span><span class="p">(</span><span class="n">cluster_dict</span><span class="p">)</span>
+        <span class="n">priority</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_label_priority_mapping</span><span class="p">()</span>
+        <span class="n">author_label_column</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">author_fields</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">field</span><span class="p">:</span> <span class="n">priority</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">field</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+        <span class="n">author_synonym_columns</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span>
+            <span class="p">[</span><span class="n">field</span> <span class="k">for</span> <span class="n">field</span> <span class="ow">in</span> <span class="n">author_fields</span> <span class="k">if</span> <span class="n">field</span> <span class="o">!=</span> <span class="n">author_label_column</span><span class="p">],</span>
+            <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">field</span><span class="p">:</span> <span class="p">(</span><span class="o">-</span><span class="n">priority</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">field</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">field</span><span class="p">),</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">author_label_column</span><span class="p">,</span> <span class="n">author_synonym_columns</span>
 
 <div class="viewcode-block" id="GraphGenerator.set_label_adding_priority">
 <a class="viewcode-back" href="../../../pandasaurus_cxg/graph_generator/graph_generator.html#pandasaurus_cxg.graph_generator.graph_generator.GraphGenerator.set_label_adding_priority">[docs]</a>
