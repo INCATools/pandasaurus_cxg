@@ -1,3 +1,4 @@
+import json
 import textwrap
 import uuid
 from enum import Enum
@@ -195,12 +196,12 @@ class GraphGenerator:
             self.graph.add((resource, RDF.type, cell_set_class))
             self.graph.add((resource, has_source, dataset_class))
             self.graph.add((resource, self.ns.author_label_column, Literal(author_label_column)))
-            for author_synonym_column in author_synonym_columns:
+            if author_synonym_columns:
                 self.graph.add(
                     (
                         resource,
                         self.ns.author_synonym_columns,
-                        Literal(author_synonym_column),
+                        Literal(json.dumps(author_synonym_columns)),
                     )
                 )
             for k, v in inner_dict.items():

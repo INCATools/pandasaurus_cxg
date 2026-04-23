@@ -1,4 +1,5 @@
 import os
+import json
 from types import SimpleNamespace
 
 import pandas as pd
@@ -269,7 +270,7 @@ def test_generate_rdf_graph_with_merge(graph_generator_instance_for_kidney, expe
         )
         == expected_stable_ids
     )
-    assert len(graph_generator.graph) == 994
+    assert len(graph_generator.graph) == 922
     assert (
         len([[s, p, o] for s, p, o in graph_generator.graph.triples((None, RDF.type, None))]) == 146
     )
@@ -311,7 +312,7 @@ def test_generate_rdf_graph_with_merge(graph_generator_instance_for_kidney, expe
 def test_generate_rdf_graph_without_merge(graph_generator_instance_for_kidney):
     graph_generator = graph_generator_instance_for_kidney
     graph_generator.generate_rdf_graph()
-    assert len(graph_generator.graph) == 3632
+    assert len(graph_generator.graph) == 3399
     assert (
         len([[s, p, o] for s, p, o in graph_generator.graph.triples((None, RDF.type, None))]) == 312
     )
@@ -340,11 +341,11 @@ def test_enrich_rdf_graph_with_merge(graph_generator_instance_for_kidney):
     graph_generator = graph_generator_instance_for_kidney
     graph_generator.generate_rdf_graph(merge=True)
 
-    assert len(graph_generator.graph) == 994
+    assert len(graph_generator.graph) == 922
 
     graph_generator.enrich_rdf_graph()
 
-    assert len(graph_generator.graph) == 1498
+    assert len(graph_generator.graph) == 1426
     assert (
         URIRef(CONSIST_OF.get("iri")),
         RDFS.label,
@@ -369,11 +370,11 @@ def test_enrich_rdf_graph_without_merge(graph_generator_instance_for_kidney):
     graph_generator = graph_generator_instance_for_kidney
     graph_generator.generate_rdf_graph()
 
-    assert len(graph_generator.graph) == 3632
+    assert len(graph_generator.graph) == 3399
 
     graph_generator.enrich_rdf_graph()
 
-    assert len(graph_generator.graph) == 4136
+    assert len(graph_generator.graph) == 3903
 
 
 def test_save_rdf_graph(graph_generator_instance_for_kidney):
@@ -534,12 +535,7 @@ def test_generate_rdf_graph_adds_cluster_schema_provenance(
     assert (
         cluster_node,
         graph_generator.ns.author_synonym_columns,
-        Literal("subclass.l1"),
-    ) in graph_generator.graph
-    assert (
-        cluster_node,
-        graph_generator.ns.author_synonym_columns,
-        Literal("author_cell_type"),
+        Literal(json.dumps(["subclass.l1", "author_cell_type"])),
     ) in graph_generator.graph
     assert (
         cluster_node,
