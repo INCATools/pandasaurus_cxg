@@ -189,13 +189,6 @@ class GraphGenerator:
         self.graph.add((cell_set_class, RDF.type, OWL.Class))
         self.graph.add((cell_set_class, RDFS.label, Literal(CLUSTER.get("label"))))
         for _uuid, inner_dict in grouped_dict_uuid.items():
-            if not self._get_cluster_author_fields(inner_dict):
-                logger.warning(
-                    "Skipping cluster %s because no author fields were found: %s",
-                    _uuid,
-                    inner_dict,
-                )
-                continue
             author_label_column, author_synonym_columns = self._get_cluster_author_provenance(
                 inner_dict
             )
