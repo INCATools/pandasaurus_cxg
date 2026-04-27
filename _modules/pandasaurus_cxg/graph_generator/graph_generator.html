@@ -266,20 +266,30 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">add</span><span class="p">((</span><span class="n">cell_set_class</span><span class="p">,</span> <span class="n">RDF</span><span class="o">.</span><span class="n">type</span><span class="p">,</span> <span class="n">OWL</span><span class="o">.</span><span class="n">Class</span><span class="p">))</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">add</span><span class="p">((</span><span class="n">cell_set_class</span><span class="p">,</span> <span class="n">RDFS</span><span class="o">.</span><span class="n">label</span><span class="p">,</span> <span class="n">Literal</span><span class="p">(</span><span class="n">CLUSTER</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;label&quot;</span><span class="p">))))</span>
         <span class="k">for</span> <span class="n">_uuid</span><span class="p">,</span> <span class="n">inner_dict</span> <span class="ow">in</span> <span class="n">grouped_dict_uuid</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-            <span class="n">author_label_column</span><span class="p">,</span> <span class="n">author_synonym_columns</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_cluster_author_provenance</span><span class="p">(</span>
-                <span class="n">inner_dict</span>
-            <span class="p">)</span>
             <span class="n">resource</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ns</span><span class="p">[</span><span class="n">_uuid</span><span class="p">]</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">add</span><span class="p">((</span><span class="n">resource</span><span class="p">,</span> <span class="n">RDF</span><span class="o">.</span><span class="n">type</span><span class="p">,</span> <span class="n">cell_set_class</span><span class="p">))</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">add</span><span class="p">((</span><span class="n">resource</span><span class="p">,</span> <span class="n">has_source</span><span class="p">,</span> <span class="n">dataset_class</span><span class="p">))</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">add</span><span class="p">((</span><span class="n">resource</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ns</span><span class="o">.</span><span class="n">author_label_column</span><span class="p">,</span> <span class="n">Literal</span><span class="p">(</span><span class="n">author_label_column</span><span class="p">)))</span>
-            <span class="k">if</span> <span class="n">author_synonym_columns</span><span class="p">:</span>
+            <span class="n">author_fields</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_cluster_author_fields</span><span class="p">(</span><span class="n">inner_dict</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">author_fields</span><span class="p">:</span>
+                <span class="n">author_label_column</span><span class="p">,</span> <span class="n">author_synonym_columns</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_cluster_author_provenance</span><span class="p">(</span>
+                    <span class="n">inner_dict</span>
+                <span class="p">)</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
-                    <span class="p">(</span>
-                        <span class="n">resource</span><span class="p">,</span>
-                        <span class="bp">self</span><span class="o">.</span><span class="n">ns</span><span class="o">.</span><span class="n">author_synonym_columns</span><span class="p">,</span>
-                        <span class="n">Literal</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">author_synonym_columns</span><span class="p">)),</span>
+                    <span class="p">(</span><span class="n">resource</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ns</span><span class="o">.</span><span class="n">author_label_column</span><span class="p">,</span> <span class="n">Literal</span><span class="p">(</span><span class="n">author_label_column</span><span class="p">))</span>
+                <span class="p">)</span>
+                <span class="k">if</span> <span class="n">author_synonym_columns</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+                        <span class="p">(</span>
+                            <span class="n">resource</span><span class="p">,</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">ns</span><span class="o">.</span><span class="n">author_synonym_columns</span><span class="p">,</span>
+                            <span class="n">Literal</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">author_synonym_columns</span><span class="p">)),</span>
+                        <span class="p">)</span>
                     <span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                    <span class="s2">&quot;Cluster </span><span class="si">%s</span><span class="s2"> has no author fields; omitting author provenance columns: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span>
+                    <span class="n">_uuid</span><span class="p">,</span>
+                    <span class="n">inner_dict</span><span class="p">,</span>
                 <span class="p">)</span>
             <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">inner_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
                 <span class="k">if</span> <span class="n">k</span> <span class="o">==</span> <span class="s2">&quot;subcluster_of&quot;</span><span class="p">:</span>
