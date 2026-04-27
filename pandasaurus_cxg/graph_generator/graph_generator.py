@@ -189,27 +189,30 @@ class GraphGenerator:
         self.graph.add((cell_set_class, RDF.type, OWL.Class))
         self.graph.add((cell_set_class, RDFS.label, Literal(CLUSTER.get("label"))))
         for _uuid, inner_dict in grouped_dict_uuid.items():
-            if not self._get_cluster_author_fields(inner_dict):
-                logger.warning(
-                    "Skipping cluster %s because no author fields were found: %s",
-                    _uuid,
-                    inner_dict,
-                )
-                continue
-            author_label_column, author_synonym_columns = self._get_cluster_author_provenance(
-                inner_dict
-            )
             resource = self.ns[_uuid]
             self.graph.add((resource, RDF.type, cell_set_class))
             self.graph.add((resource, has_source, dataset_class))
-            self.graph.add((resource, self.ns.author_label_column, Literal(author_label_column)))
-            if author_synonym_columns:
+            author_fields = self._get_cluster_author_fields(inner_dict)
+            if author_fields:
+                author_label_column, author_synonym_columns = self._get_cluster_author_provenance(
+                    inner_dict
+                )
                 self.graph.add(
-                    (
-                        resource,
-                        self.ns.author_synonym_columns,
-                        Literal(json.dumps(author_synonym_columns)),
+                    (resource, self.ns.author_label_column, Literal(author_label_column))
+                )
+                if author_synonym_columns:
+                    self.graph.add(
+                        (
+                            resource,
+                            self.ns.author_synonym_columns,
+                            Literal(json.dumps(author_synonym_columns)),
+                        )
                     )
+            else:
+                logger.warning(
+                    "Cluster %s has no author fields; omitting author provenance columns: %s",
+                    _uuid,
+                    inner_dict,
                 )
             for k, v in inner_dict.items():
                 if k == "subcluster_of":
