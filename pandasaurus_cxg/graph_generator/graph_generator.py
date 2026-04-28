@@ -63,6 +63,7 @@ class GraphGenerator:
         self,
         enrichment_analyzer: AnndataEnrichmentAnalyzer,
         keys: Optional[List[str]] = None,
+        dataset_metadata: Optional[Dict[str, str]] = None,
     ):
         """
         Initializes GraphGenerator instance.
@@ -72,6 +73,8 @@ class GraphGenerator:
             keys (Optional[List[str]]): List of column names to select from the DataFrame to
                 generate the report. Defaults to None.
                 Please refrain from using this parameter until the next notification
+            dataset_metadata (Optional[Dict[str, str]]): Optional CELLxGENE dataset metadata.
+                Supported keys are `dataset_id` and `dataset_version_id`.
 
         """
         # TODO need to think about how to handle the requirement of enrichment and co_annotation_analysis methods
@@ -89,6 +92,7 @@ class GraphGenerator:
         self.ns = Namespace("http://example.org/")
         self.graph = Graph()
         self.label_priority = None
+        self.dataset_metadata = dataset_metadata
         # TODO This part needs a better approach in the future
         self.graph.bind("ns", self.ns)
         self.graph.bind("obo", Namespace("http://purl.obolibrary.org/obo/"))
@@ -108,15 +112,31 @@ class GraphGenerator:
         citation_dict = {}
         uns = self.ea.enricher_manager.anndata.uns
         census_dataset_id = None
-        if citation_field_name in uns.keys():
+        dataset_seed_id = None
+        if self.dataset_metadata is not None:
+            dataset_id = self.dataset_metadata.get("dataset_id")
+            dataset_version_id = self.dataset_metadata.get("dataset_version_id")
+            if citation_field_name in uns.keys():
+                citation_dict = parse_citation_field_into_dict(uns[citation_field_name])
+            if dataset_id:
+                census_dataset_id = dataset_id
+                dataset_seed_id = dataset_id
+                dataset_class = URIRef(get_cxg_dataset_url(dataset_id))
+            elif dataset_version_id:
+                dataset_seed_id = dataset_version_id
+                dataset_class = URIRef(get_cxg_dataset_url(dataset_version_id))
+            else:
+                dataset_seed_id = str(uuid.uuid4())
+                dataset_class = URIRef(self.ns[dataset_seed_id])
+        elif citation_field_name in uns.keys():
             citation_dict = parse_citation_field_into_dict(uns[citation_field_name])
             census_dataset_id = extract_dataset_version_id(citation_dict.get("download_link"))
-            cxg_versioned_dataset_id = census_dataset_id or str(uuid.uuid4())
-            dataset_class = URIRef(get_cxg_dataset_url(cxg_versioned_dataset_id))
+            dataset_seed_id = census_dataset_id or str(uuid.uuid4())
+            dataset_class = URIRef(get_cxg_dataset_url(dataset_seed_id))
         else:
             # if citation_field_name doesn't exist we use random uuid as cxg_versioned_dataset_id
-            cxg_versioned_dataset_id = str(uuid.uuid4())
-            dataset_class = URIRef(self.ns[cxg_versioned_dataset_id])
+            dataset_seed_id = str(uuid.uuid4())
+            dataset_class = URIRef(self.ns[dataset_seed_id])
         self.graph.add((dataset_class, RDF.type, URIRef(DATASET.get("iri"))))
         self.graph.add((dataset_class, RDFS.label, Literal(DATASET.get("label"))))
         for key, value in uns.items():
@@ -135,6 +155,15 @@ class GraphGenerator:
             self.graph.add(
                 (dataset_class, URIRef(self.ns[ncname_safe(key)]), Literal(value))
             )
+        if self.dataset_metadata is not None:
+            dataset_id = self.dataset_metadata.get("dataset_id")
+            dataset_version_id = self.dataset_metadata.get("dataset_version_id")
+            if dataset_id:
+                self.graph.add((dataset_class, self.ns.dataset_id, Literal(dataset_id)))
+            if dataset_version_id:
+                self.graph.add(
+                    (dataset_class, self.ns.dataset_version_id, Literal(dataset_version_id))
+                )
         if census_dataset_id:
             self.graph.add((dataset_class, self.ns.census_dataset_id, Literal(census_dataset_id)))
         self.graph.add(
@@ -181,7 +210,7 @@ class GraphGenerator:
 
             if temp_dict not in grouped_dict_uuid.values():
                 grouped_dict_uuid[
-                    str(uuid.uuid5(uuid.UUID(cxg_versioned_dataset_id), str(temp_dict)))
+                    str(uuid.uuid5(uuid.UUID(dataset_seed_id), str(temp_dict)))
                 ] = temp_dict
 
         # generate a resource for each free-text cell_type annotation and cell_type_ontology_term annotation

@@ -16,6 +16,12 @@ from pandasaurus_cxg.utils.exceptions import (
 )
 
 
+SCHEMA_TEST_DATASET_VERSION_ID = "75c059c8-8fb7-4e6e-a618-a3e01ac42060"
+SCHEMA_TEST_DATASET_ID = "11111111-2222-3333-4444-555555555555"
+SCHEMA_TEST_LEGACY_CLUSTER_ID = "b2f21d75-2dd5-57c9-a4dc-92c9818926fb"
+SCHEMA_TEST_METADATA_CLUSTER_ID = "0883d0c4-3eee-5abc-9c36-8e3d0c7d183e"
+
+
 @pytest.fixture(autouse=True)
 def mock_census_version(monkeypatch):
     monkeypatch.setattr(
@@ -66,10 +72,9 @@ def graph_generator_instance_for_kidney(enrichment_analyzer_instance_for_kidney_
 
 @pytest.fixture()
 def graph_generator_instance_for_schema_unit_test():
-    dataset_uuid = "75c059c8-8fb7-4e6e-a618-a3e01ac42060"
     citation = (
         "Publication: https://doi.org/10.1038/s41586-021-03569-1 "
-        f"Version: https://datasets.cellxgene.cziscience.com/{dataset_uuid}.h5ad "
+        f"Version: https://datasets.cellxgene.cziscience.com/{SCHEMA_TEST_DATASET_VERSION_ID}.h5ad "
         "Collection: lung_atlas"
     )
     report_df = pd.DataFrame(
@@ -123,6 +128,72 @@ def graph_generator_instance_for_schema_unit_test():
         ),
     )
     return GraphGenerator(ea)
+
+
+@pytest.fixture()
+def graph_generator_instance_for_schema_unit_test_with_metadata():
+    citation = (
+        "Publication: https://doi.org/10.1038/s41586-021-03569-1 "
+        f"Version: https://datasets.cellxgene.cziscience.com/{SCHEMA_TEST_DATASET_VERSION_ID}.h5ad "
+        "Collection: lung_atlas"
+    )
+    report_df = pd.DataFrame(
+        [
+            [
+                "subclass.full",
+                "Monocyte-derived macrophages",
+                "cluster_matches",
+                "author_cell_type",
+                "Monocyte-derived macrophages",
+                5,
+                5,
+            ],
+            [
+                "subclass.full",
+                "Monocyte-derived macrophages",
+                "cluster_matches",
+                "subclass.l1",
+                "macrophage",
+                5,
+                5,
+            ],
+            [
+                "subclass.full",
+                "Monocyte-derived macrophages",
+                "cluster_matches",
+                "cell_type",
+                "macrophage",
+                5,
+                5,
+            ],
+        ],
+        columns=[
+            "field_name1",
+            "value1",
+            "predicate",
+            "field_name2",
+            "value2",
+            "field_name1_cell_count",
+            "field_name2_cell_count",
+        ],
+    )
+    ea = SimpleNamespace(
+        analyzer_manager=SimpleNamespace(
+            report_df=report_df,
+            all_cell_type_identifiers=["subclass.full", "subclass.l1", "author_cell_type", "cell_type"],
+        ),
+        enricher_manager=SimpleNamespace(
+            anndata=SimpleNamespace(uns={"citation": citation}),
+            seed_dict={},
+        ),
+    )
+    return GraphGenerator(
+        ea,
+        dataset_metadata={
+            "dataset_id": SCHEMA_TEST_DATASET_ID,
+            "dataset_version_id": SCHEMA_TEST_DATASET_VERSION_ID,
+        },
+    )
 
 
 @pytest.fixture()
@@ -257,6 +328,22 @@ def test_graph_generator_init_with_valid_input(enrichment_analyzer_instance_for_
     assert graph_generator.ns == Namespace("http://example.org/")
     assert graph_generator.graph is not None
     assert graph_generator.label_priority is None
+
+
+def test_graph_generator_init_accepts_dataset_metadata(
+    enrichment_analyzer_instance_for_immune_data,
+):
+    ea = enrichment_analyzer_instance_for_immune_data
+    ea.enricher_manager.simple_enrichment()
+    ea.co_annotation_report()
+
+    dataset_metadata = {
+        "dataset_id": SCHEMA_TEST_DATASET_ID,
+        "dataset_version_id": SCHEMA_TEST_DATASET_VERSION_ID,
+    }
+    graph_generator = GraphGenerator(ea, dataset_metadata=dataset_metadata)
+
+    assert graph_generator.dataset_metadata == dataset_metadata
 
 
 def test_generate_rdf_graph_with_merge(graph_generator_instance_for_kidney, expected_stable_ids):
@@ -568,10 +655,76 @@ def test_generate_rdf_graph_adds_dataset_census_properties(
     assert (
         dataset_node,
         graph_generator.ns.census_dataset_id,
-        Literal("75c059c8-8fb7-4e6e-a618-a3e01ac42060"),
+        Literal(SCHEMA_TEST_DATASET_VERSION_ID),
     ) in graph_generator.graph
     assert (
         dataset_node,
         graph_generator.ns.census_version_cached,
         Literal("2025-11-08"),
     ) in graph_generator.graph
+    assert (dataset_node, graph_generator.ns.dataset_id, None) not in graph_generator.graph
+    assert (dataset_node, graph_generator.ns.dataset_version_id, None) not in graph_generator.graph
+
+
+def test_generate_rdf_graph_uses_dataset_metadata_for_dataset_properties(
+    graph_generator_instance_for_schema_unit_test_with_metadata,
+):
+    graph_generator = graph_generator_instance_for_schema_unit_test_with_metadata
+    graph_generator.generate_rdf_graph(merge=True)
+
+    dataset_node = next(
+        graph_generator.graph.subjects(
+            predicate=RDF.type, object=URIRef("https://schema.org/Dataset")
+        )
+    )
+    assert dataset_node == URIRef(
+        f"https://cellxgene.cziscience.com/e/{SCHEMA_TEST_DATASET_ID}.cxg/"
+    )
+    assert (
+        dataset_node,
+        graph_generator.ns.dataset_id,
+        Literal(SCHEMA_TEST_DATASET_ID),
+    ) in graph_generator.graph
+    assert (
+        dataset_node,
+        graph_generator.ns.dataset_version_id,
+        Literal(SCHEMA_TEST_DATASET_VERSION_ID),
+    ) in graph_generator.graph
+    assert (
+        dataset_node,
+        graph_generator.ns.census_dataset_id,
+        Literal(SCHEMA_TEST_DATASET_ID),
+    ) in graph_generator.graph
+    assert (
+        dataset_node,
+        graph_generator.ns.census_version_cached,
+        Literal("2025-11-08"),
+    ) in graph_generator.graph
+
+
+def test_generate_rdf_graph_prefers_dataset_id_for_uuid_seeding(
+    graph_generator_instance_for_schema_unit_test_with_metadata,
+):
+    graph_generator = graph_generator_instance_for_schema_unit_test_with_metadata
+    graph_generator.generate_rdf_graph(merge=True)
+
+    cluster_nodes = list(
+        graph_generator.graph.subjects(
+            predicate=RDF.type, object=URIRef("http://purl.obolibrary.org/obo/PCL_0010001")
+        )
+    )
+    assert cluster_nodes == [URIRef(f"http://example.org/{SCHEMA_TEST_METADATA_CLUSTER_ID}")]
+
+
+def test_generate_rdf_graph_preserves_legacy_uuid_seeding_without_dataset_metadata(
+    graph_generator_instance_for_schema_unit_test,
+):
+    graph_generator = graph_generator_instance_for_schema_unit_test
+    graph_generator.generate_rdf_graph(merge=True)
+
+    cluster_nodes = list(
+        graph_generator.graph.subjects(
+            predicate=RDF.type, object=URIRef("http://purl.obolibrary.org/obo/PCL_0010001")
+        )
+    )
+    assert cluster_nodes == [URIRef(f"http://example.org/{SCHEMA_TEST_LEGACY_CLUSTER_ID}")]
