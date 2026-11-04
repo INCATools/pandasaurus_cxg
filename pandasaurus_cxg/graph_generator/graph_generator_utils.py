@@ -1,14 +1,46 @@
+import logging
 import re
-from typing import Dict, Optional
+from typing import Dict, List, Optional
 
 import networkx as nx
 from rdflib import OWL, RDF, RDFS, BNode, Graph, Literal, Namespace, URIRef
 
+from pandasaurus_cxg.graph_generator.graph_namespaces import OBO_BASE, prefixes
 from pandasaurus_cxg.graph_generator.graph_predicates import (
     CLUSTER,
     CONSIST_OF,
     SUBCLUSTER_OF,
 )
+
+logger = logging.getLogger(__name__)
+
+# CxG separates multiple ontology term IDs with "," (schema >= 4) or " || " (older schemas)
+_MULTI_VALUE_SEPARATOR = re.compile(r"\s*(?:,|\|\|)\s*")
+
+
+def split_multi_valued(value: str) -> List[str]:
+    """Split a possibly multi-valued CxG field (e.g. ``HANCESTRO:0005,HANCESTRO:0014``)."""
+    return [part for part in _MULTI_VALUE_SEPARATOR.split(value.strip()) if part]
+
+
+def curie_to_iri(curie: str) -> URIRef:
+    """
+    Expand a CURIE such as ``HANCESTRO:0568`` to a full IRI.
+
+    Prefixes missing from ``graph_namespaces.prefixes`` fall back to the OBO PURL pattern
+    ``http://purl.obolibrary.org/obo/{PREFIX}_{ID}`` and a warning is logged.
+    """
+    prefix, local_id = curie.strip().split(":", 1)
+    base = prefixes.get(prefix)
+    if base is None:
+        logger.warning(
+            "Unknown ontology prefix '%s' in term ID '%s'; falling back to the OBO PURL pattern.",
+            prefix,
+            curie,
+        )
+        base = f"{OBO_BASE}{prefix}_"
+    return URIRef(f"{base}{local_id}")
+
 
 colour_mapping = {
     "http://www.w3.org/2002/07/owl#Class": "deepskyblue",
@@ -147,8 +179,8 @@ def ncname_safe(term: str) -> str:
 
     """
     term = term.replace(" ", "_")
-    term = re.sub(r'^[^A-Za-z_]+', '', term)
-    return re.sub(r'[^A-Za-z0-9_\-\.]', '_', term)
+    term = re.sub(r"^[^A-Za-z_]+", "", term)
+    return re.sub(r"[^A-Za-z0-9_\-\.]", "_", term)
 
 
 def parse_citation_field_into_dict(value: str) -> Dict[str, str]:

@@ -21,14 +21,16 @@ from pandasaurus_cxg.graph_generator.graph_generator_utils import (
     add_outgoing_edges_to_subgraph,
     citation_field_name,
     colour_mapping,
+    curie_to_iri,
     extract_dataset_version_id,
     find_and_rotate_center_layout,
     generate_subgraph,
     get_census_version_cached,
     get_cxg_dataset_url,
-    parse_citation_field_into_dict,
     ncname_safe,
+    parse_citation_field_into_dict,
     select_node_with_property,
+    split_multi_valued,
 )
 from pandasaurus_cxg.graph_generator.graph_namespaces import prefixes
 from pandasaurus_cxg.graph_generator.graph_predicates import (
@@ -152,9 +154,7 @@ class GraphGenerator:
                         )
                     )
 
-            self.graph.add(
-                (dataset_class, URIRef(self.ns[ncname_safe(key)]), Literal(value))
-            )
+            self.graph.add((dataset_class, URIRef(self.ns[ncname_safe(key)]), Literal(value)))
         if self.dataset_metadata is not None:
             dataset_id = self.dataset_metadata.get("dataset_id")
             dataset_version_id = self.dataset_metadata.get("dataset_version_id")
@@ -359,28 +359,54 @@ class GraphGenerator:
                     ).loc[lambda x: x != 0.0]
 
                     for label, percentage in percentages.items():
-                        ontology_term_id = ontology_term_id_mapping.get(label)
-                        if isinstance(ontology_term_id, str) and ":" in ontology_term_id:
-                            ontology_term_id = ontology_term_id_mapping.get(label).split(":")
-                            annotated_target = Namespace(prefixes.get(ontology_term_id[0]))[
-                                ontology_term_id[-1]
-                            ]
-                        else:
-                            annotated_target = URIRef(self.ns[str(uuid.uuid4())])
-                        self.graph.add((annotated_target, RDFS.label, Literal(label)))
-                        self.graph.add((annotated_target, RDF.type, OWL.Class))
-                        bnode_axiom = BNode()
-                        self.graph.add((bnode_axiom, RDF.type, OWL.Axiom))
-                        self.graph.add((bnode_axiom, OWL.annotatedSource, s))
-                        self.graph.add((bnode_axiom, OWL.annotatedProperty, self.ns[metadata]))
-                        self.graph.add((bnode_axiom, OWL.annotatedTarget, annotated_target))
-                        self.graph.add(
-                            (
-                                bnode_axiom,
-                                percentage_annotation_property,
-                                Literal("{:.2f}".format(percentage)),
-                            )
+                        targets = self._metadata_targets(
+                            metadata, label, ontology_term_id_mapping.get(label)
                         )
+                        for annotated_target, target_label in targets:
+                            if target_label is not None:
+                                self.graph.add(
+                                    (annotated_target, RDFS.label, Literal(target_label))
+                                )
+                            self.graph.add((annotated_target, RDF.type, OWL.Class))
+                            bnode_axiom = BNode()
+                            self.graph.add((bnode_axiom, RDF.type, OWL.Axiom))
+                            self.graph.add((bnode_axiom, OWL.annotatedSource, s))
+                            self.graph.add((bnode_axiom, OWL.annotatedProperty, self.ns[metadata]))
+                            self.graph.add((bnode_axiom, OWL.annotatedTarget, annotated_target))
+                            self.graph.add(
+                                (
+                                    bnode_axiom,
+                                    percentage_annotation_property,
+                                    Literal("{:.2f}".format(percentage)),
+                                )
+                            )
+
+    def _metadata_targets(
+        self, metadata: str, label, ontology_term_id
+    ) -> List[Tuple[URIRef, Optional[str]]]:
+        """
+        Resolve a metadata value to the class IRI(s) used as annotation targets.
+
+        Multi-valued term IDs (e.g. ``HANCESTRO:0005,HANCESTRO:0014``) yield one target per term.
+        Values without an ontology term ID (e.g. ``unknown``) get a deterministic IRI derived
+        from the metadata field and label, so repeated runs produce the same graph.
+
+        Returns:
+            A list of (target IRI, label) tuples. The label is None when it cannot be
+            matched to an individual term of a multi-valued ID.
+        """
+        label = str(label)
+        term_ids = split_multi_valued(ontology_term_id) if isinstance(ontology_term_id, str) else []
+        term_ids = [t for t in term_ids if ":" in t]
+        if not term_ids:
+            seed = f"{self.ns}{metadata}/{label}"
+            return [(URIRef(self.ns[str(uuid.uuid5(uuid.NAMESPACE_URL, seed))]), label)]
+        if len(term_ids) == 1:
+            return [(curie_to_iri(term_ids[0]), label)]
+        labels = split_multi_valued(label)
+        if len(labels) != len(term_ids):
+            labels = [None] * len(term_ids)
+        return [(curie_to_iri(t), lbl) for t, lbl in zip(term_ids, labels)]
 
     def save_rdf_graph(
         self,
@@ -582,7 +608,9 @@ class GraphGenerator:
             if label_field[0]:
                 graph.add((resource, RDFS.label, Literal(label_field[0])))
 
-    def _get_cluster_author_fields(self, cluster_dict: Dict[str, Union[str, Dict[str, str]]]) -> List[str]:
+    def _get_cluster_author_fields(
+        self, cluster_dict: Dict[str, Union[str, Dict[str, str]]]
+    ) -> List[str]:
         author_fields = [
             key
             for key in cluster_dict
