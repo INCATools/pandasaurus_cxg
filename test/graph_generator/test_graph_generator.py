@@ -1,5 +1,5 @@
-import os
 import json
+import os
 from types import SimpleNamespace
 
 import pandas as pd
@@ -14,7 +14,6 @@ from pandasaurus_cxg.utils.exceptions import (
     MissingAnalysisProcess,
     MissingEnrichmentProcess,
 )
-
 
 SCHEMA_TEST_DATASET_VERSION_ID = "75c059c8-8fb7-4e6e-a618-a3e01ac42060"
 SCHEMA_TEST_DATASET_ID = "11111111-2222-3333-4444-555555555555"
@@ -120,7 +119,12 @@ def graph_generator_instance_for_schema_unit_test():
     ea = SimpleNamespace(
         analyzer_manager=SimpleNamespace(
             report_df=report_df,
-            all_cell_type_identifiers=["subclass.full", "subclass.l1", "author_cell_type", "cell_type"],
+            all_cell_type_identifiers=[
+                "subclass.full",
+                "subclass.l1",
+                "author_cell_type",
+                "cell_type",
+            ],
         ),
         enricher_manager=SimpleNamespace(
             anndata=SimpleNamespace(uns={"citation": citation}),
@@ -180,7 +184,12 @@ def graph_generator_instance_for_schema_unit_test_with_metadata():
     ea = SimpleNamespace(
         analyzer_manager=SimpleNamespace(
             report_df=report_df,
-            all_cell_type_identifiers=["subclass.full", "subclass.l1", "author_cell_type", "cell_type"],
+            all_cell_type_identifiers=[
+                "subclass.full",
+                "subclass.l1",
+                "author_cell_type",
+                "cell_type",
+            ],
         ),
         enricher_manager=SimpleNamespace(
             anndata=SimpleNamespace(uns={"citation": citation}),
@@ -609,7 +618,9 @@ def test_generate_rdf_graph_adds_cluster_schema_provenance(
     graph_generator.generate_rdf_graph(merge=True)
 
     cluster_nodes = list(
-        graph_generator.graph.subjects(predicate=RDF.type, object=URIRef("http://purl.obolibrary.org/obo/PCL_0010001"))
+        graph_generator.graph.subjects(
+            predicate=RDF.type, object=URIRef("http://purl.obolibrary.org/obo/PCL_0010001")
+        )
     )
     assert len(cluster_nodes) == 1
 
@@ -728,3 +739,71 @@ def test_generate_rdf_graph_preserves_legacy_uuid_seeding_without_dataset_metada
         )
     )
     assert cluster_nodes == [URIRef(f"http://example.org/{SCHEMA_TEST_LEGACY_CLUSTER_ID}")]
+
+
+@pytest.fixture()
+def graph_generator_for_metadata_nodes(graph_generator_instance_for_schema_unit_test):
+    from pandasaurus_cxg.graph_generator.graph_predicates import CLUSTER
+
+    gg = graph_generator_instance_for_schema_unit_test
+    gg.ea.analyzer_manager.all_cell_type_identifiers = ["author_cell_type", "cell_type"]
+    gg.ea.enricher_manager.anndata.obs = pd.DataFrame(
+        {
+            "author_cell_type": ["T"] * 5,
+            "self_reported_ethnicity": [
+                "European",
+                "Han Chinese",
+                "unknown",
+                "African,Asian",
+                "MouseStage",
+            ],
+            "self_reported_ethnicity_ontology_term_id": [
+                "HANCESTRO:0005",
+                "HANCESTRO:0027",
+                "unknown",
+                "HANCESTRO:0010,HANCESTRO:0008",
+                "FOOBAR:0001",
+            ],
+        }
+    )
+    cluster = gg.ns["cluster1"]
+    gg.graph.add((cluster, RDF.type, URIRef(CLUSTER.get("iri"))))
+    gg.graph.add((cluster, gg.ns["author_cell_type"], Literal("T")))
+    return gg
+
+
+def _metadata_targets(graph):
+    return {o for o in graph.objects(None, OWL.annotatedTarget)}
+
+
+def test_add_metadata_nodes_produces_absolute_iris(graph_generator_for_metadata_nodes):
+    gg = graph_generator_for_metadata_nodes
+    gg.add_metadata_nodes(["self_reported_ethnicity"])
+    targets = _metadata_targets(gg.graph)
+
+    for target in targets:
+        assert str(target).startswith("http"), target
+        assert not str(target).startswith("None"), target
+
+    obo = "http://purl.obolibrary.org/obo/"
+    assert URIRef(f"{obo}HANCESTRO_0005") in targets
+    assert URIRef(f"{obo}HANCESTRO_0027") in targets
+    # multi-valued IDs are split into one target per term
+    assert URIRef(f"{obo}HANCESTRO_0010") in targets
+    assert URIRef(f"{obo}HANCESTRO_0008") in targets
+    assert gg.graph.value(URIRef(f"{obo}HANCESTRO_0010"), RDFS.label) == Literal("African")
+    # unknown prefixes fall back to the OBO PURL pattern
+    assert URIRef(f"{obo}FOOBAR_0001") in targets
+    assert len(targets) == 6
+
+
+def test_add_metadata_nodes_unknown_value_iri_is_deterministic(
+    graph_generator_for_metadata_nodes,
+):
+    gg = graph_generator_for_metadata_nodes
+    gg.add_metadata_nodes(["self_reported_ethnicity"])
+    gg.add_metadata_nodes(["self_reported_ethnicity"])
+
+    unknown_targets = set(gg.graph.subjects(RDFS.label, Literal("unknown")))
+    assert len(unknown_targets) == 1
+    assert str(next(iter(unknown_targets))).startswith(str(gg.ns))
