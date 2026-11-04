@@ -94,14 +94,16 @@
     <span class="n">add_outgoing_edges_to_subgraph</span><span class="p">,</span>
     <span class="n">citation_field_name</span><span class="p">,</span>
     <span class="n">colour_mapping</span><span class="p">,</span>
+    <span class="n">curie_to_iri</span><span class="p">,</span>
     <span class="n">extract_dataset_version_id</span><span class="p">,</span>
     <span class="n">find_and_rotate_center_layout</span><span class="p">,</span>
     <span class="n">generate_subgraph</span><span class="p">,</span>
     <span class="n">get_census_version_cached</span><span class="p">,</span>
     <span class="n">get_cxg_dataset_url</span><span class="p">,</span>
-    <span class="n">parse_citation_field_into_dict</span><span class="p">,</span>
     <span class="n">ncname_safe</span><span class="p">,</span>
+    <span class="n">parse_citation_field_into_dict</span><span class="p">,</span>
     <span class="n">select_node_with_property</span><span class="p">,</span>
+    <span class="n">split_multi_valued</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="kn">from</span> <span class="nn">pandasaurus_cxg.graph_generator.graph_namespaces</span> <span class="kn">import</span> <span class="n">prefixes</span>
 <span class="kn">from</span> <span class="nn">pandasaurus_cxg.graph_generator.graph_predicates</span> <span class="kn">import</span> <span class="p">(</span>
@@ -229,9 +231,7 @@
                         <span class="p">)</span>
                     <span class="p">)</span>
 
-            <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
-                <span class="p">(</span><span class="n">dataset_class</span><span class="p">,</span> <span class="n">URIRef</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ns</span><span class="p">[</span><span class="n">ncname_safe</span><span class="p">(</span><span class="n">key</span><span class="p">)]),</span> <span class="n">Literal</span><span class="p">(</span><span class="n">value</span><span class="p">))</span>
-            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">add</span><span class="p">((</span><span class="n">dataset_class</span><span class="p">,</span> <span class="n">URIRef</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ns</span><span class="p">[</span><span class="n">ncname_safe</span><span class="p">(</span><span class="n">key</span><span class="p">)]),</span> <span class="n">Literal</span><span class="p">(</span><span class="n">value</span><span class="p">)))</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataset_metadata</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">dataset_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataset_metadata</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;dataset_id&quot;</span><span class="p">)</span>
             <span class="n">dataset_version_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataset_metadata</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;dataset_version_id&quot;</span><span class="p">)</span>
@@ -442,29 +442,55 @@
                     <span class="p">)</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span> <span class="o">!=</span> <span class="mf">0.0</span><span class="p">]</span>
 
                     <span class="k">for</span> <span class="n">label</span><span class="p">,</span> <span class="n">percentage</span> <span class="ow">in</span> <span class="n">percentages</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-                        <span class="n">ontology_term_id</span> <span class="o">=</span> <span class="n">ontology_term_id_mapping</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">label</span><span class="p">)</span>
-                        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">ontology_term_id</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">and</span> <span class="s2">&quot;:&quot;</span> <span class="ow">in</span> <span class="n">ontology_term_id</span><span class="p">:</span>
-                            <span class="n">ontology_term_id</span> <span class="o">=</span> <span class="n">ontology_term_id_mapping</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">label</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;:&quot;</span><span class="p">)</span>
-                            <span class="n">annotated_target</span> <span class="o">=</span> <span class="n">Namespace</span><span class="p">(</span><span class="n">prefixes</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">ontology_term_id</span><span class="p">[</span><span class="mi">0</span><span class="p">]))[</span>
-                                <span class="n">ontology_term_id</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
-                            <span class="p">]</span>
-                        <span class="k">else</span><span class="p">:</span>
-                            <span class="n">annotated_target</span> <span class="o">=</span> <span class="n">URIRef</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ns</span><span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">uuid</span><span class="o">.</span><span class="n">uuid4</span><span class="p">())])</span>
-                        <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">add</span><span class="p">((</span><span class="n">annotated_target</span><span class="p">,</span> <span class="n">RDFS</span><span class="o">.</span><span class="n">label</span><span class="p">,</span> <span class="n">Literal</span><span class="p">(</span><span class="n">label</span><span class="p">)))</span>
-                        <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">add</span><span class="p">((</span><span class="n">annotated_target</span><span class="p">,</span> <span class="n">RDF</span><span class="o">.</span><span class="n">type</span><span class="p">,</span> <span class="n">OWL</span><span class="o">.</span><span class="n">Class</span><span class="p">))</span>
-                        <span class="n">bnode_axiom</span> <span class="o">=</span> <span class="n">BNode</span><span class="p">()</span>
-                        <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">add</span><span class="p">((</span><span class="n">bnode_axiom</span><span class="p">,</span> <span class="n">RDF</span><span class="o">.</span><span class="n">type</span><span class="p">,</span> <span class="n">OWL</span><span class="o">.</span><span class="n">Axiom</span><span class="p">))</span>
-                        <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">add</span><span class="p">((</span><span class="n">bnode_axiom</span><span class="p">,</span> <span class="n">OWL</span><span class="o">.</span><span class="n">annotatedSource</span><span class="p">,</span> <span class="n">s</span><span class="p">))</span>
-                        <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">add</span><span class="p">((</span><span class="n">bnode_axiom</span><span class="p">,</span> <span class="n">OWL</span><span class="o">.</span><span class="n">annotatedProperty</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ns</span><span class="p">[</span><span class="n">metadata</span><span class="p">]))</span>
-                        <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">add</span><span class="p">((</span><span class="n">bnode_axiom</span><span class="p">,</span> <span class="n">OWL</span><span class="o">.</span><span class="n">annotatedTarget</span><span class="p">,</span> <span class="n">annotated_target</span><span class="p">))</span>
-                        <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
-                            <span class="p">(</span>
-                                <span class="n">bnode_axiom</span><span class="p">,</span>
-                                <span class="n">percentage_annotation_property</span><span class="p">,</span>
-                                <span class="n">Literal</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">{:.2f}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">percentage</span><span class="p">)),</span>
-                            <span class="p">)</span>
-                        <span class="p">)</span></div>
+                        <span class="n">targets</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_metadata_targets</span><span class="p">(</span>
+                            <span class="n">metadata</span><span class="p">,</span> <span class="n">label</span><span class="p">,</span> <span class="n">ontology_term_id_mapping</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">label</span><span class="p">)</span>
+                        <span class="p">)</span>
+                        <span class="k">for</span> <span class="n">annotated_target</span><span class="p">,</span> <span class="n">target_label</span> <span class="ow">in</span> <span class="n">targets</span><span class="p">:</span>
+                            <span class="k">if</span> <span class="n">target_label</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                                <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+                                    <span class="p">(</span><span class="n">annotated_target</span><span class="p">,</span> <span class="n">RDFS</span><span class="o">.</span><span class="n">label</span><span class="p">,</span> <span class="n">Literal</span><span class="p">(</span><span class="n">target_label</span><span class="p">))</span>
+                                <span class="p">)</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">add</span><span class="p">((</span><span class="n">annotated_target</span><span class="p">,</span> <span class="n">RDF</span><span class="o">.</span><span class="n">type</span><span class="p">,</span> <span class="n">OWL</span><span class="o">.</span><span class="n">Class</span><span class="p">))</span>
+                            <span class="n">bnode_axiom</span> <span class="o">=</span> <span class="n">BNode</span><span class="p">()</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">add</span><span class="p">((</span><span class="n">bnode_axiom</span><span class="p">,</span> <span class="n">RDF</span><span class="o">.</span><span class="n">type</span><span class="p">,</span> <span class="n">OWL</span><span class="o">.</span><span class="n">Axiom</span><span class="p">))</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">add</span><span class="p">((</span><span class="n">bnode_axiom</span><span class="p">,</span> <span class="n">OWL</span><span class="o">.</span><span class="n">annotatedSource</span><span class="p">,</span> <span class="n">s</span><span class="p">))</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">add</span><span class="p">((</span><span class="n">bnode_axiom</span><span class="p">,</span> <span class="n">OWL</span><span class="o">.</span><span class="n">annotatedProperty</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ns</span><span class="p">[</span><span class="n">metadata</span><span class="p">]))</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">add</span><span class="p">((</span><span class="n">bnode_axiom</span><span class="p">,</span> <span class="n">OWL</span><span class="o">.</span><span class="n">annotatedTarget</span><span class="p">,</span> <span class="n">annotated_target</span><span class="p">))</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+                                <span class="p">(</span>
+                                    <span class="n">bnode_axiom</span><span class="p">,</span>
+                                    <span class="n">percentage_annotation_property</span><span class="p">,</span>
+                                    <span class="n">Literal</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">{:.2f}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">percentage</span><span class="p">)),</span>
+                                <span class="p">)</span>
+                            <span class="p">)</span></div>
 
+
+    <span class="k">def</span> <span class="nf">_metadata_targets</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">metadata</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">label</span><span class="p">,</span> <span class="n">ontology_term_id</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">URIRef</span><span class="p">,</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]]]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Resolve a metadata value to the class IRI(s) used as annotation targets.</span>
+
+<span class="sd">        Multi-valued term IDs (e.g. ``HANCESTRO:0005,HANCESTRO:0014``) yield one target per term.</span>
+<span class="sd">        Values without an ontology term ID (e.g. ``unknown``) get a deterministic IRI derived</span>
+<span class="sd">        from the metadata field and label, so repeated runs produce the same graph.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            A list of (target IRI, label) tuples. The label is None when it cannot be</span>
+<span class="sd">            matched to an individual term of a multi-valued ID.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">label</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">label</span><span class="p">)</span>
+        <span class="n">term_ids</span> <span class="o">=</span> <span class="n">split_multi_valued</span><span class="p">(</span><span class="n">ontology_term_id</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">ontology_term_id</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="k">else</span> <span class="p">[]</span>
+        <span class="n">term_ids</span> <span class="o">=</span> <span class="p">[</span><span class="n">t</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">term_ids</span> <span class="k">if</span> <span class="s2">&quot;:&quot;</span> <span class="ow">in</span> <span class="n">t</span><span class="p">]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">term_ids</span><span class="p">:</span>
+            <span class="n">seed</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">ns</span><span class="si">}{</span><span class="n">metadata</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">label</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="k">return</span> <span class="p">[(</span><span class="n">URIRef</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ns</span><span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">uuid</span><span class="o">.</span><span class="n">uuid5</span><span class="p">(</span><span class="n">uuid</span><span class="o">.</span><span class="n">NAMESPACE_URL</span><span class="p">,</span> <span class="n">seed</span><span class="p">))]),</span> <span class="n">label</span><span class="p">)]</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">term_ids</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">[(</span><span class="n">curie_to_iri</span><span class="p">(</span><span class="n">term_ids</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="n">label</span><span class="p">)]</span>
+        <span class="n">labels</span> <span class="o">=</span> <span class="n">split_multi_valued</span><span class="p">(</span><span class="n">label</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">labels</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">term_ids</span><span class="p">):</span>
+            <span class="n">labels</span> <span class="o">=</span> <span class="p">[</span><span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">term_ids</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">[(</span><span class="n">curie_to_iri</span><span class="p">(</span><span class="n">t</span><span class="p">),</span> <span class="n">lbl</span><span class="p">)</span> <span class="k">for</span> <span class="n">t</span><span class="p">,</span> <span class="n">lbl</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">term_ids</span><span class="p">,</span> <span class="n">labels</span><span class="p">)]</span>
 
 <div class="viewcode-block" id="GraphGenerator.save_rdf_graph">
 <a class="viewcode-back" href="../../../pandasaurus_cxg/graph_generator/graph_generator.html#pandasaurus_cxg.graph_generator.graph_generator.GraphGenerator.save_rdf_graph">[docs]</a>
@@ -672,7 +698,9 @@
             <span class="k">if</span> <span class="n">label_field</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
                 <span class="n">graph</span><span class="o">.</span><span class="n">add</span><span class="p">((</span><span class="n">resource</span><span class="p">,</span> <span class="n">RDFS</span><span class="o">.</span><span class="n">label</span><span class="p">,</span> <span class="n">Literal</span><span class="p">(</span><span class="n">label_field</span><span class="p">[</span><span class="mi">0</span><span class="p">])))</span>
 
-    <span class="k">def</span> <span class="nf">_get_cluster_author_fields</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cluster_dict</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]])</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+    <span class="k">def</span> <span class="nf">_get_cluster_author_fields</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">cluster_dict</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]]</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
         <span class="n">author_fields</span> <span class="o">=</span> <span class="p">[</span>
             <span class="n">key</span>
             <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">cluster_dict</span>

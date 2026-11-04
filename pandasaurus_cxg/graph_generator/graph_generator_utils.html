@@ -118,6 +118,14 @@
 </dd></dl>
 
 <dl class="py function">
+<dt class="sig sig-object py" id="pandasaurus_cxg.graph_generator.graph_generator_utils.curie_to_iri">
+<span class="sig-prename descclassname"><span class="pre">pandasaurus_cxg.graph_generator.graph_generator_utils.</span></span><span class="sig-name descname"><span class="pre">curie_to_iri</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">curie</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">URIRef</span></span></span><a class="reference internal" href="../../_modules/pandasaurus_cxg/graph_generator/graph_generator_utils.html#curie_to_iri"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pandasaurus_cxg.graph_generator.graph_generator_utils.curie_to_iri" title="Link to this definition"></a></dt>
+<dd><p>Expand a CURIE such as <code class="docutils literal notranslate"><span class="pre">HANCESTRO:0568</span></code> to a full IRI.</p>
+<p>Prefixes missing from <code class="docutils literal notranslate"><span class="pre">graph_namespaces.prefixes</span></code> fall back to the OBO PURL pattern
+<code class="docutils literal notranslate"><span class="pre">http://purl.obolibrary.org/obo/{PREFIX}_{ID}</span></code> and a warning is logged.</p>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="pandasaurus_cxg.graph_generator.graph_generator_utils.extract_dataset_version_id">
 <span class="sig-prename descclassname"><span class="pre">pandasaurus_cxg.graph_generator.graph_generator_utils.</span></span><span class="sig-name descname"><span class="pre">extract_dataset_version_id</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">download_link</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></span><a class="reference internal" href="../../_modules/pandasaurus_cxg/graph_generator/graph_generator_utils.html#extract_dataset_version_id"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pandasaurus_cxg.graph_generator.graph_generator_utils.extract_dataset_version_id" title="Link to this definition"></a></dt>
 <dd><p>Extract the dataset UUID from a CellxGene download link.</p>
@@ -204,6 +212,12 @@ the local part of an XML QName.</p>
 </p>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="pandasaurus_cxg.graph_generator.graph_generator_utils.split_multi_valued">
+<span class="sig-prename descclassname"><span class="pre">pandasaurus_cxg.graph_generator.graph_generator_utils.</span></span><span class="sig-name descname"><span class="pre">split_multi_valued</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../_modules/pandasaurus_cxg/graph_generator/graph_generator_utils.html#split_multi_valued"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pandasaurus_cxg.graph_generator.graph_generator_utils.split_multi_valued" title="Link to this definition"></a></dt>
+<dd><p>Split a possibly multi-valued CxG field (e.g. <code class="docutils literal notranslate"><span class="pre">HANCESTRO:0005,HANCESTRO:0014</span></code>).</p>
 </dd></dl>
 
 </section>
